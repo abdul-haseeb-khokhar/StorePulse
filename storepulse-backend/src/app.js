@@ -1,16 +1,18 @@
 const express = require('express')
 const cors = require('cors')
-
+const sitesRoutes = require('./modules/sites/sites.routes');
 const authRoutes  = require('./modules/auth/auth.routes')
 const AppError = require('./utils/AppError')
 const { nextTick } = require('node:process')
 const { appendFile } = require('node:fs')
 
 const app = express()
+
 app.use(cors())
 app.use(express.json())
 
 app.use('/api/auth', authRoutes);
+app.use('/api/sites', sitesRoutes)
 
 app.use((req, res, next) =>{
     next(new AppError(`Route not found: ${req.method} ${req.originalUrl}`, 404))

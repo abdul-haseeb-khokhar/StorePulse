@@ -1,17 +1,20 @@
 const prisma = require('../../config/prisma')
 
 async function findUserByEmail(email) {
+    console.log('Find user by email. is called')
     return prisma.user.findUnique({
         where: {email}
     });
 }
 async function findUserById(id) {
+    console.log("finduser by id is called")
     return prisma.user.findUnique({
         where: {id}
     })
 }
 
 async function  createUser(fullName, email, hashedPassword) {
+    console.log('Create User is called')
     return prisma.user.create({
         data: {
             fullName,
