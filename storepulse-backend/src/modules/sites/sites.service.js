@@ -1,6 +1,7 @@
 const {createSite, findSiteById, findSitesByUserId, updateApiKey} = require('./sites.repository')
 const {generateApiKey} = require('../../utils/apiKey')
 const AppError = require('../../utils/AppError')
+const {invalidateCachedSite} = require('../ingest/ingest.cache')
 
 async function addSite({name, domain, userId}) {
     const apiKey = generateApiKey();
@@ -27,9 +28,12 @@ async function getSiteById({siteId, userId}) {
 
 async function regenerateApiKey({siteId, userId}) {
     console.log('Regenerate Api key service is runnig')
-    await getSiteById({siteId, userId});
+    
+    const site = await getSiteById({siteId, userId});
 
     const newApiKey = generateApiKey()
+
+    invalidateCachedSite(site.apiKey);
 
     return updateApiKey(siteId, newApiKey);
 }
