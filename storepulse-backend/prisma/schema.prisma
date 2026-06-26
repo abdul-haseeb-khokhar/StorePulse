@@ -44,6 +44,7 @@ model Event {
   referrer String?
   productId String?
   productName String?
+  visitorId String
   siteId String
   createdAt DateTime @default(now())
 
@@ -51,6 +52,7 @@ model Event {
 
   @@index([siteId, createdAt])
   @@index([siteId, productId])
+  @@index([siteId, visitorId])
 }
 
 enum EventType {

@@ -4,8 +4,7 @@ const AppError = require('../../utils/AppError');
 const {getCachedSite, setCachedSite} = require('./ingest.cache')
 const VALID_EVENTS_TYPES = ['PAGE_VIEW', 'PRODUCT_CLICK'];
 
-async function recordEvent({apiKey, type, pageUrl, referrer, productId, productName}) {
-    console.log('recordevent service is called')
+async function recordEvent({apiKey, type, pageUrl, referrer, productId, productName, visitorId}) {
     if(!apiKey) {
         throw new AppError('Missing API key.', 401);
     }
@@ -14,6 +13,9 @@ async function recordEvent({apiKey, type, pageUrl, referrer, productId, productN
     } 
     if(!pageUrl){
         throw new AppError("Missing pageUrl.", 400);
+    }
+    if(!visitorId) {
+        throw new AppError('Missing visitorId.', 400)
     } 
 
     let site = getCachedSite(apiKey);
@@ -24,12 +26,14 @@ async function recordEvent({apiKey, type, pageUrl, referrer, productId, productN
         }
         setCachedSite(apiKey, site)
     }
-
-    if(!site) {
-        throw new AppError('Invalid API key.', 401);
-    }
     addToBuffer({
-        type, pageUrl, referrer: referrer || null, productId: productId || null, productName: productName || null, siteId: site.id,
+        type,
+        pageUrl, 
+        referrer: referrer || null, 
+        productId: productId || null, 
+        productName: productName || null, 
+        visitorId,
+        siteId: site.id,
     });
 }
 module.exports = {
