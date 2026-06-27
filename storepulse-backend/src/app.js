@@ -1,8 +1,11 @@
 const express = require('express')
 const cors = require('cors')
+
 const sitesRoutes = require('./modules/sites/sites.routes');
 const authRoutes  = require('./modules/auth/auth.routes');
 const ingestRoutes = require('../src/modules/ingest/ingest.routes');
+const analyticsRoutes = require('./modules/analytics/analytics.routes');
+
 const AppError = require('./utils/AppError')
 const { nextTick } = require('node:process')
 const { appendFile } = require('node:fs')
@@ -15,6 +18,7 @@ app.use(express.json())
 app.use('/api/auth', authRoutes);
 app.use('/api/sites', sitesRoutes)
 app.use('/api/events', ingestRoutes)
+app.use('/api/analytics', analyticsRoutes);
 
 app.use((req, res, next) =>{
     next(new AppError(`Route not found: ${req.method} ${req.originalUrl}`, 404))
