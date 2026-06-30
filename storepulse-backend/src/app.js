@@ -20,6 +20,8 @@ app.use('/api/sites', sitesRoutes)
 app.use('/api/events', ingestRoutes)
 app.use('/api/analytics', analyticsRoutes);
 
+app.use(express.static("public"));
+
 app.use((req, res, next) =>{
     next(new AppError(`Route not found: ${req.method} ${req.originalUrl}`, 404))
 });
