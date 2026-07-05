@@ -1,6 +1,3 @@
-const { type } = require("node:os");
-const { event } = require("../src/config/prisma");
-
 (function() {
     const API_ENDPOINT = 'http://localhost:5000/api/events';
     const VISITOR_STORAGE_KEY = 'sp_visitor_id';
