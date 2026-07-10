@@ -55,8 +55,6 @@ function saveFailedEvents(events) {
     });
 }
 
-setInterval(flushBuffer, FLUSH_INTERVAL_MS);
-
 module.exports= {
     addToBuffer, flushBuffer
 }
