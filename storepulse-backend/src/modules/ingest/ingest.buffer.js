@@ -3,7 +3,7 @@ const fs = require('fs')
 const { createManyEvents } = require('./ingest.repository');
 const redisClient = require('../../config/redis');
 
-const BUFFER_KEY = 'events:buffer';
+const BUFFER_KEY = 'ingest:events:buffer';
 const FLUSH_INTERVAL_MS = 10000;
 const MAX_BUFFER_SIZE = 500;
 const MAX_RETRIES = 3;
