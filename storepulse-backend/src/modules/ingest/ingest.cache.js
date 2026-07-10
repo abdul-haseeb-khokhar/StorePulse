@@ -1,28 +1,26 @@
-const CACHE_TTL_MS = 10 * 60 * 1000;
+const redisClient = require('../../config/redis');
 
-const siteCache = new Map();
+const CACHE_TTL_SECONDS = 30 * 60;
 
-function getCachedSite(apiKey) {
-    const entry = siteCache.get(apiKey);
+async function getCachedSite(apiKey) {
+    const site = await redisClient.get(`site:${apiKey}`);
 
-    if(! entry) return null;
+    if(!site) return null;
 
-    const isExpired = Date.now() - entry.cachedAt > CACHE_TTL_MS;
-
-    if(isExpired) {
-        siteCache.delete(apiKey);
-        return null;
-    }
-
-    return entry.site;
+    return JSON.parse(site);
 }
 
-function setCachedSite (apiKey, site) {
-    siteCache.set(apiKey, {site, cachedAt: Date.now()})
+async function setCachedSite (apiKey, site) {
+    await redisClient.set(
+        `site:${apiKey}`,
+        JSON.stringify(site),
+        'EX',
+        CACHE_TTL_SECONDS
+    );
 }
 
-function invalidateCachedSite(apiKey) {
-    siteCache.delete(apiKey)
+async function invalidateCachedSite(apiKey) {
+    await redisClient.del(`site:${apiKey}`)
 }
 
 module.exports = {

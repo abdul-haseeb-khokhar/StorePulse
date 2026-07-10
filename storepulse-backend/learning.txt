@@ -1,0 +1,7 @@
+7/10/2026:
+Today i implemented redis caching to my project for batch inserting in database after sometime rather than on every request.
+Than i cached the site information in redis too as ever event need to check from db about its site exists or not.
+
+Now that i wanna implement load balancing for events as there would be a lot of events hitting my db but there are som problems.
+i) if we have two server instances calling same redis, but problem arises that when they call lrange to get cached enteries they might call it at the same time before ltrim happened in one instance,
+that causes the write in event table to be doubled.

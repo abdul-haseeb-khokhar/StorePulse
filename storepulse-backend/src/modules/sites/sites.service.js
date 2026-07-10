@@ -33,7 +33,7 @@ async function regenerateApiKey({siteId, userId}) {
 
     const newApiKey = generateApiKey()
 
-    invalidateCachedSite(site.apiKey);
+    await invalidateCachedSite(site.apiKey);
 
     return updateApiKey(siteId, newApiKey);
 }

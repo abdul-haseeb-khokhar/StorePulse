@@ -1,46 +1,49 @@
 const path = require('path');
 const fs = require('fs')
-const { event } = require('../../config/prisma');
 const { createManyEvents } = require('./ingest.repository');
-const { resolve } = require('dns');
+const redisClient = require('../../config/redis');
 
-let buffer = [];
-
-const FLUSH_INTERVAL_MS = 5000;
+const BUFFER_KEY = 'ingest:events:buffer';
+const FLUSH_INTERVAL_MS = 10000;
 const MAX_BUFFER_SIZE = 500;
 const MAX_RETRIES = 3;
 const FAILED_EVENTS_LOG = path.join(__dirname, 'failed-events.log')
 
-function addToBuffer(event){
+async function addToBuffer(event){
     console.log('Add to buffer is called')
-    buffer.push(event);
+    await redisClient.lpush(BUFFER_KEY, JSON.stringify(event));
 
-    if(buffer.length >= MAX_BUFFER_SIZE) {
+    const bufferLength = await redisClient.llen(BUFFER_KEY);
+    if(bufferLength >= MAX_BUFFER_SIZE) {
         flushBuffer();
     }
 }
 
 async function flushBuffer(){
     console.log('FlushBuffer is called')
-    if(buffer.length === 0) return;
 
-    const eventsToWrite = buffer;
-    buffer = [];
+    const rawEvents = await redisClient.lrange(BUFFER_KEY, 0, MAX_BUFFER_SIZE - 1);
+    console.log(rawEvents)
+    
+    if(rawEvents.length === 0) return null;
 
-    await writesWithRetry(eventsToWrite, MAX_RETRIES);
+    const events = rawEvents.map(e => JSON.parse(e));
+
+    await writesWithRetry(events, rawEvents.length , MAX_RETRIES);
 }
 
-async function writesWithRetry(events, attemptsLeft) {
+async function writesWithRetry(events, countToTrim, attemptsLeft) {
     console.log('Wirteswithretry is called')
     try{
         await createManyEvents(events);
+        await redisClient.ltrim(BUFFER_KEY, countToTrim, -1);
     } catch(error) {
         if(attemptsLeft>0) {
             await new Promise((resolve) => setTimeout(resolve, 1000));
-            return writesWithRetry(events, attemptsLeft-1)
+            return writesWithRetry(events, countToTrim, attemptsLeft-1)
         }
-
-        saveFailedEvents(events)
+        await redisClient.ltrim(BUFFER_KEY, countToTrim, -1);
+        saveFailedEvents(events);
     }
 }
 

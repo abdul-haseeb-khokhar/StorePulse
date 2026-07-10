@@ -18,15 +18,15 @@ async function recordEvent({apiKey, type, pageUrl, referrer, productId, productN
         throw new AppError('Missing visitorId.', 400)
     } 
 
-    let site = getCachedSite(apiKey);
+    let site =await getCachedSite(apiKey);
     if(!site){
         site = await findSiteByApiKey(apiKey);
         if(!site) {
             throw new AppError('Invalid API key', 401)
         }
-        setCachedSite(apiKey, site)
+        await setCachedSite(apiKey, site)
     }
-    addToBuffer({
+    await addToBuffer({
         type,
         pageUrl, 
         referrer: referrer || null, 
