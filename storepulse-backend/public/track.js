@@ -1,5 +1,6 @@
 (function() {
-    const API_ENDPOINT = 'http://localhost:5000/api/events';
+    const script = document.currentScript;
+    const API_ENDPOINT = new URL('/api/events',script.src).href;
     const VISITOR_STORAGE_KEY = 'sp_visitor_id';
 
     function getScriptApiKey () {

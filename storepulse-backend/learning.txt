@@ -8,3 +8,6 @@ that causes the write in event table to be doubled.
 
 Solution: i): im separating flushing to db from other functionality and keep it separate from others , now if we make multiple instances of a server they all need this flush and flush only occur thorugh this single instance, solving our problem.
 
+After that i make instances of server and use nginx as a loadbalaancer than got another problem and that was in my track.js API endpoint of my ingest route was hardcoded.
+so now on multiple instances this causes error as server path is changing
+Then i use script = document.currentScript that gives current running script than takes the url of my server using script.src.
