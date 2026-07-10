@@ -26,7 +26,7 @@ async function recordEvent({apiKey, type, pageUrl, referrer, productId, productN
         }
         setCachedSite(apiKey, site)
     }
-    addToBuffer({
+    await addToBuffer({
         type,
         pageUrl, 
         referrer: referrer || null, 
