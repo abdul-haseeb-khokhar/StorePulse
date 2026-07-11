@@ -1,4 +1,5 @@
 import { Bell, HelpCircle } from "lucide-react";
+import { getStoredUser } from "../../lib/auth";
 
 /**
  * Topbar — right side of the app shell. Takes children so each page
@@ -7,6 +8,9 @@ import { Bell, HelpCircle } from "lucide-react";
  * without the Topbar needing to know about every page's specifics.
  */
 export default function Topbar({ children, userName = "Alex Rivera", userPlan = "Pro Plan" }) {
+  const user = getStoredUser();
+  const displayName = user?.fullName || userName;
+
   return (
     <header className="flex h-16 items-center justify-between border-b border-outline-variant/40
       bg-surface-lowest px-6">
@@ -29,7 +33,7 @@ export default function Topbar({ children, userName = "Alex Rivera", userPlan = 
         </button>
         <div className="flex items-center gap-2.5 pl-2">
           <div className="text-right">
-            <p className="text-sm font-semibold leading-tight text-on-surface">{userName}</p>
+            <p className="text-sm font-semibold leading-tight text-on-surface">{displayName}</p>
             <p className="text-xs leading-tight text-on-surface-variant">{userPlan}</p>
           </div>
           <div

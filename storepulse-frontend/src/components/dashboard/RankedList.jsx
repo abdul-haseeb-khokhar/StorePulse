@@ -14,9 +14,14 @@ export default function RankedList({ title, items, icon, valueLabel }) {
         {icon}
       </div>
 
-      <ul className="mt-4 flex flex-col gap-4">
-        {items.map((item) => (
-          <li key={item.id} className="flex items-center justify-between gap-3">
+      {items.length === 0 ? (
+        <div className="mt-4 rounded-lg border border-outline-variant/60 bg-surface-low px-4 py-8 text-center text-sm text-on-surface-variant">
+          No data available yet.
+        </div>
+      ) : (
+        <ul className="mt-4 flex flex-col gap-4">
+          {items.map((item) => (
+            <li key={item.id} className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               {item.thumbnail ? (
                 <img
@@ -39,9 +44,10 @@ export default function RankedList({ title, items, icon, valueLabel }) {
               <p className="text-sm font-bold text-on-surface">{item.value}</p>
               <p className="text-xs text-on-surface-variant">{valueLabel}</p>
             </div>
-          </li>
-        ))}
-      </ul>
+            </li>
+          ))}
+        </ul>
+      )}
     </Card>
   );
 }

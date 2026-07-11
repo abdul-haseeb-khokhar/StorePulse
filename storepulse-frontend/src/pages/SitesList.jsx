@@ -1,18 +1,11 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Plus, ArrowRight } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
 import Topbar from "../components/ui/Topbar";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
-
-// TODO: replace with real data from GET /api/sites once the sites
-// module's list endpoint exists. Shape mirrors what that endpoint
-// should return: id, name, domain, totalViews, status.
-const sites = [
-  { id: "1", name: "The Artisan Shop", domain: "artisanshop.com", totalViews: "12.4k", status: null },
-  { id: "2", name: "Urban Thread", domain: "urbanthread.io", totalViews: "8.2k", status: "connected" },
-  { id: "3", name: "Green Grove", domain: "greengrove.co", totalViews: "4.1k", status: "maintenance" },
-];
+import api, { getApiErrorMessage } from "../lib/api";
 
 const statusStyles = {
   connected: "bg-secondary-container text-on-secondary-container",
@@ -39,8 +32,8 @@ function SiteCard({ site }) {
 
       <div className="mt-5 flex items-end justify-between">
         <div>
-          <p className="text-xs text-on-surface-variant">Total Views</p>
-          <p className="text-xl font-bold text-on-surface">{site.totalViews}</p>
+          <p className="text-xs text-on-surface-variant">Created</p>
+          <p className="text-xl font-bold text-on-surface">{site.createdAtLabel}</p>
         </div>
         <Link
           to={`/dashboard?site=${site.id}`}
@@ -55,6 +48,43 @@ function SiteCard({ site }) {
 }
 
 export default function SitesList() {
+  const [sites, setSites] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadSites() {
+      try {
+        const { data } = await api.get("/sites");
+        if (!ignore) {
+          setSites(
+            data.sites.map((site) => ({
+              ...site,
+              createdAtLabel: new Intl.DateTimeFormat(undefined, {
+                month: "short",
+                day: "numeric",
+              }).format(new Date(site.createdAt)),
+              status: "connected",
+            })),
+          );
+        }
+      } catch (err) {
+        if (!ignore) {
+          setError(getApiErrorMessage(err, "Could not load your sites."));
+        }
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    }
+
+    loadSites();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   return (
     <AppLayout>
       <Topbar />
@@ -72,7 +102,13 @@ export default function SitesList() {
           </Link>
         </div>
 
-        {sites.length === 0 ? (
+        {loading ? (
+          <Card className="mt-8 px-6 py-10 text-sm text-on-surface-variant">
+            Loading your sites...
+          </Card>
+        ) : error ? (
+          <Card className="mt-8 px-6 py-10 text-sm text-error">{error}</Card>
+        ) : sites.length === 0 ? (
           <Card className="mt-8 flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
             <p className="font-semibold text-on-surface">No sites connected yet</p>
             <p className="max-w-sm text-sm text-on-surface-variant">

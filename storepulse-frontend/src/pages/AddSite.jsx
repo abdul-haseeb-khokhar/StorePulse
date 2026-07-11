@@ -6,6 +6,22 @@ import Topbar from "../components/ui/Topbar";
 import Card from "../components/ui/Card";
 import TextField from "../components/ui/TextField";
 import Button from "../components/ui/Button";
+import api, { getApiErrorMessage } from "../lib/api";
+
+function normalizeDomain(value) {
+  return value
+    .trim()
+    .replace(/^https?:\/\//i, "")
+    .replace(/^www\./i, "")
+    .replace(/\/.*$/, "");
+}
+
+function titleFromDomain(domain) {
+  return domain
+    .split(".")[0]
+    .replace(/[-_]+/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
 
 export default function AddSite() {
   const navigate = useNavigate();
@@ -18,12 +34,14 @@ export default function AddSite() {
     setError(null);
     setLoading(true);
     try {
-      // TODO: wire to POST /api/sites once the sites module is built,
-      // then navigate to /sites/:id/setup with the returned site + apiKey
-      console.log("create site", { siteName });
-      navigate("/sites/new/setup");
+      const domain = normalizeDomain(siteName);
+      const { data } = await api.post("/sites", {
+        name: titleFromDomain(domain),
+        domain,
+      });
+      navigate(`/sites/${data.site.id}/setup`);
     } catch (err) {
-      setError("Could not create the site. Try again.");
+      setError(getApiErrorMessage(err, "Could not create the site. Try again."));
     } finally {
       setLoading(false);
     }

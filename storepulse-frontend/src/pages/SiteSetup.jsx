@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { CheckCircle2, Info, Code2, Copy, Check, Lightbulb } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
 import Topbar from "../components/ui/Topbar";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
+import api, { API_BASE_URL, getApiErrorMessage } from "../lib/api";
 
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false);
@@ -34,17 +35,58 @@ function CopyButton({ text }) {
 
 export default function SiteSetup() {
   const { siteId } = useParams();
+  const [site, setSite] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [regenerating, setRegenerating] = useState(false);
+  const [error, setError] = useState(null);
 
-  // TODO: replace with the real site fetched by siteId once the
-  // sites module's GET /api/sites/:id endpoint exists.
-  const site = { name: "My Store", apiKey: "sp_live_xxxxxxxxxxxx" };
+  useEffect(() => {
+    let ignore = false;
 
-  const snippet = `<script src="https://cdn.storepulse.io/track.js" data-site-key="${site.apiKey}"></script>`;
+    async function loadSite() {
+      try {
+        const { data } = await api.get(`/sites/${siteId}`);
+        if (!ignore) setSite(data.site);
+      } catch (err) {
+        if (!ignore) setError(getApiErrorMessage(err, "Could not load this site."));
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    }
+
+    loadSite();
+    return () => {
+      ignore = true;
+    };
+  }, [siteId]);
+
+  async function handleRegenerateKey() {
+    setError(null);
+    setRegenerating(true);
+    try {
+      const { data } = await api.patch(`/sites/${siteId}/api-key`);
+      setSite(data.site);
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Could not regenerate the API key."));
+    } finally {
+      setRegenerating(false);
+    }
+  }
+
+  const snippet = site
+    ? `<script src="${API_BASE_URL}/track.js" data-site-key="${site.apiKey}"></script>`
+    : "";
 
   return (
     <AppLayout>
       <Topbar />
       <main className="flex-1 px-6 py-8">
+        {loading ? (
+          <Card className="px-6 py-10 text-sm text-on-surface-variant">Loading setup...</Card>
+        ) : error && !site ? (
+          <Card className="px-6 py-10 text-sm text-error">{error}</Card>
+        ) : (
+          <>
         <div className="overflow-hidden rounded-2xl bg-primary px-8 py-7 text-on-primary">
           <div className="flex items-center justify-between gap-4">
             <div>
@@ -80,9 +122,19 @@ export default function SiteSetup() {
               <CopyButton text={site.apiKey} />
             </div>
 
-            <div className="mt-4 border-t border-outline-variant/40 pt-3 text-xs text-on-surface-variant">
-              Key active and valid for production
+            <div className="mt-4 flex items-center justify-between gap-3 border-t border-outline-variant/40 pt-3">
+              <p className="text-xs text-on-surface-variant">Key active and valid for production</p>
+              <Button
+                type="button"
+                variant="secondary"
+                size="md"
+                loading={regenerating}
+                onClick={handleRegenerateKey}
+              >
+                Regenerate
+              </Button>
             </div>
+            {error && <p className="mt-3 text-sm text-error">{error}</p>}
           </Card>
 
           <Card className="p-6">
@@ -112,13 +164,15 @@ export default function SiteSetup() {
         <div className="mt-8 flex justify-end gap-3">
           <Button variant="secondary">Documentation</Button>
           <Link
-            to="/dashboard"
+            to={`/dashboard?site=${site.id}`}
             className="inline-flex items-center justify-center rounded-lg bg-primary
               px-5 py-3 text-base font-semibold text-on-primary hover:bg-[#2c1ea8]"
           >
             Go to Dashboard
           </Link>
         </div>
+          </>
+        )}
       </main>
     </AppLayout>
   );

@@ -1,12 +1,15 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import AuthLayout from "../layouts/AuthLayout";
 import Logo from "../components/ui/Logo";
 import TextField from "../components/ui/TextField";
 import Button from "../components/ui/Button";
+import api, { getApiErrorMessage } from "../lib/api";
+import { saveSession } from "../lib/auth";
 
 export default function Signup() {
+  const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,10 +22,11 @@ export default function Signup() {
     setError(null);
     setLoading(true);
     try {
-      // TODO: wire to POST /api/auth/signup once the auth module is built
-      console.log("signup", { fullName, email, password });
+      const { data } = await api.post("/auth/signup", { fullName, email, password });
+      saveSession(data);
+      navigate("/sites/new", { replace: true });
     } catch (err) {
-      setError("Could not create your account. Try again.");
+      setError(getApiErrorMessage(err, "Could not create your account. Try again."));
     } finally {
       setLoading(false);
     }

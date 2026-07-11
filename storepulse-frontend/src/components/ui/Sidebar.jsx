@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { LayoutDashboard, Globe, Settings, LogOut } from "lucide-react";
 import Logo from "../ui/Logo";
+import { clearSession } from "../../lib/auth";
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -15,6 +16,11 @@ const navItems = [
  * earlier "Add Site" export, so the nav is consistent everywhere.
  */
 export default function Sidebar() {
+  function handleLogout() {
+    clearSession();
+    window.location.assign("/login");
+  }
+
   return (
     <aside className="flex h-screen w-60 flex-col border-r border-outline-variant/40 bg-surface-lowest px-4 py-5">
       <div className="mb-8 px-1">
@@ -43,6 +49,7 @@ export default function Sidebar() {
 
       <button
         type="button"
+        onClick={handleLogout}
         className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium
           text-on-surface-variant hover:bg-surface-low"
       >
