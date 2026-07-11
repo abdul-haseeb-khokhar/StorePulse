@@ -1,8 +1,12 @@
+This file about the problems i have faced while making this proj. and the decsions and solutions i making to slove these.
 7/10/2026:
 Today i implemented redis caching to my project for batch inserting in database after sometime rather than on every request.
 Than i cached the site information in redis too as ever event need to check from db about its site exists or not.
 
-Now that i wanna implement load balancing for events as there would be a lot of events hitting my db but there are som problems.
+Since there would be multiple sites and every site will be hitting event route multiple time so im gonna use horizonatal scaling(Multiple instances)
+to manage that i m gonna use load balancing using nginx
+
+Now  that i wanna implement load balancing for events as there would be a lot of events hitting my db but there are some problems.
 i) if we have two server instances calling same redis, but problem arises that when they call lrange to get cached enteries they might call it at the same time before ltrim happened in one instance,
 that causes the write in event table to be doubled.
 
@@ -11,3 +15,22 @@ Solution: i): im separating flushing to db from other functionality and keep it 
 After that i make instances of server and use nginx as a loadbalaancer than got another problem and that was in my track.js API endpoint of my ingest route was hardcoded.
 so now on multiple instances this causes error as server path is changing
 Then i use script = document.currentScript that gives current running script than takes the url of my server using script.src.
+
+7/11/2026
+
+Today i m gonna deploy this proj. right now there are two instances of server and one is a backend service that flushes events into db.
+Im gonna use fly.io for this 
+For setting this up I have downloaded flyctl than make a dockerfile for this backend server
+Proble:
+1)
+after making container on docker for my backend i run it and an error occured about because .env database_url was pointing at localhost which in docker container points to container not machine
+
+Solution: for testing im gonna use host.docker.internal which inside docker points to machines localhost
+
+Problem: I used command doceker run for my image of server storepulse_backend and it caused 3 different containers to run causing port conflict issues
+
+Solution istead of using 'docker run' we can use docker start one a container is created to start that created container.
+
+Learnt: Whenever there is a change in code we need to rebuild container image using "docker build" 
+and then run a new container using "docker run" on that image 
+then docker start to run that container

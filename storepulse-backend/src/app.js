@@ -22,6 +22,10 @@ app.use('/api/analytics', analyticsRoutes);
 
 app.use(express.static("public"));
 
+app.get('/health', (req, res) => { 
+    res.status(200).json({ status: 'ok'})
+})
+
 app.use((req, res, next) =>{
     next(new AppError(`Route not found: ${req.method} ${req.originalUrl}`, 404))
 });
