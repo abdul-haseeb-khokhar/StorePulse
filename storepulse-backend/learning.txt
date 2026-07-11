@@ -34,3 +34,9 @@ Solution istead of using 'docker run' we can use docker start one a container is
 Learnt: Whenever there is a change in code we need to rebuild container image using "docker build" 
 and then run a new container using "docker run" on that image 
 then docker start to run that container
+
+Problem: Depolyment of postgres db , two options wew there
+"Supabase" and "Neon"
+
+since Supabase contains a lot of extra feature like authentications and apis and other stuff and im doing this in my code by myself 
+but neon is something i need as i already have my postgres locally that just needed to be deployed and no need of all other stuff.
