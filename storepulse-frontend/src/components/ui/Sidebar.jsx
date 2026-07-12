@@ -22,7 +22,7 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="flex h-screen w-60 flex-col border-r border-outline-variant/40 bg-surface-lowest px-4 py-5">
+    <aside className="flex h-screen w-60 shrink-0 flex-col overflow-hidden border-r border-outline-variant/40 bg-surface-lowest px-4 py-5">
       <div className="mb-8 px-1">
         <Logo tagline="E-commerce Insights" />
       </div>

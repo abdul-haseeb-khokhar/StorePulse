@@ -8,9 +8,9 @@ import Sidebar from "../components/ui/Sidebar";
  */
 export default function AppLayout({ children }) {
   return (
-    <div className="flex min-h-screen bg-surface">
+    <div className="flex h-screen overflow-hidden bg-surface">
       <Sidebar />
-      <div className="flex flex-1 flex-col">{children}</div>
+      <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">{children}</div>
     </div>
   );
 }

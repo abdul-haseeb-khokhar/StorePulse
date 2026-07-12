@@ -53,3 +53,18 @@ body {
 * {
   box-sizing: border-box;
 }
+
+button,
+a,
+select,
+summary,
+[role="button"],
+[role="link"] {
+  cursor: pointer;
+}
+
+button:disabled,
+select:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}

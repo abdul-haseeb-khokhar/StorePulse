@@ -7,8 +7,12 @@ import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import api, { API_BASE_URL, getApiErrorMessage } from "../lib/api";
 
-function CopyButton({ text }) {
+function CopyButton({ text, variant = "light" }) {
   const [copied, setCopied] = useState(false);
+  const variantClass =
+    variant === "dark"
+      ? "bg-surface-lowest/15 text-surface-lowest ring-1 ring-surface-lowest/25 hover:bg-surface-lowest/25"
+      : "bg-on-surface/10 text-on-surface hover:bg-on-surface/20";
 
   async function handleCopy() {
     try {
@@ -24,8 +28,8 @@ function CopyButton({ text }) {
     <button
       type="button"
       onClick={handleCopy}
-      className="flex items-center gap-1.5 rounded-md bg-on-surface/10 px-2.5 py-1.5
-        text-xs font-medium text-on-surface hover:bg-on-surface/20"
+      className={`flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5
+        text-xs font-semibold ${variantClass}`}
     >
       {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
       {copied ? "Copied" : "Copy"}
@@ -149,7 +153,7 @@ export default function SiteSetup() {
                 [scrollbar-width:thin]">
                 {snippet}
               </code>
-              <CopyButton text={snippet} />
+              <CopyButton text={snippet} variant="dark" />
             </div>
 
             <div className="mt-4 flex items-start gap-2 rounded-lg bg-primary-container/10 p-3

@@ -153,7 +153,6 @@ export default function Dashboard() {
               </option>
             ))}
           </select>
-          <ChevronDown className="h-4 w-4 text-on-surface-variant" />
         </label>
       </Topbar>
 
