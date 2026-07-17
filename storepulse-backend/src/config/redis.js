@@ -1,6 +1,6 @@
 const Redis = require('ioredis');
 
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+const redisUrl = process.env.REDIS_URL;
 
 const redisClient = new Redis(redisUrl,{
     retryStrategy(times) {

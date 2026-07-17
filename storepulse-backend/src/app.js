@@ -31,6 +31,7 @@ app.use((req, res, next) =>{
 });
 
 app.use((err, req, res, next) => {
+    console.error(err)
     const statusCode = err.statusCode || 500;
     const message = err.statusCode ? err.message : 'Something went wrong on server side'
 
