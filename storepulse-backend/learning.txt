@@ -40,3 +40,34 @@ Problem: Depolyment of postgres db , two options wew there
 
 since Supabase contains a lot of extra feature like authentications and apis and other stuff and im doing this in my code by myself 
 but neon is something i need as i already have my postgres locally that just needed to be deployed and no need of all other stuff.
+
+Now for deploying redis to upstash 
+upstash provides rest API connection and TCP string connection
+used TCP string as rest api is not suitable for list data that we have used in flushing.
+
+Problem 1) is that for upstash instead of separately providing redis host and port that i did in case of local redis
+is not the case we need to generate redisClient using redisUrl
+
+Solution: So instead of providing it with port and host separately we provide it with a single URL.
+
+Problem: Some time connection between redis and node process drop may be of different reasons 
+This is something not preventive as the cost of talking to someone on other network.
+It causes 1) client to disconnect and dont try to reconnect, no data to db 2) Secondly it can crash the whole process
+
+Solution: Using retrystrategy function to provide ioredis with miliseconds that tells ioredis that this is the time after which you should try.
+
+7/15/2026
+
+Now to deploy on Fly.io.
+downloaded flyctl that act as an inteface between me and fly.io server
+It is commandline base tool
+then "fly auth login" to login in the fly.io
+
+Problem:
+1) fly ,using http_service block, by defalut sent http requests to these deployed servers for health check
+since i deploying server.js and worker-flush.js separately sp when a request is sent to worker-flush.js there wont be any response as it is not a server
+so it will cause a failure response 
+
+Solution: Explicity telling fly to send http request to sever.js only by using [http_service]
+
+Now that i have cancelled my plan to deploy it on fly.io as it is gonna be paid.
