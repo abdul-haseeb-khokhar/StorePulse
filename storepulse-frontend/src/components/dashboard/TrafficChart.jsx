@@ -23,7 +23,7 @@ export default function TrafficChart({ data }) {
 
       <div style={{ height: 220 }}>
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={data} barGap={4}>
+          <ComposedChart data={data} barGap={4} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
             <XAxis
               dataKey="date"
               axisLine={false}

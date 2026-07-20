@@ -5,7 +5,7 @@ import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
 import Field from "../components/ui/Field";
 import Button from "../components/ui/Button";
-import api, { getApiErrorMessage } from "../lib/api";
+import api, { getApiErrorMessage, getFieldErrors } from "../lib/api";
 
 function normalizeDomain(value) {
   return value
@@ -21,10 +21,12 @@ export default function AddSite() {
   const [domain, setDomain] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
     setLoading(true);
     try {
       const { data } = await api.post("/sites", {
@@ -33,7 +35,11 @@ export default function AddSite() {
       });
       navigate(`/sites/${data.site.id}/setup`);
     } catch (err) {
-      setError(getApiErrorMessage(err, "Could not create the site. Try again."));
+      const errors = getFieldErrors(err);
+      setFieldErrors(errors);
+      if (Object.keys(errors).length === 0) {
+        setError(getApiErrorMessage(err, "Could not create the site. Try again."));
+      }
     } finally {
       setLoading(false);
     }
@@ -56,6 +62,7 @@ export default function AddSite() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               icon={<Store className="h-4 w-4" />}
+              error={fieldErrors.name}
               required
             />
             <Field
@@ -65,6 +72,7 @@ export default function AddSite() {
               value={domain}
               onChange={(e) => setDomain(e.target.value)}
               icon={<Globe className="h-4 w-4" />}
+              error={fieldErrors.domain}
               required
             />
             <p className="text-xs" style={{ opacity: 0.65, marginTop: "-6px" }}>

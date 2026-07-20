@@ -5,7 +5,7 @@ import AuthLayout from "../layouts/AuthLayout";
 import Card from "../components/ui/Card";
 import Field from "../components/ui/Field";
 import Button from "../components/ui/Button";
-import api, { getApiErrorMessage } from "../lib/api";
+import api, { getApiErrorMessage, getFieldErrors } from "../lib/api";
 import { saveSession } from "../lib/auth";
 
 export default function Signup() {
@@ -16,17 +16,23 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
     setLoading(true);
     try {
       const { data } = await api.post("/auth/signup", { fullName, email, password });
       saveSession(data);
       navigate("/sites/new", { replace: true });
     } catch (err) {
-      setError(getApiErrorMessage(err, "Could not create your account. Try again."));
+      const errors = getFieldErrors(err);
+      setFieldErrors(errors);
+      if (Object.keys(errors).length === 0) {
+        setError(getApiErrorMessage(err, "Could not create your account. Try again."));
+      }
     } finally {
       setLoading(false);
     }
@@ -47,6 +53,7 @@ export default function Signup() {
             placeholder="Ada Okafor"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
+            error={fieldErrors.fullName}
             required
           />
 
@@ -57,6 +64,7 @@ export default function Signup() {
             placeholder="you@store.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            error={fieldErrors.email}
             required
           />
 
@@ -67,6 +75,7 @@ export default function Signup() {
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            error={fieldErrors.password}
             rightAction={
               <button
                 type="button"

@@ -45,7 +45,7 @@ export default function Landing() {
         <Tag variant="outline" className="w-fit whitespace-nowrap">
           Traffic monitoring for ecommerce
         </Tag>
-        <h1 style={{ fontSize: 56, lineHeight: 1.02, margin: 0, maxWidth: "16ch" }}>
+        <h1 style={{ fontSize: "clamp(32px, 9vw, 56px)", lineHeight: 1.02, margin: 0 }}>
           See exactly how shoppers move through your store
         </h1>
         <p style={{ fontSize: 18, lineHeight: 1.55, maxWidth: "56ch", opacity: 0.8, margin: 0 }}>
@@ -64,7 +64,7 @@ export default function Landing() {
       </div>
 
       <div className="mx-auto" style={{ maxWidth: 1040, padding: "var(--space-4)" }}>
-        <Card elevation="md" style={{ maxWidth: 640 }}>
+        <Card elevation="md">
           <div className="card-kicker">Install</div>
           <div className="card-title">Hand this to your developer</div>
           <p className="card-body">

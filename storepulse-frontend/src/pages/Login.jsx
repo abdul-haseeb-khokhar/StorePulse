@@ -5,7 +5,7 @@ import AuthLayout from "../layouts/AuthLayout";
 import Card from "../components/ui/Card";
 import Field from "../components/ui/Field";
 import Button from "../components/ui/Button";
-import api, { getApiErrorMessage } from "../lib/api";
+import api, { getApiErrorMessage, getFieldErrors } from "../lib/api";
 import { saveSession } from "../lib/auth";
 
 export default function Login() {
@@ -17,17 +17,23 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
     setLoading(true);
     try {
       const { data } = await api.post("/auth/login", { email, password });
       saveSession(data);
       navigate(redirectTo, { replace: true });
     } catch (err) {
-      setError(getApiErrorMessage(err, "Could not log in. Check your email and password."));
+      const errors = getFieldErrors(err);
+      setFieldErrors(errors);
+      if (Object.keys(errors).length === 0) {
+        setError(getApiErrorMessage(err, "Could not log in. Check your email and password."));
+      }
     } finally {
       setLoading(false);
     }
@@ -50,6 +56,7 @@ export default function Login() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             icon={<Mail className="h-4 w-4" />}
+            error={fieldErrors.email}
             required
           />
 
@@ -61,6 +68,7 @@ export default function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             icon={<Lock className="h-4 w-4" />}
+            error={fieldErrors.password}
             rightAction={
               <button
                 type="button"
