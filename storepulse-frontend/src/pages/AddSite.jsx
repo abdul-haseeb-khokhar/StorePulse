@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Globe } from "lucide-react";
+import { Store, Globe } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
 import Field from "../components/ui/Field";
@@ -15,16 +15,10 @@ function normalizeDomain(value) {
     .replace(/\/.*$/, "");
 }
 
-function titleFromDomain(domain) {
-  return domain
-    .split(".")[0]
-    .replace(/[-_]+/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-}
-
 export default function AddSite() {
   const navigate = useNavigate();
-  const [siteName, setSiteName] = useState("");
+  const [name, setName] = useState("");
+  const [domain, setDomain] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -33,10 +27,9 @@ export default function AddSite() {
     setError(null);
     setLoading(true);
     try {
-      const domain = normalizeDomain(siteName);
       const { data } = await api.post("/sites", {
-        name: titleFromDomain(domain),
-        domain,
+        name: name.trim(),
+        domain: normalizeDomain(domain),
       });
       navigate(`/sites/${data.site.id}/setup`);
     } catch (err) {
@@ -58,10 +51,19 @@ export default function AddSite() {
           <form onSubmit={handleSubmit} className="grid" style={{ gap: "var(--space-3)" }}>
             <Field
               id="siteName"
-              label="Site name or domain"
+              label="Site name"
+              placeholder="My Store"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              icon={<Store className="h-4 w-4" />}
+              required
+            />
+            <Field
+              id="siteDomain"
+              label="Domain"
               placeholder="mystore.com"
-              value={siteName}
-              onChange={(e) => setSiteName(e.target.value)}
+              value={domain}
+              onChange={(e) => setDomain(e.target.value)}
               icon={<Globe className="h-4 w-4" />}
               required
             />
