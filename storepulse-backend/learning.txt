@@ -71,3 +71,16 @@ so it will cause a failure response
 Solution: Explicity telling fly to send http request to sever.js only by using [http_service]
 
 Now that i have cancelled my plan to deploy it on fly.io as it is gonna be paid.
+
+Now im going to move to adding validations 
+Since i dont want onl from frontend to validate data as data can be sent by curl and postman
+So rather than relying on frontend validation i m gonna make validation in my backend side
+
+Pass through a new sort of function called curried function
+These sort of function return a function unlike callback funtions who take function as an argument.
+
+7/20/2026
+Completed validation today of all modules 
+I have learnt quite a lot about "zod" a validation package that is used to validate the data coming from client on runtime and sent back with error code before hitting main logic of code
+Learnt about some new functionality like .parse .refine .superRefine .regex of zod 
+
