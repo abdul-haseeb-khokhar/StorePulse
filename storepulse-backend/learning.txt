@@ -79,3 +79,8 @@ So rather than relying on frontend validation i m gonna make validation in my ba
 Pass through a new sort of function called curried function
 These sort of function return a function unlike callback funtions who take function as an argument.
 
+7/20/2026
+Completed validation today of all modules 
+I have learnt quite a lot about "zod" a validation package that is used to validate the data coming from client on runtime and sent back with error code before hitting main logic of code
+Learnt about some new functionality like .parse .refine .superRefine .regex of zod 
+
