@@ -1,16 +1,35 @@
-import Sidebar from "../components/ui/Sidebar";
+import { useNavigate } from "react-router-dom";
+import Nav from "../components/ui/Nav";
+import Button from "../components/ui/Button";
+import { clearSession } from "../lib/auth";
 
 /**
- * AppLayout — wraps every authenticated screen (Dashboard, Sites,
- * Add Site, API key confirmation, Settings). Renders the persistent
- * Sidebar and leaves the topbar to each page itself, since the topbar
- * content differs per page (site switcher vs search vs nothing).
+ * AppLayout — wraps every authenticated screen. Top nav (Sites /
+ * Settings / Log out) replaces the old sidebar, matching the design.
  */
 export default function AppLayout({ children }) {
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    clearSession();
+    navigate("/", { replace: true });
+  }
+
   return (
-    <div className="flex h-screen overflow-hidden bg-surface">
-      <Sidebar />
-      <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">{children}</div>
+    <div className="min-h-screen">
+      <Nav
+        brandTo="/sites"
+        links={[
+          { to: "/sites", label: "Sites" },
+          { to: "/settings", label: "Settings" },
+        ]}
+        actions={
+          <Button variant="ghost" onClick={handleLogout}>
+            Log out
+          </Button>
+        }
+      />
+      {children}
     </div>
   );
 }

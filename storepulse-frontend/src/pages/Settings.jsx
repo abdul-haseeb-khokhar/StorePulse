@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import AppLayout from "../layouts/AppLayout";
-import Topbar from "../components/ui/Topbar";
 import Card from "../components/ui/Card";
+import Field from "../components/ui/Field";
 import api, { getApiErrorMessage } from "../lib/api";
 
 export default function Settings() {
@@ -28,32 +28,28 @@ export default function Settings() {
 
   return (
     <AppLayout>
-      <Topbar />
-      <main className="flex-1 px-6 py-8">
-        <h1 className="text-2xl font-bold text-on-surface">Settings</h1>
+      <main
+        className="mx-auto"
+        style={{ maxWidth: 560, padding: "var(--space-6) var(--space-4) var(--space-8)" }}
+      >
+        <h1 style={{ marginBottom: "var(--space-4)" }}>Settings</h1>
+
         {error ? (
-          <Card className="mt-6 p-6 text-sm text-error">{error}</Card>
+          <Card>
+            <p className="card-body" style={{ color: "#b3261e" }}>
+              {error}
+            </p>
+          </Card>
         ) : (
-          <Card className="mt-6 p-6">
-            <h2 className="text-lg font-bold text-on-surface">Account</h2>
-            <dl className="mt-5 grid gap-4 sm:grid-cols-2">
-              <div>
-                <dt className="text-xs font-medium uppercase tracking-wide text-on-surface-variant">
-                  Full name
-                </dt>
-                <dd className="mt-1 text-sm font-semibold text-on-surface">
-                  {user?.fullName || "Loading..."}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs font-medium uppercase tracking-wide text-on-surface-variant">
-                  Email
-                </dt>
-                <dd className="mt-1 text-sm font-semibold text-on-surface">
-                  {user?.email || "Loading..."}
-                </dd>
-              </div>
-            </dl>
+          <Card elevation="md">
+            <div className="card-kicker">Account</div>
+            <div className="card-title" style={{ marginBottom: "var(--space-3)" }}>
+              {user?.fullName || "Loading…"}
+            </div>
+            <div className="grid" style={{ gap: "var(--space-3)" }}>
+              <Field id="acc-name" label="Full name" value={user?.fullName || ""} readOnly />
+              <Field id="acc-email" label="Email" value={user?.email || ""} readOnly />
+            </div>
           </Card>
         )}
       </main>

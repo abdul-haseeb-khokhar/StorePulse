@@ -1,16 +1,18 @@
+import Corners from "./Corners";
+
+const elevClass = { sm: "elev-sm", md: "elev-md", lg: "elev-lg" };
+
 /**
- * Card — the white rounded panel used everywhere: auth forms, stat
- * tiles, dashboard sections, site rows. One component so border-radius,
- * border, and shadow stay identical across the whole app.
+ * Card — the transparent, hairline-bordered blueprint frame used for
+ * every content block (forms, stats, site tiles, snippets). Content is
+ * composed by callers using the .card-kicker/.card-title/.card-body/
+ * .card-meta classes directly, since layout varies a lot per screen.
  */
-export default function Card({ children, className = "", ...props }) {
+export default function Card({ children, elevation, className = "", as: As = "div", ...props }) {
   return (
-    <div
-      className={`rounded-2xl border border-outline-variant/40 bg-surface-lowest
-        shadow-sm ${className}`}
-      {...props}
-    >
+    <As className={`card blueprint ${elevation ? elevClass[elevation] : ""} ${className}`} {...props}>
+      <Corners />
       {children}
-    </div>
+    </As>
   );
 }

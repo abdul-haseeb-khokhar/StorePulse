@@ -1,46 +1,41 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Plus, ArrowRight } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import AppLayout from "../layouts/AppLayout";
-import Topbar from "../components/ui/Topbar";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
+import Tag from "../components/ui/Tag";
 import api, { getApiErrorMessage } from "../lib/api";
 
-const statusStyles = {
-  connected: "bg-secondary-container text-on-secondary-container",
-  maintenance: "bg-error-container text-on-error-container",
-};
+function formatNumber(value) {
+  return new Intl.NumberFormat().format(value || 0);
+}
 
 function SiteCard({ site }) {
-  return (
-    <Card className="p-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <h3 className="font-semibold text-on-surface">{site.name}</h3>
-          <p className="text-sm text-on-surface-variant">{site.domain}</p>
-        </div>
-        {site.status && (
-          <span
-            className={`rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide
-              ${statusStyles[site.status]}`}
-          >
-            {site.status}
-          </span>
-        )}
-      </div>
+  const navigate = useNavigate();
 
-      <div className="mt-5 flex items-end justify-between">
-        <div>
-          <p className="text-xs text-on-surface-variant">Created</p>
-          <p className="text-xl font-bold text-on-surface">{site.createdAtLabel}</p>
-        </div>
+  return (
+    <Card
+      elevation="sm"
+      style={{ cursor: "pointer" }}
+      onClick={() => navigate(`/dashboard?site=${site.id}`)}
+    >
+      <div className="card-kicker">{site.domain}</div>
+      <div className="card-title">{site.name}</div>
+      <p className="card-body">
+        {site.summary
+          ? `${formatNumber(site.summary.uniqueVisitors.value)} unique visitors · last 7 days`
+          : "No traffic yet"}
+      </p>
+      <div className="card-meta" style={{ justifyContent: "space-between" }}>
+        <span className="flex items-center" style={{ gap: 6 }}>
+          <Tag variant="accent">Live</Tag>
+          {site.summary && <span>{formatNumber(site.summary.pageViews.value)} page views</span>}
+        </span>
         <Link
-          to={`/dashboard?site=${site.id}`}
-          className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+          to={`/sites/${site.id}/settings`}
+          onClick={(e) => e.stopPropagation()}
         >
-          Details
-          <ArrowRight className="h-3.5 w-3.5" />
+          Settings
         </Link>
       </div>
     </Card>
@@ -58,22 +53,24 @@ export default function SitesList() {
     async function loadSites() {
       try {
         const { data } = await api.get("/sites");
-        if (!ignore) {
-          setSites(
-            data.sites.map((site) => ({
-              ...site,
-              createdAtLabel: new Intl.DateTimeFormat(undefined, {
-                month: "short",
-                day: "numeric",
-              }).format(new Date(site.createdAt)),
-              status: "connected",
-            })),
-          );
-        }
+        if (ignore) return;
+
+        const withSummary = await Promise.all(
+          data.sites.map(async (site) => {
+            try {
+              const { data: summaryData } = await api.get(`/analytics/${site.id}/summary`, {
+                params: { range: "7d" },
+              });
+              return { ...site, summary: summaryData.summary };
+            } catch {
+              return { ...site, summary: null };
+            }
+          }),
+        );
+
+        if (!ignore) setSites(withSummary);
       } catch (err) {
-        if (!ignore) {
-          setError(getApiErrorMessage(err, "Could not load your sites."));
-        }
+        if (!ignore) setError(getApiErrorMessage(err, "Could not load your sites."));
       } finally {
         if (!ignore) setLoading(false);
       }
@@ -87,39 +84,48 @@ export default function SitesList() {
 
   return (
     <AppLayout>
-      <Topbar />
-      <main className="flex-1 px-6 py-8">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-on-surface">Your sites</h1>
-            <p className="mt-1 max-w-lg text-sm text-on-surface-variant">
-              Manage all your connected e-commerce storefronts and monitor their
-              real-time performance from a single view.
-            </p>
-          </div>
+      <main
+        className="mx-auto"
+        style={{ maxWidth: 1040, padding: "var(--space-6) var(--space-4) var(--space-8)" }}
+      >
+        <div
+          className="flex items-baseline justify-between"
+          style={{ marginBottom: "var(--space-4)" }}
+        >
+          <h1 style={{ margin: 0 }}>Your sites</h1>
           <Link to="/sites/new">
-            <Button icon={<Plus className="h-4 w-4" />}>Add new site</Button>
+            <Button>Add site</Button>
           </Link>
         </div>
 
         {loading ? (
-          <Card className="mt-8 px-6 py-10 text-sm text-on-surface-variant">
-            Loading your sites...
+          <Card>
+            <p className="card-body">Loading your sites…</p>
           </Card>
         ) : error ? (
-          <Card className="mt-8 px-6 py-10 text-sm text-error">{error}</Card>
+          <Card>
+            <p className="card-body" style={{ color: "#b3261e" }}>
+              {error}
+            </p>
+          </Card>
         ) : sites.length === 0 ? (
-          <Card className="mt-8 flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
-            <p className="font-semibold text-on-surface">No sites connected yet</p>
-            <p className="max-w-sm text-sm text-on-surface-variant">
+          <Card
+            className="flex flex-col items-center text-center"
+            style={{ padding: "var(--space-8)" }}
+          >
+            <div className="card-title">No sites yet</div>
+            <p className="card-body">
               Add your first site to start tracking page views and product clicks.
             </p>
             <Link to="/sites/new">
-              <Button icon={<Plus className="h-4 w-4" />}>Add your first site</Button>
+              <Button>Add your first site</Button>
             </Link>
           </Card>
         ) : (
-          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+            style={{ gap: "var(--space-3)" }}
+          >
             {sites.map((site) => (
               <SiteCard key={site.id} site={site} />
             ))}

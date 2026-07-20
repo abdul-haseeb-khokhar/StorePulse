@@ -1,48 +1,17 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { CheckCircle2, Info, Code2, Copy, Check, Lightbulb } from "lucide-react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import AppLayout from "../layouts/AppLayout";
-import Topbar from "../components/ui/Topbar";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import api, { API_BASE_URL, getApiErrorMessage } from "../lib/api";
 
-function CopyButton({ text, variant = "light" }) {
-  const [copied, setCopied] = useState(false);
-  const variantClass =
-    variant === "dark"
-      ? "bg-surface-lowest/15 text-surface-lowest ring-1 ring-surface-lowest/25 hover:bg-surface-lowest/25"
-      : "bg-on-surface/10 text-on-surface hover:bg-on-surface/20";
-
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // Clipboard access can fail (e.g. no permission); fail silently.
-    }
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={handleCopy}
-      className={`flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5
-        text-xs font-semibold ${variantClass}`}
-    >
-      {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-      {copied ? "Copied" : "Copy"}
-    </button>
-  );
-}
-
 export default function SiteSetup() {
   const { siteId } = useParams();
+  const navigate = useNavigate();
   const [site, setSite] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [regenerating, setRegenerating] = useState(false);
   const [error, setError] = useState(null);
+  const [copyLabel, setCopyLabel] = useState("Copy snippet");
 
   useEffect(() => {
     let ignore = false;
@@ -64,118 +33,83 @@ export default function SiteSetup() {
     };
   }, [siteId]);
 
-  async function handleRegenerateKey() {
-    setError(null);
-    setRegenerating(true);
+  const snippet = site
+    ? `<script src="${API_BASE_URL}/track.js"\n  data-site-key="${site.apiKey}"></script>`
+    : "";
+
+  async function handleCopy() {
     try {
-      const { data } = await api.patch(`/sites/${siteId}/api-key`);
-      setSite(data.site);
-    } catch (err) {
-      setError(getApiErrorMessage(err, "Could not regenerate the API key."));
-    } finally {
-      setRegenerating(false);
+      await navigator.clipboard.writeText(snippet);
+      setCopyLabel("Copied");
+      setTimeout(() => setCopyLabel("Copy snippet"), 1600);
+    } catch {
+      // Clipboard access can fail (e.g. no permission); fail silently.
     }
   }
 
-  const snippet = site
-    ? `<script src="${API_BASE_URL}/track.js" data-site-key="${site.apiKey}"></script>`
-    : "";
-
   return (
     <AppLayout>
-      <Topbar />
-      <main className="flex-1 px-6 py-8">
+      <main
+        className="mx-auto"
+        style={{ maxWidth: 640, padding: "var(--space-6) var(--space-4) var(--space-8)" }}
+      >
+        <h1 style={{ marginBottom: "var(--space-4)" }}>Add a site</h1>
+
         {loading ? (
-          <Card className="px-6 py-10 text-sm text-on-surface-variant">Loading setup...</Card>
+          <Card>
+            <p className="card-body">Loading…</p>
+          </Card>
         ) : error && !site ? (
-          <Card className="px-6 py-10 text-sm text-error">{error}</Card>
+          <Card>
+            <p className="card-body" style={{ color: "#b3261e" }}>
+              {error}
+            </p>
+          </Card>
         ) : (
-          <>
-        <div className="overflow-hidden rounded-2xl bg-primary px-8 py-7 text-on-primary">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold">Your site is ready</h1>
-              <p className="mt-1 text-sm text-on-primary/85">
-                StorePulse is now connected. Follow the steps below to finish setup.
-              </p>
-            </div>
-            <CheckCircle2 className="h-10 w-10 flex-shrink-0 text-on-primary/90" />
-          </div>
-        </div>
-
-        <div className="mt-6 grid gap-6 md:grid-cols-2">
-          <Card className="p-6">
-            <h2 className="flex items-center gap-2 text-sm font-semibold text-primary">
-              <Info className="h-4 w-4" />
-              Site Details
-            </h2>
-
-            <p className="mt-4 text-xs font-medium uppercase tracking-wide text-on-surface-variant">
-              Site Name
+          <Card elevation="md">
+            <div className="card-kicker">{site.domain}</div>
+            <div className="card-title">{site.name} is ready</div>
+            <p className="card-body">
+              Integrating tracking usually isn&apos;t a copy-paste job for a live store.
+              Send this snippet to your developer and have them add it before the
+              closing &lt;/body&gt; tag on every page you want to track.
             </p>
-            <p className="mt-1 text-lg font-semibold text-on-surface">{site.name}</p>
-
-            <p className="mt-4 text-xs font-medium uppercase tracking-wide text-on-surface-variant">
-              API Key
+            <p
+              className="card-body"
+              style={{
+                fontFamily: "ui-monospace,SF Mono,Menlo,monospace",
+                fontSize: 13,
+                background: "var(--color-neutral-100)",
+                border: "1px solid var(--color-neutral-300)",
+                borderRadius: "var(--radius-sm)",
+                padding: "var(--space-3)",
+                overflowX: "auto",
+                whiteSpace: "pre",
+              }}
+            >
+              {snippet}
             </p>
-            <div className="mt-1.5 flex items-center gap-2">
-              <code className="flex-1 truncate rounded-lg border border-outline-variant
-                bg-surface-low px-3 py-2.5 text-sm text-on-surface">
-                {site.apiKey}
-              </code>
-              <CopyButton text={site.apiKey} />
-            </div>
-
-            <div className="mt-4 flex items-center justify-between gap-3 border-t border-outline-variant/40 pt-3">
-              <p className="text-xs text-on-surface-variant">Key active and valid for production</p>
-              <Button
-                type="button"
-                variant="secondary"
-                size="md"
-                loading={regenerating}
-                onClick={handleRegenerateKey}
-              >
-                Regenerate
+            <div className="flex" style={{ gap: "var(--space-2)", marginTop: "var(--space-3)" }}>
+              <Button variant="secondary" onClick={handleCopy}>
+                {copyLabel}
+              </Button>
+              <Button onClick={() => navigate(`/dashboard?site=${site.id}`)}>
+                Go to dashboard
               </Button>
             </div>
-            {error && <p className="mt-3 text-sm text-error">{error}</p>}
-          </Card>
-
-          <Card className="p-6">
-            <h2 className="flex items-center gap-2 text-sm font-semibold text-primary">
-              <Code2 className="h-4 w-4" />
-              Install your tracking script
-            </h2>
-
-            <div className="mt-4 flex items-start justify-between gap-2 rounded-lg bg-on-surface
-              px-4 py-3">
-              <code className="flex-1 overflow-x-auto whitespace-pre text-xs text-surface-lowest
-                [scrollbar-width:thin]">
-                {snippet}
-              </code>
-              <CopyButton text={snippet} variant="dark" />
-            </div>
-
-            <div className="mt-4 flex items-start gap-2 rounded-lg bg-primary-container/10 p-3
-              text-xs text-on-surface-variant">
-              <Lightbulb className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
-              Paste this snippet before the closing <code className="text-on-surface">&lt;/body&gt;</code> tag
-              on your store&apos;s pages.
+            <div className="card-meta" style={{ marginTop: "var(--space-3)", gap: "var(--space-3)" }}>
+              <a href="mailto:dev@storepulse.io">dev@storepulse.io</a>
+              <a href="https://wa.me/10000000000" target="_blank" rel="noopener noreferrer">
+                WhatsApp: +1 000 000 0000
+              </a>
             </div>
           </Card>
-        </div>
+        )}
 
-        <div className="mt-8 flex justify-end gap-3">
-          <Button variant="secondary">Documentation</Button>
-          <Link
-            to={`/dashboard?site=${site.id}`}
-            className="inline-flex items-center justify-center rounded-lg bg-primary
-              px-5 py-3 text-base font-semibold text-on-primary hover:bg-[#2c1ea8]"
-          >
-            Go to Dashboard
-          </Link>
-        </div>
-          </>
+        {site && (
+          <p className="text-sm" style={{ marginTop: "var(--space-3)" }}>
+            Need to rotate the API key later? <Link to={`/sites/${site.id}/settings`}>Manage this site</Link>
+          </p>
         )}
       </main>
     </AppLayout>

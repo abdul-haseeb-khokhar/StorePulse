@@ -1,56 +1,62 @@
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
+import { ComposedChart, Bar, Line, XAxis, ResponsiveContainer, Tooltip } from "recharts";
 import Card from "../ui/Card";
 
+// Resolved from --color-accent-300 / --color-accent-700 in index.css —
+// hardcoded rather than var(...) to avoid relying on CSS custom
+// property resolution inside SVG presentation attributes.
+const CLICKS_COLOR = "#b5d9fd";
+const VIEWS_COLOR = "#416180";
+const AXIS_COLOR = "#7a7a7d";
+
 /**
- * TrafficChart — the bar chart in the middle of the dashboard.
- * `data` is an array of { date, visitors, clicks } so this component
- * stays dumb and reusable once real ingest/analytics data lands —
- * the page just needs to fetch and shape data into this format.
+ * TrafficChart — bars = product clicks, line = page views, matching the
+ * design's combo chart. `data` is [{ date, visitors, clicks }], same
+ * shape the dashboard's analytics fetch already produces.
  */
 export default function TrafficChart({ data }) {
   return (
-    <Card className="p-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <h2 className="text-lg font-bold text-on-surface">Traffic Overview</h2>
-          <p className="text-sm text-on-surface-variant">
-            Daily visitors vs product engagement across 30 days.
-          </p>
-        </div>
-        <div className="flex items-center gap-4 text-xs text-on-surface-variant">
-          <span className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-primary" /> Visitors
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-primary-container/40" /> Clicks
-          </span>
-        </div>
+    <Card elevation="md">
+      <div className="card-kicker">Traffic</div>
+      <div className="card-title" style={{ marginBottom: "var(--space-3)" }}>
+        Page views &amp; product clicks
       </div>
 
-      <div className="mt-6 h-72">
+      <div style={{ height: 220 }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} barGap={4}>
+          <ComposedChart data={data} barGap={4}>
             <XAxis
               dataKey="date"
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 12, fill: "#777587" }}
-              interval={Math.ceil(data.length / 5)}
+              tick={{ fontSize: 11, fill: AXIS_COLOR }}
+              interval={Math.ceil(data.length / 6)}
             />
             <Tooltip
-              cursor={{ fill: "rgba(53, 37, 205, 0.05)" }}
-              contentStyle={{ borderRadius: 8, border: "1px solid #c7c4d8", fontSize: 13 }}
+              cursor={{ fill: "rgba(65, 97, 128, 0.06)" }}
+              contentStyle={{ borderRadius: 0, border: "1px solid #d4d4d7", fontSize: 12 }}
             />
-            <Bar dataKey="visitors" fill="#3525cd" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="clicks" fill="#c3c0ff" radius={[4, 4, 0, 0]} />
-          </BarChart>
+            <Bar dataKey="clicks" name="Product clicks" fill={CLICKS_COLOR} />
+            <Line
+              type="monotone"
+              dataKey="visitors"
+              name="Page views"
+              stroke={VIEWS_COLOR}
+              strokeWidth={2}
+              dot={false}
+            />
+          </ComposedChart>
         </ResponsiveContainer>
+      </div>
+
+      <div className="flex" style={{ gap: "var(--space-4)", marginTop: "var(--space-3)", fontSize: 12 }}>
+        <span className="flex items-center" style={{ gap: 6 }}>
+          <span style={{ width: 10, height: 10, background: VIEWS_COLOR, display: "inline-block" }} />
+          Page views
+        </span>
+        <span className="flex items-center" style={{ gap: 6 }}>
+          <span style={{ width: 10, height: 10, background: CLICKS_COLOR, display: "inline-block" }} />
+          Product clicks
+        </span>
       </div>
     </Card>
   );

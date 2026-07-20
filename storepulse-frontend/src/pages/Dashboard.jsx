@@ -1,20 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Eye, MousePointerClick, Users, ChevronDown, MoreHorizontal, Filter, Plus } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
-import Topbar from "../components/ui/Topbar";
-import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
+import Tag from "../components/ui/Tag";
+import Seg from "../components/ui/Seg";
+import Button from "../components/ui/Button";
 import StatCard from "../components/dashboard/StatCard";
 import TrafficChart from "../components/dashboard/TrafficChart";
-import RankedList from "../components/dashboard/RankedList";
 import api, { getApiErrorMessage } from "../lib/api";
 
 const rangeLabels = {
-  "7d": "Last 7 days",
-  "30d": "Last 30 days",
-  "90d": "Last 90 days",
+  "7d": "7 days",
+  "30d": "30 days",
+  "90d": "90 days",
 };
+
+// No backend endpoint ranks products by clicks yet — this stays an
+// empty state until one exists (analytics.repository.js only exposes
+// page-view/click counts and daily traffic, not per-product ranking).
+const TOP_PRODUCTS = [];
 
 function formatNumber(value) {
   return new Intl.NumberFormat().format(value || 0);
@@ -109,132 +113,161 @@ export default function Dashboard() {
   }, [range, selectedSiteId]);
 
   const selectedSite = sites.find((site) => site.id === selectedSiteId);
+  const rangeLabel = rangeLabels[range];
+
   const stats = useMemo(() => {
     if (!summary) return [];
 
     return [
       {
-        label: "Total page views",
+        label: "Page views",
         value: formatNumber(summary.pageViews.value),
         trend: formatTrend(summary.pageViews.change),
-        trendDirection: summary.pageViews.change < 0 ? "down" : "up",
-        icon: <Eye className="h-5 w-5" />,
+        trendDirection: summary.pageViews.change < 0 ? "down" : summary.pageViews.change === 0 ? "flat" : "up",
       },
       {
-        label: "Total product clicks",
+        label: "Product clicks",
         value: formatNumber(summary.productClicks.value),
         trend: formatTrend(summary.productClicks.change),
-        trendDirection: summary.productClicks.change < 0 ? "down" : "up",
-        icon: <MousePointerClick className="h-5 w-5" />,
+        trendDirection:
+          summary.productClicks.change < 0 ? "down" : summary.productClicks.change === 0 ? "flat" : "up",
       },
       {
         label: "Unique visitors",
         value: formatNumber(summary.uniqueVisitors.value),
         trend: formatTrend(summary.uniqueVisitors.change),
-        trendDirection: summary.uniqueVisitors.change < 0 ? "down" : "up",
-        icon: <Users className="h-5 w-5" />,
+        trendDirection:
+          summary.uniqueVisitors.change < 0 ? "down" : summary.uniqueVisitors.change === 0 ? "flat" : "up",
       },
     ];
   }, [summary]);
 
   return (
     <AppLayout>
-      <Topbar>
-        <label className="flex max-w-xs items-center gap-2">
-          <span className="sr-only">Selected site</span>
-          <select
-            value={selectedSiteId}
-            onChange={(event) => setSelectedSiteId(event.target.value)}
-            className="w-full rounded-lg border border-outline-variant bg-surface-lowest px-3 py-2 text-sm font-semibold text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-          >
-            {sites.map((site) => (
-              <option key={site.id} value={site.id}>
-                {site.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      </Topbar>
-
-      <main className="flex-1 px-6 py-6">
-        <div className="flex items-center justify-end gap-3">
-          <label className="flex items-center gap-2">
-            <span className="sr-only">Date range</span>
-            <select
-              value={range}
-              onChange={(event) => setRange(event.target.value)}
-              className="rounded-lg border border-outline-variant bg-surface-lowest px-3 py-2.5 text-sm font-semibold text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-            >
-              {Object.entries(rangeLabels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <Link to="/sites/new">
-            <Button size="md" icon={<Plus className="h-4 w-4" />}>Add Site</Button>
-          </Link>
-        </div>
-
+      <main
+        className="mx-auto"
+        style={{ maxWidth: 1040, padding: "var(--space-6) var(--space-4) var(--space-8)" }}
+      >
         {loadingSites ? (
-          <Card className="mt-5 px-6 py-10 text-sm text-on-surface-variant">Loading dashboard...</Card>
+          <Card>
+            <p className="card-body">Loading dashboard…</p>
+          </Card>
         ) : sites.length === 0 ? (
-          <Card className="mt-5 flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
-            <p className="font-semibold text-on-surface">Add a site to start tracking analytics</p>
-            <p className="max-w-sm text-sm text-on-surface-variant">
-              StorePulse needs one connected storefront before it can show dashboard data.
+          <Card className="flex flex-col items-center text-center" style={{ padding: "var(--space-8)" }}>
+            <div className="card-title">Add a site to start tracking analytics</div>
+            <p className="card-body">
+              StorePulse needs one connected storefront before it can show dashboard
+              data.
             </p>
             <Link to="/sites/new">
-              <Button icon={<Plus className="h-4 w-4" />}>Add your first site</Button>
+              <Button>Add your first site</Button>
             </Link>
           </Card>
-        ) : error ? (
-          <Card className="mt-5 px-6 py-10 text-sm text-error">{error}</Card>
-        ) : loadingAnalytics && !summary ? (
-          <Card className="mt-5 px-6 py-10 text-sm text-on-surface-variant">Loading analytics...</Card>
         ) : (
           <>
-            <div className="mt-5 flex items-center justify-between">
+            <div
+              className="flex flex-wrap items-end justify-between"
+              style={{ gap: "var(--space-3)", marginBottom: "var(--space-5)" }}
+            >
               <div>
-                <h1 className="text-2xl font-bold text-on-surface">{selectedSite?.name}</h1>
-                <p className="text-sm text-on-surface-variant">{selectedSite?.domain}</p>
+                <Tag variant="outline" className="w-fit" style={{ marginBottom: "var(--space-2)" }}>
+                  {selectedSite?.domain}
+                </Tag>
+                <h1 style={{ margin: 0 }}>{selectedSite?.name}</h1>
               </div>
-              {loadingAnalytics && <p className="text-sm text-on-surface-variant">Refreshing...</p>}
+
+              <div className="flex items-center" style={{ gap: "var(--space-3)" }}>
+                <label className="flex items-center" style={{ gap: 6 }}>
+                  <span className="sr-only">Selected site</span>
+                  <select
+                    value={selectedSiteId}
+                    onChange={(event) => setSelectedSiteId(event.target.value)}
+                    className="input"
+                  >
+                    {sites.map((site) => (
+                      <option key={site.id} value={site.id}>
+                        {site.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <Seg
+                  name="range"
+                  aria-label="Date range"
+                  value={range}
+                  onChange={setRange}
+                  options={[
+                    { value: "7d", label: "7d" },
+                    { value: "30d", label: "30d" },
+                    { value: "90d", label: "90d" },
+                  ]}
+                />
+              </div>
             </div>
 
-            <div className="mt-5 grid gap-5 sm:grid-cols-3">
-              {stats.map((stat) => (
-                <StatCard key={stat.label} {...stat} />
-              ))}
-            </div>
+            {error ? (
+              <Card>
+                <p className="card-body" style={{ color: "#b3261e" }}>
+                  {error}
+                </p>
+              </Card>
+            ) : loadingAnalytics && !summary ? (
+              <Card>
+                <p className="card-body">Loading analytics…</p>
+              </Card>
+            ) : (
+              <>
+                <div
+                  className="grid grid-cols-1 sm:grid-cols-3"
+                  style={{ gap: "var(--space-3)", marginBottom: "var(--space-4)" }}
+                >
+                  {stats.map((stat) => (
+                    <StatCard key={stat.label} {...stat} rangeLabel={rangeLabel} />
+                  ))}
+                </div>
 
-            <div className="mt-5">
-              <TrafficChart data={traffic} />
-            </div>
+                <div style={{ marginBottom: "var(--space-4)" }}>
+                  <TrafficChart data={traffic} />
+                </div>
 
-            <div className="mt-5 grid gap-5 lg:grid-cols-2">
-              <RankedList
-                title="Top Clicked Products"
-                items={[]}
-                valueLabel="clicks"
-                icon={
-                  <button type="button" aria-label="More options" className="text-on-surface-variant">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </button>
-                }
-              />
-              <RankedList
-                title="Top Referrers"
-                items={[]}
-                valueLabel="visits"
-                icon={
-                  <button type="button" aria-label="Filter" className="text-on-surface-variant">
-                    <Filter className="h-4 w-4" />
-                  </button>
-                }
-              />
-            </div>
+                <Card>
+                  <div className="card-kicker">Products</div>
+                  <div className="card-title" style={{ marginBottom: "var(--space-3)" }}>
+                    Top clicked products
+                  </div>
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Product</th>
+                        <th>Clicks</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {TOP_PRODUCTS.length === 0 ? (
+                        <tr>
+                          <td colSpan={2} style={{ opacity: 0.6 }}>
+                            No data available yet.
+                          </td>
+                        </tr>
+                      ) : (
+                        TOP_PRODUCTS.map((product) => (
+                          <tr key={product.name}>
+                            <td>{product.name}</td>
+                            <td>{product.clicks}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </Card>
+
+                {selectedSite && (
+                  <p className="text-sm" style={{ marginTop: "var(--space-3)" }}>
+                    <Link to={`/sites/${selectedSite.id}/settings`}>Site settings</Link>
+                  </p>
+                )}
+              </>
+            )}
           </>
         )}
       </main>

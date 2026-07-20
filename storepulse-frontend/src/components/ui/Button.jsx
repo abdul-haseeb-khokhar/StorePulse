@@ -1,46 +1,42 @@
-const variantClasses = {
-  primary:
-    "bg-primary text-on-primary hover:bg-[#2c1ea8] focus-visible:outline-primary",
-  secondary:
-    "bg-surface-lowest text-on-surface border border-outline-variant hover:bg-surface-low focus-visible:outline-primary",
-  ghost:
-    "bg-transparent text-on-surface-variant hover:bg-surface-container focus-visible:outline-primary",
-};
+import Corners from "./Corners";
 
-const sizeClasses = {
-  md: "px-4 py-2.5 text-sm",
-  lg: "px-5 py-3 text-base",
+const variantClass = {
+  primary: "btn-primary",
+  secondary: "btn-secondary",
+  ghost: "btn-ghost",
 };
 
 /**
- * Button — shared primitive used across every screen.
- * Keeping this as one component means a single change here
- * (color, radius, focus ring) propagates everywhere instantly.
+ * Button — primary/secondary render the blueprint frame (border +
+ * corner marks); ghost never does, matching the design (e.g. "Log out",
+ * "I already have an account" are plain, unframed).
  */
 export default function Button({
   children,
   variant = "primary",
-  size = "lg",
-  className = "",
+  block = false,
   type = "button",
   disabled = false,
   loading = false,
   icon = null,
+  className = "",
   ...props
 }) {
+  const framed = variant === "primary" || variant === "secondary";
+
   return (
     <button
       type={type}
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg font-semibold
-        transition-colors duration-150 focus-visible:outline focus-visible:outline-2
-        focus-visible:outline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
-        ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+      className={`btn ${variantClass[variant]} ${block ? "btn-block" : ""} ${
+        framed ? "blueprint" : ""
+      } ${className}`}
       {...props}
     >
+      {framed && <Corners />}
       {loading ? (
         <span
-          className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+          className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"
           aria-hidden="true"
         />
       ) : (

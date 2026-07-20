@@ -1,12 +1,29 @@
+import { Link } from "react-router-dom";
+import Nav from "../components/ui/Nav";
+import Button from "../components/ui/Button";
+
 /**
- * AuthLayout — wraps Login and Signup. Centers a single white card
- * on the soft gray background, matching the Stitch login/signup exports.
- * No sidebar, no topbar — these screens stand alone.
+ * AuthLayout — wraps Login and Signup. Top nav (Overview link + a
+ * secondary button that switches between the two) above a centered
+ * card, matching the design. `switchTo`/`switchLabel` let each page
+ * say what the nav's secondary action should do.
  */
-export default function AuthLayout({ children }) {
+export default function AuthLayout({ children, switchTo, switchLabel }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface px-4 py-10">
-      <div className="w-full max-w-md rounded-2xl border border-outline-variant/40 bg-surface-lowest p-8 shadow-sm">
+    <div className="min-h-screen">
+      <Nav
+        brandTo="/"
+        links={[{ to: "/", label: "Overview", end: true }]}
+        actions={
+          <Link to={switchTo}>
+            <Button variant="secondary">{switchLabel}</Button>
+          </Link>
+        }
+      />
+      <div
+        className="mx-auto w-full px-4"
+        style={{ maxWidth: 400, marginTop: "var(--space-8)", marginBottom: "var(--space-8)" }}
+      >
         {children}
       </div>
     </div>

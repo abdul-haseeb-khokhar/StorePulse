@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Globe, ArrowRight } from "lucide-react";
+import { Globe } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
-import Topbar from "../components/ui/Topbar";
 import Card from "../components/ui/Card";
-import TextField from "../components/ui/TextField";
+import Field from "../components/ui/Field";
 import Button from "../components/ui/Button";
 import api, { getApiErrorMessage } from "../lib/api";
 
@@ -49,33 +48,34 @@ export default function AddSite() {
 
   return (
     <AppLayout>
-      <Topbar />
-      <main className="flex flex-1 flex-col items-center px-6 py-12">
-        <div className="w-full max-w-xl text-center">
-          <h1 className="text-3xl font-bold text-on-surface">Add a new site</h1>
-          <p className="mt-2 text-on-surface-variant">
-            Connect your store to start tracking events and optimizing conversions.
-          </p>
-        </div>
+      <main
+        className="mx-auto"
+        style={{ maxWidth: 640, padding: "var(--space-6) var(--space-4) var(--space-8)" }}
+      >
+        <h1 style={{ marginBottom: "var(--space-4)" }}>Add a site</h1>
 
-        <Card className="mt-8 w-full max-w-xl p-8">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <TextField
+        <Card elevation="md">
+          <form onSubmit={handleSubmit} className="grid" style={{ gap: "var(--space-3)" }}>
+            <Field
               id="siteName"
               label="Site name or domain"
-              placeholder="e.g., myshopify.com"
+              placeholder="mystore.com"
               value={siteName}
               onChange={(e) => setSiteName(e.target.value)}
               icon={<Globe className="h-4 w-4" />}
               required
             />
-            <p className="-mt-2 text-xs text-on-surface-variant">
+            <p className="text-xs" style={{ opacity: 0.65, marginTop: "-6px" }}>
               We support Shopify, WooCommerce, Magento, and custom builds.
             </p>
 
-            {error && <p className="text-sm text-error">{error}</p>}
+            {error && (
+              <p className="text-sm" style={{ color: "#b3261e" }}>
+                {error}
+              </p>
+            )}
 
-            <Button type="submit" loading={loading} icon={<ArrowRight className="h-4 w-4" />}>
+            <Button type="submit" block loading={loading}>
               Create site
             </Button>
           </form>
