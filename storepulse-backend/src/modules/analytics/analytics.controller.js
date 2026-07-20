@@ -3,9 +3,7 @@ const {getTrafficOverview, getSummary} = require('./analytics.service');
 function getDateRangeFromQuery(range) {
     const endDate = new Date();
     const startDate = new Date();
-    console.log("range ", range)
     const days = {'7d' : 7, '30d' : 30, '90d' : 90} [range] || 7;
-    console.log(days)
     startDate.setDate(startDate.getDate() - days);
 
     return {startDate, endDate}
@@ -16,7 +14,6 @@ async function getTrafficController(req, res, next) {
         const {siteId} = req.params;
         const {range} = req.query;
         const userId = req.user.id;
-        console.log("range ", range)
         const {startDate, endDate} = getDateRangeFromQuery(range);
 
         const traffic = await getTrafficOverview({siteId, userId, startDate, endDate});
