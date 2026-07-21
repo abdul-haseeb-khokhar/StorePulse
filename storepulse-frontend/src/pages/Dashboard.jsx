@@ -15,10 +15,19 @@ const rangeLabels = {
   "90d": "90 days",
 };
 
-// No backend endpoint ranks products by clicks yet — this stays an
-// empty state until one exists (analytics.repository.js only exposes
-// page-view/click counts and daily traffic, not per-product ranking).
-const TOP_PRODUCTS = [];
+const RANGE_DAYS = { "7d": 7, "30d": 30, "90d": 90 };
+
+// The top-products/top-referrers endpoints take explicit startDate/endDate
+// query params (unlike summary/traffic, which take a `range` string the
+// backend converts itself) — mirror analytics.controller.js's own
+// getDateRangeFromQuery mapping here so all four panels show the same window.
+function getDateBoundaryParams(range) {
+  const days = RANGE_DAYS[range] || 7;
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+  return { startDate: startDate.toISOString(), endDate: endDate.toISOString() };
+}
 
 function formatNumber(value) {
   return new Intl.NumberFormat().format(value || 0);
@@ -42,6 +51,8 @@ export default function Dashboard() {
   const [range, setRange] = useState(searchParams.get("range") || "30d");
   const [summary, setSummary] = useState(null);
   const [traffic, setTraffic] = useState([]);
+  const [topProducts, setTopProducts] = useState([]);
+  const [topReferrers, setTopReferrers] = useState([]);
   const [loadingSites, setLoadingSites] = useState(true);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
   const [error, setError] = useState(null);
@@ -107,6 +118,42 @@ export default function Dashboard() {
     }
 
     loadAnalytics();
+    return () => {
+      ignore = true;
+    };
+  }, [range, selectedSiteId]);
+
+  // Kept separate from the summary/traffic fetch above: these two panels
+  // are supplementary, so a problem with either endpoint falls back to an
+  // empty state instead of taking down the stat cards and chart too.
+  useEffect(() => {
+    if (!selectedSiteId) return;
+
+    let ignore = false;
+
+    async function loadRankings() {
+      const { startDate, endDate } = getDateBoundaryParams(range);
+      try {
+        const [productsResponse, referrersResponse] = await Promise.all([
+          api.get(`/analytics/${selectedSiteId}/top-products`, {
+            params: { startDate, endDate, limit: 5 },
+          }),
+          api.get(`/analytics/${selectedSiteId}/top-referrers`, {
+            params: { startDate, endDate, limit: 5 },
+          }),
+        ]);
+        if (ignore) return;
+        setTopProducts(productsResponse.data.data || []);
+        setTopReferrers(referrersResponse.data.data || []);
+      } catch {
+        if (!ignore) {
+          setTopProducts([]);
+          setTopReferrers([]);
+        }
+      }
+    }
+
+    loadRankings();
     return () => {
       ignore = true;
     };
@@ -230,36 +277,69 @@ export default function Dashboard() {
                   <TrafficChart data={traffic} />
                 </div>
 
-                <Card>
-                  <div className="card-kicker">Products</div>
-                  <div className="card-title" style={{ marginBottom: "var(--space-3)" }}>
-                    Top clicked products
-                  </div>
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Product</th>
-                        <th>Clicks</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {TOP_PRODUCTS.length === 0 ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: "var(--space-3)" }}>
+                  <Card>
+                    <div className="card-kicker">Products</div>
+                    <div className="card-title" style={{ marginBottom: "var(--space-3)" }}>
+                      Top clicked products
+                    </div>
+                    <table className="table">
+                      <thead>
                         <tr>
-                          <td colSpan={2} style={{ opacity: 0.6 }}>
-                            No data available yet.
-                          </td>
+                          <th>Product</th>
+                          <th>Clicks</th>
                         </tr>
-                      ) : (
-                        TOP_PRODUCTS.map((product) => (
-                          <tr key={product.name}>
-                            <td>{product.name}</td>
-                            <td>{product.clicks}</td>
+                      </thead>
+                      <tbody>
+                        {topProducts.length === 0 ? (
+                          <tr>
+                            <td colSpan={2} style={{ opacity: 0.6 }}>
+                              No data available yet.
+                            </td>
                           </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </Card>
+                        ) : (
+                          topProducts.map((product) => (
+                            <tr key={product.productId}>
+                              <td>{product.productName || product.productId}</td>
+                              <td>{formatNumber(product.clicks)}</td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </Card>
+
+                  <Card>
+                    <div className="card-kicker">Traffic sources</div>
+                    <div className="card-title" style={{ marginBottom: "var(--space-3)" }}>
+                      Top referrers
+                    </div>
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th>Referrer</th>
+                          <th>Visits</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {topReferrers.length === 0 ? (
+                          <tr>
+                            <td colSpan={2} style={{ opacity: 0.6 }}>
+                              No data available yet.
+                            </td>
+                          </tr>
+                        ) : (
+                          topReferrers.map((referrer, index) => (
+                            <tr key={`${referrer.referrers}-${index}`}>
+                              <td>{referrer.referrers || "Direct"}</td>
+                              <td>{formatNumber(referrer.visitors)}</td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </Card>
+                </div>
 
                 {selectedSite && (
                   <p className="text-sm" style={{ marginTop: "var(--space-3)" }}>
