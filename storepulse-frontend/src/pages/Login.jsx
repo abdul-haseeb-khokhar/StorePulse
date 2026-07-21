@@ -83,7 +83,7 @@ export default function Login() {
           />
 
           {error && (
-            <p className="text-sm" style={{ color: "#b3261e" }}>
+            <p className="text-sm" style={{ color: "var(--brick)" }}>
               {error}
             </p>
           )}

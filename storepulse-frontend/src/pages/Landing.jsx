@@ -76,8 +76,8 @@ export default function Landing() {
             style={{
               fontFamily: "ui-monospace,SF Mono,Menlo,monospace",
               fontSize: 13,
-              background: "var(--color-neutral-100)",
-              border: "1px solid var(--color-neutral-300)",
+              background: "var(--paper)",
+              border: "1px solid var(--divider)",
               borderRadius: "var(--radius-sm)",
               padding: "var(--space-3)",
               overflowX: "auto",

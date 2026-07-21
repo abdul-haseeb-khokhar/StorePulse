@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Settings } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
@@ -34,8 +35,11 @@ function SiteCard({ site }) {
         <Link
           to={`/sites/${site.id}/settings`}
           onClick={(e) => e.stopPropagation()}
+          className="flex items-center"
+          aria-label="Site settings"
+          title="Site settings"
         >
-          Settings
+          <Settings className="h-4 w-4" />
         </Link>
       </div>
     </Card>
@@ -104,7 +108,7 @@ export default function SitesList() {
           </Card>
         ) : error ? (
           <Card>
-            <p className="card-body" style={{ color: "#b3261e" }}>
+            <p className="card-body" style={{ color: "var(--brick)" }}>
               {error}
             </p>
           </Card>

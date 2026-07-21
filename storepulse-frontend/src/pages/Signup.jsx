@@ -90,7 +90,7 @@ export default function Signup() {
           />
 
           {error && (
-            <p className="text-sm" style={{ color: "#b3261e" }}>
+            <p className="text-sm" style={{ color: "var(--brick)" }}>
               {error}
             </p>
           )}

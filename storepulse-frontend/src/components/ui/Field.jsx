@@ -42,7 +42,7 @@ export default function Field({
         )}
       </div>
       {error && (
-        <p className="mt-1 text-xs" style={{ color: "#b3261e" }}>
+        <p className="mt-1 text-xs" style={{ color: "var(--brick)" }}>
           {error}
         </p>
       )}

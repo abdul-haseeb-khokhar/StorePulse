@@ -61,7 +61,7 @@ export default function SiteSetup() {
           </Card>
         ) : error && !site ? (
           <Card>
-            <p className="card-body" style={{ color: "#b3261e" }}>
+            <p className="card-body" style={{ color: "var(--brick)" }}>
               {error}
             </p>
           </Card>
@@ -79,8 +79,8 @@ export default function SiteSetup() {
               style={{
                 fontFamily: "ui-monospace,SF Mono,Menlo,monospace",
                 fontSize: 13,
-                background: "var(--color-neutral-100)",
-                border: "1px solid var(--color-neutral-300)",
+                background: "var(--paper)",
+                border: "1px solid var(--divider)",
                 borderRadius: "var(--radius-sm)",
                 padding: "var(--space-3)",
                 overflowX: "auto",

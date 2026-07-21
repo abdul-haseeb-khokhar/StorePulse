@@ -1,33 +1,21 @@
-import { useNavigate } from "react-router-dom";
+import { User } from "lucide-react";
 import Nav from "../components/ui/Nav";
-import Button from "../components/ui/Button";
-import { clearSession } from "../lib/auth";
 
 /**
- * AppLayout — wraps every authenticated screen. Top nav (Sites /
- * Settings / Log out) replaces the old sidebar, matching the design.
+ * AppLayout — wraps every authenticated screen. Top nav (Dashboard /
+ * Sites / Profile) replaces the old sidebar, matching the design.
+ * Log out lives on the Profile page now, not in the nav itself.
  */
 export default function AppLayout({ children }) {
-  const navigate = useNavigate();
-
-  function handleLogout() {
-    clearSession();
-    navigate("/", { replace: true });
-  }
-
   return (
     <div className="min-h-screen">
       <Nav
         brandTo="/sites"
         links={[
+          { to: "/dashboard", label: "Dashboard" },
           { to: "/sites", label: "Sites" },
-          { to: "/settings", label: "Settings" },
+          { to: "/settings", label: "Profile", icon: <User className="h-4 w-4" /> },
         ]}
-        actions={
-          <Button variant="ghost" onClick={handleLogout}>
-            Log out
-          </Button>
-        }
       />
       {children}
     </div>

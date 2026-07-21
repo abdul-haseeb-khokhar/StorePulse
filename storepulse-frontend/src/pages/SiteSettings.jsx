@@ -69,7 +69,7 @@ export default function SiteSettings() {
           </Card>
         ) : error && !site ? (
           <Card>
-            <p className="card-body" style={{ color: "#b3261e" }}>
+            <p className="card-body" style={{ color: "var(--brick)" }}>
               {error}
             </p>
           </Card>
@@ -94,13 +94,13 @@ export default function SiteSettings() {
                   Regenerate key
                 </Button>
                 {error && (
-                  <p className="text-sm" style={{ color: "#b3261e" }}>
+                  <p className="text-sm" style={{ color: "var(--brick)" }}>
                     {error}
                   </p>
                 )}
                 {showRegenNotice && (
                   <>
-                    <p className="text-sm" style={{ color: "var(--color-accent-700)" }}>
+                    <p className="text-sm" style={{ color: "var(--stamp)" }}>
                       Key regenerated. The old key stops working immediately — contact
                       your developer so they can update the integration with the new
                       key.
@@ -127,8 +127,8 @@ export default function SiteSettings() {
                 style={{
                   fontFamily: "ui-monospace,SF Mono,Menlo,monospace",
                   fontSize: 13,
-                  background: "var(--color-neutral-100)",
-                  border: "1px solid var(--color-neutral-300)",
+                  background: "var(--paper)",
+                  border: "1px solid var(--divider)",
                   borderRadius: "var(--radius-sm)",
                   padding: "var(--space-3)",
                   overflowX: "auto",
@@ -162,9 +162,11 @@ export default function SiteSettings() {
             </>
           }
         >
-          The current key stops working the moment you confirm. Tracking on{" "}
-          {site?.domain} will silently stop until your developer updates the snippet
-          with the new key.
+          <span style={{ color: "var(--brick)" }}>
+            The current key stops working the moment you confirm. Tracking on{" "}
+            {site?.domain} will silently stop until your developer updates the snippet
+            with the new key.
+          </span>
         </Dialog>
       </main>
     </AppLayout>

@@ -1,6 +1,7 @@
 const variantClass = {
   accent: "tag-accent",
-  "accent-2": "tag-accent-2",
+  positive: "tag-positive",
+  negative: "tag-negative",
   outline: "tag-outline",
   neutral: "tag-neutral",
 };

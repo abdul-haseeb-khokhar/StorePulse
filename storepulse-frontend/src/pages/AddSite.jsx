@@ -80,7 +80,7 @@ export default function AddSite() {
             </p>
 
             {error && (
-              <p className="text-sm" style={{ color: "#b3261e" }}>
+              <p className="text-sm" style={{ color: "var(--brick)" }}>
                 {error}
               </p>
             )}

@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ThemeProvider } from "./context/ThemeContext";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -12,25 +13,27 @@ import RequireAuth from "./components/auth/RequireAuth";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Landing />} />
+    <ThemeProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Landing />} />
 
-        {/* Auth */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+          {/* Auth */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
 
-        <Route element={<RequireAuth />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/sites" element={<SitesList />} />
-          <Route path="/sites/new" element={<AddSite />} />
-          <Route path="/sites/:siteId/setup" element={<SiteSetup />} />
-          <Route path="/sites/:siteId/settings" element={<SiteSettings />} />
-          <Route path="/settings" element={<Settings />} />
-        </Route>
+          <Route element={<RequireAuth />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/sites" element={<SitesList />} />
+            <Route path="/sites/new" element={<AddSite />} />
+            <Route path="/sites/:siteId/setup" element={<SiteSetup />} />
+            <Route path="/sites/:siteId/settings" element={<SiteSettings />} />
+            <Route path="/settings" element={<Settings />} />
+          </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
