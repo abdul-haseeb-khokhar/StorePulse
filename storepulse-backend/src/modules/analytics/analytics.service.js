@@ -1,8 +1,8 @@
-const { getDailyTraffic, countPageViews, countProductClicks, countUniqueVisitors } = require(
+const { getDailyTraffic, countPageViews, countProductClicks, countUniqueVisitors, getTopClickedProducts, getTopReferrers } = require(
     './analytics.repository'
 )
 const { getSiteById } = require('../sites/sites.service')
-const {formateDateKey, buildDateRange} = require('../../utils/dateRange')
+const {formateDateKey, buildDateRange, resolveDateBoundary} = require('../../utils/dateRange')
 
 // This function manages the traffic on the site on daily basis
 async function getTrafficOverview({ siteId, userId, startDate, endDate }) {
@@ -83,6 +83,26 @@ async function getSummary({siteId, userId, startDate, endDate}) {
     }
 }
 
+async function getTopProducts(siteId, {startDate, endDate, limit}) {
+    const range = resolveDateBoundary(startDate, endDate);
+    const rows = await getTopClickedProducts({siteId, ...range, limit});
+
+    return rows.map(r => ({
+        productId: r.productId,
+        productName: r.productName,
+        clicks: r._count.productId,
+    }));
+}
+
+async function getTopReferrersService(siteId, {startDate, endDate, limit}) {
+    const range = resolveDateBoundary(startDate, endDate);
+    const rows = await getTopReferrers({siteId, ...range, limit});
+
+    return rows.map (r => ({
+        referrers: r.referrer,
+        visitors: r._count.referrer
+    }))
+}
 module.exports = {
-    getTrafficOverview, getSummary
+    getTrafficOverview, getSummary, getTopProducts, getTopReferrersService
 }

@@ -84,3 +84,4 @@ Completed validation today of all modules
 I have learnt quite a lot about "zod" a validation package that is used to validate the data coming from client on runtime and sent back with error code before hitting main logic of code
 Learnt about some new functionality like .parse .refine .superRefine .regex of zod 
 
+Learnt about Groupby in sql that makes group of rows on the basis of same values of column mentioned.

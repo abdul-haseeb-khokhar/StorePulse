@@ -46,6 +46,36 @@ async function getDailyTraffic({siteId, startDate, endDate}){
     `;
 }
 
+async function getTopClickedProducts({siteId, startDate, endDate, limit = 10}) {
+    return prisma.event.groupBy({
+        by: ['productId', 'productName'],
+        where: {
+            siteId,
+            type: 'PRODUCT_CLICK',
+            createdAt: {gte: startDate, lte: endDate},
+            productId: {not: null}
+        },
+        _count: {productId: true},
+        orderBy: {_count: {productId: 'desc'}},
+        take: limit,
+    });
+}
+
+async function getTopReferrers({siteId, startDate, endDate, limit = 10}) {
+    return prisma.event.groupBy({
+        by: ['referrer'],
+        where: {
+            siteId,
+            type: 'PAGE_VIEW',
+            createdAt: {gte: startDate, lte: endDate},
+        },
+
+        _count: {referrer: true},
+        orderBy: {_count: {referrer: 'desc'}},
+        take: limit,
+    })
+}
+
 module.exports= {
-    countPageViews, countProductClicks, countUniqueVisitors, getDailyTraffic
+    countPageViews, countProductClicks, countUniqueVisitors, getDailyTraffic, getTopClickedProducts, getTopReferrers
 }

@@ -1,4 +1,4 @@
-const {getTrafficOverview, getSummary} = require('./analytics.service');
+const {getTrafficOverview, getSummary, getTopProducts, getTopReferrersService} = require('./analytics.service');
 
 function getDateRangeFromQuery(range) {
     const endDate = new Date();
@@ -41,6 +41,31 @@ async function getSummaryController(req, res, next) {
     }
 }
 
+async function topProducts(req, res, next) {
+    try{
+        const {siteId} = req.params;
+        const {startDate, endDate, limit} = req.query;
+        const data = await getTopProducts(siteId, {startDate, endDate, limit: Number(limit) || 10});
+
+        res.json({data})
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function topReferrers(req, res, next) {
+    try {
+        const {siteId} = req.params;
+        const {startDate, endDate, limit} = req.query;
+        const data = await getTopReferrersService(siteId, {startDate, endDate, limit: Number(limit) || 10});
+
+        res.json({data});
+    } catch (err) {
+        next(err)
+    }
+}
+
+
 module.exports = {
-    getTrafficController, getSummaryController
+    getTrafficController, getSummaryController, topProducts, topReferrers
 }
