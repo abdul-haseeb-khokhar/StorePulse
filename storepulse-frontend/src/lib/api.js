@@ -39,6 +39,7 @@ const FIELD_LABELS = {
   password: "Password",
   currentPassword: "Current password",
   newPassword: "New password",
+  newEmail: "New email",
   name: "Site name",
   domain: "Domain",
 };

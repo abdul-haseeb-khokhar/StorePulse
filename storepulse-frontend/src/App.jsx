@@ -4,6 +4,8 @@ import Landing from "./pages/Landing";
 import Docs from "./pages/Docs";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import VerifyEmail from "./pages/VerifyEmail";
+import ConfirmEmailChange from "./pages/ConfirmEmailChange";
 import AddSite from "./pages/AddSite";
 import SiteSetup from "./pages/SiteSetup";
 import SiteSettings from "./pages/SiteSettings";
@@ -23,6 +25,8 @@ export default function App() {
           {/* Auth */}
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/confirm-email-change" element={<ConfirmEmailChange />} />
 
           <Route element={<RequireAuth />}>
             <Route path="/dashboard" element={<Dashboard />} />

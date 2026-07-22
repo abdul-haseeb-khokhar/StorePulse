@@ -23,6 +23,13 @@ export default function Settings() {
   const [nameFieldErrors, setNameFieldErrors] = useState({});
   const [nameSuccess, setNameSuccess] = useState(false);
 
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailError, setEmailError] = useState(null);
+  const [emailFieldErrors, setEmailFieldErrors] = useState({});
+  const [emailSuccess, setEmailSuccess] = useState(false);
+
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -68,6 +75,41 @@ export default function Settings() {
     setNameError(null);
     setNameFieldErrors({});
     setIsEditingName(false);
+  }
+
+  function startEditingEmail() {
+    setEmailError(null);
+    setEmailFieldErrors({});
+    setEmailSuccess(false);
+    setNewEmail("");
+    setIsEditingEmail(true);
+  }
+
+  function cancelEditingEmail() {
+    setEmailError(null);
+    setEmailFieldErrors({});
+    setIsEditingEmail(false);
+  }
+
+  async function handleEmailSubmit(e) {
+    e.preventDefault();
+    setEmailError(null);
+    setEmailFieldErrors({});
+    setEmailSuccess(false);
+    setEmailLoading(true);
+    try {
+      await api.post("/auth/me/email", { newEmail });
+      setEmailSuccess(true);
+      setIsEditingEmail(false);
+    } catch (err) {
+      const errors = getFieldErrors(err);
+      setEmailFieldErrors(errors);
+      if (Object.keys(errors).length === 0) {
+        setEmailError(getApiErrorMessage(err, "Could not request that email change."));
+      }
+    } finally {
+      setEmailLoading(false);
+    }
   }
 
   async function handleNameSubmit(e) {
@@ -196,24 +238,6 @@ export default function Settings() {
                   }
                   required
                 />
-                <Field id="acc-email" label="Email" value={user?.email || ""} readOnly />
-
-                {!isPasswordOpen && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="justify-self-start"
-                    icon={<Lock className="h-3.5 w-3.5" />}
-                    onClick={openPasswordSection}
-                  >
-                    Change password
-                  </Button>
-                )}
-                {passwordSuccess && (
-                  <p className="text-sm" style={{ color: "var(--gold)" }}>
-                    Password updated successfully.
-                  </p>
-                )}
 
                 {nameError && (
                   <p className="text-sm" style={{ color: "var(--brick)" }}>
@@ -237,6 +261,75 @@ export default function Settings() {
                   </div>
                 )}
               </form>
+
+              <form
+                onSubmit={handleEmailSubmit}
+                className="grid"
+                style={{ gap: "var(--space-3)", marginTop: "var(--space-3)" }}
+              >
+                <Field
+                  id="acc-email"
+                  label="Email"
+                  type="email"
+                  value={isEditingEmail ? newEmail : user?.email || ""}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  error={emailFieldErrors.newEmail}
+                  readOnly={!isEditingEmail}
+                  rightAction={
+                    !isEditingEmail && (
+                      <button
+                        type="button"
+                        onClick={startEditingEmail}
+                        className="text-muted"
+                        aria-label="Change email"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                    )
+                  }
+                  required
+                />
+
+                {emailError && (
+                  <p className="text-sm" style={{ color: "var(--brick)" }}>
+                    {emailError}
+                  </p>
+                )}
+                {emailSuccess && (
+                  <p className="text-sm" style={{ color: "var(--gold)" }}>
+                    Check your new inbox to confirm the email change.
+                  </p>
+                )}
+
+                {isEditingEmail && (
+                  <div className="flex" style={{ gap: "var(--space-2)" }}>
+                    <Button type="submit" loading={emailLoading}>
+                      Save email
+                    </Button>
+                    <Button type="button" variant="secondary" onClick={cancelEditingEmail}>
+                      Cancel
+                    </Button>
+                  </div>
+                )}
+              </form>
+
+              {!isPasswordOpen && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="justify-self-start"
+                  icon={<Lock className="h-3.5 w-3.5" />}
+                  onClick={openPasswordSection}
+                  style={{ marginTop: "var(--space-3)" }}
+                >
+                  Change password
+                </Button>
+              )}
+              {passwordSuccess && (
+                <p className="text-sm" style={{ color: "var(--gold)", marginTop: "var(--space-2)" }}>
+                  Password updated successfully.
+                </p>
+              )}
             </Card>
 
             {isPasswordOpen && (

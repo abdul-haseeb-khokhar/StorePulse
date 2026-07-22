@@ -1,16 +1,14 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Eye, EyeOff, MailCheck } from "lucide-react";
 import AuthLayout from "../layouts/AuthLayout";
 import Card from "../components/ui/Card";
 import Field from "../components/ui/Field";
 import Button from "../components/ui/Button";
 import PasswordRequirements from "../components/ui/PasswordRequirements";
 import api, { getApiErrorMessage, getFieldErrors } from "../lib/api";
-import { saveSession } from "../lib/auth";
 
 export default function Signup() {
-  const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,6 +17,7 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [submittedEmail, setSubmittedEmail] = useState(null);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -26,9 +25,8 @@ export default function Signup() {
     setFieldErrors({});
     setLoading(true);
     try {
-      const { data } = await api.post("/auth/signup", { fullName, email, password });
-      saveSession(data);
-      navigate("/dashboard", { replace: true });
+      await api.post("/auth/signup", { fullName, email, password });
+      setSubmittedEmail(email);
     } catch (err) {
       const errors = getFieldErrors(err);
       setFieldErrors(errors);
@@ -38,6 +36,26 @@ export default function Signup() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (submittedEmail) {
+    return (
+      <AuthLayout switchTo="/login" switchLabel="Log in">
+        <Card elevation="md">
+          <div
+            className="flex items-center"
+            style={{ gap: "var(--space-2)", marginBottom: "var(--space-3)" }}
+          >
+            <MailCheck className="h-5 w-5" style={{ color: "var(--gold)" }} />
+            <div className="card-title">Check your email</div>
+          </div>
+          <p className="card-body">
+            We sent a verification link to <strong>{submittedEmail}</strong>. Open it to
+            activate your account, then log in.
+          </p>
+        </Card>
+      </AuthLayout>
+    );
   }
 
   return (

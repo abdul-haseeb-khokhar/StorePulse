@@ -18,17 +18,25 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSent, setResendSent] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError(null);
     setFieldErrors({});
+    setNeedsVerification(false);
+    setResendSent(false);
     setLoading(true);
     try {
       const { data } = await api.post("/auth/login", { email, password });
       saveSession(data);
       navigate(redirectTo, { replace: true });
     } catch (err) {
+      if (err.response?.status === 403) {
+        setNeedsVerification(true);
+      }
       const errors = getFieldErrors(err);
       setFieldErrors(errors);
       if (Object.keys(errors).length === 0) {
@@ -36,6 +44,18 @@ export default function Login() {
       }
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleResend() {
+    setResendLoading(true);
+    try {
+      await api.post("/auth/resend-verification", { email });
+      setResendSent(true);
+    } catch {
+      setResendSent(true);
+    } finally {
+      setResendLoading(false);
     }
   }
 
@@ -86,6 +106,24 @@ export default function Login() {
             <p className="text-sm" style={{ color: "var(--brick)" }}>
               {error}
             </p>
+          )}
+
+          {needsVerification && (
+            resendSent ? (
+              <p className="text-sm" style={{ color: "var(--gold)" }}>
+                If an account with that email exists and is unverified, a new link has been sent.
+              </p>
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                className="justify-self-start"
+                loading={resendLoading}
+                onClick={handleResend}
+              >
+                Resend verification email
+              </Button>
+            )
           )}
 
           <Button type="submit" block loading={loading}>
