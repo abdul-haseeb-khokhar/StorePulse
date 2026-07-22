@@ -1,4 +1,4 @@
-const {findUserByEmail, createUser, findUserById} = require('./auth.repository')
+const {findUserByEmail, createUser, findUserById, updateUserName, updateUserPassword} = require('./auth.repository')
 const {hashPassword, comparePassword} = require('../../utils/passwordHashing')
 const {signToken} = require('../../utils/jwt')
 const { error } = require('node:console')
@@ -50,6 +50,23 @@ async function getUserById(id) {
     return {id: user.id, fullName: user.fullName, email: user.email}
 }
 
+async function changeName(userId, fullName) {
+    return updateUserName(userId, fullName);
+}
+
+async function changePassword(userId, currentPassword, newPassword) {
+    const user = await findUserById(userId);
+
+    const isMatch = await comparePassword(currentPassword, user.password);
+
+    if(!isMatch) {
+        throw new AppError('Current password is incorrect', 401);
+    }
+
+    const hashed = await hashPassword(newPassword);
+
+    return updateUserPassword(userId, hashed);
+}
 module.exports= {
-    signUp, login, getUserById
+    signUp, login, getUserById, changeName, changePassword
 }

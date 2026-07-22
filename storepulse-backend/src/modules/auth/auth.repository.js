@@ -24,6 +24,14 @@ async function  createUser(fullName, email, hashedPassword) {
     });
 }
 
+async function updateUserName(userId, fullName) {
+    return prisma.user.update({ where: {id: userId, data: {fullName}}})
+}
+
+async function updateUserPassword(userId, hashedPassword) {
+    return prisma.user.update({where: {id: userId}, data: {password: hashedPassword}});
+}
+
 module.exports = {
-    findUserByEmail, createUser, findUserById
+    findUserByEmail, createUser, findUserById, updateUserName, updateUserPassword
 } 
