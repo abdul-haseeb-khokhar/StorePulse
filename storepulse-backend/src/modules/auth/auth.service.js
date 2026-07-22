@@ -5,10 +5,8 @@ const {findUserByEmail, createUser, findUserById, updateUserName, updateUserPass
 const {generateToken, hashToken} = require('../../utils/verificationToken');
 const {hashPassword, comparePassword} = require('../../utils/passwordHashing')
 const {signToken} = require('../../utils/jwt')
-const { error } = require('node:console')
 const AppError = require('../../utils/AppError');
 const { sendVerificationEmail, sendEmailChangeEmail } = require('../email/email.service');
-const { use } = require('react');
 
 const VERIFICATION_EXPIRY_MS = 24*60*60*1000;
 const EMAIL_CHANGE_EXPIRY_MS = 60*60*1000;
@@ -142,7 +140,7 @@ async function requestEmailChange(userId, newEmail) {
 }
 
 async function confirmEmailChange(rawToken) {
-    const hashedToken = hashPassword(rawToken);
+    const hashedToken = hashToken(rawToken);
     const user = await findUserByPendingEmailToken(hashedToken);
 
     if(!user) {

@@ -11,7 +11,7 @@ const router = express.Router()
 router.post('/signup',validate(registerSchema), signUpController);
 router.post('/login', validate(loginSchema), loginController);
 
-router.get('verify-email', verifyEmailController);
+router.get('/verify-email', verifyEmailController);
 router.post('/resend-verification', validate(resendVerificationSchema), resendVerificationController);
 
 router.get('/me', protect, meController);

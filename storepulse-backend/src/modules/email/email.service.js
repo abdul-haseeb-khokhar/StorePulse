@@ -16,7 +16,7 @@ async function sendEmailChangeEmail({fullName, newEmail, rawToken}) {
 
     const {subject, html, text} = emailChangeTemplate({fullName, confirmUrl});
 
-    return sendEmail({to: newEmail, html, text });
+    return sendEmail({to: newEmail,subject ,html, text });
 }
 
 module.exports = {sendVerificationEmail, sendEmailChangeEmail};

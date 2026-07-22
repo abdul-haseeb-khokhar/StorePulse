@@ -1,4 +1,3 @@
-const { getRawPointer } = require('node:ffi');
 const {signUp, login, getUserById, changeName, changePassword, verifyEmail, resendVerification, requestEmailChange, confirmEmailChange} = require('./auth.service')
 
 async function signUpController(req, res, next) {

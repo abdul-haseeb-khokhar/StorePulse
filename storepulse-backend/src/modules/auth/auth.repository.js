@@ -38,7 +38,7 @@ async function setVerificationToken(userId, hashedToken, expiry) {
         where: {id: userId},
         data: {
             emailVerificationToken: hashedToken,
-            emailVerificationExpirey: expiry,
+            emailVerificationExpiry: expiry,
         }
     });
 }
