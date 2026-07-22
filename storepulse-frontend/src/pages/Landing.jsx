@@ -3,6 +3,8 @@ import Nav from "../components/ui/Nav";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Tag from "../components/ui/Tag";
+import CodeBlock from "../components/ui/CodeBlock";
+import SiteFooter from "../components/ui/SiteFooter";
 import { API_BASE_URL } from "../lib/api";
 
 const SNIPPET = `<script src="${API_BASE_URL}/track.js"\n  data-site-key="YOUR_SITE_KEY"></script>`;
@@ -29,7 +31,6 @@ export default function Landing() {
   return (
     <div className="min-h-screen">
       <Nav
-        brandTo="/"
         links={[
           { to: "/", label: "Overview", end: true },
           { to: "/login", label: "Log in" },
@@ -63,41 +64,35 @@ export default function Landing() {
         </div>
       </div>
 
-      <div className="mx-auto" style={{ maxWidth: 1040, padding: "var(--space-4)" }}>
-        <Card elevation="md">
-          <div className="card-kicker">Install</div>
-          <div className="card-title">Hand this to your developer</div>
-          <p className="card-body">
-            Your developer adds this once, before the closing &lt;/body&gt; tag, and
-            every page starts reporting traffic.
-          </p>
-          <p
-            className="card-body"
-            style={{
-              fontFamily: "ui-monospace,SF Mono,Menlo,monospace",
-              fontSize: 13,
-              background: "var(--paper)",
-              border: "1px solid var(--divider)",
-              borderRadius: "var(--radius-sm)",
-              padding: "var(--space-3)",
-              overflowX: "auto",
-              whiteSpace: "pre",
-            }}
-          >
-            {SNIPPET}
-          </p>
-          <div className="card-meta" style={{ gap: "var(--space-3)" }}>
-            <a href="mailto:dev@storepulse.io">dev@storepulse.io</a>
-            <a href="https://wa.me/10000000000" target="_blank" rel="noopener noreferrer">
-              WhatsApp: +1 000 000 0000
-            </a>
-          </div>
-        </Card>
+      <div
+        className="mx-auto"
+        style={{
+          maxWidth: 1040,
+          padding: "var(--space-6) var(--space-4)",
+          borderTop: "1px solid var(--divider)",
+          borderBottom: "1px solid var(--divider)",
+        }}
+      >
+        <Tag variant="outline" className="w-fit" style={{ marginBottom: "var(--space-3)" }}>
+          Why StorePulse
+        </Tag>
+        <h2 style={{ maxWidth: "20ch", marginBottom: "var(--space-3)" }}>
+          You can&apos;t improve what you can&apos;t see.
+        </h2>
+        <p style={{ fontSize: 18, lineHeight: 1.55, maxWidth: "62ch", opacity: 0.8, margin: 0 }}>
+          StorePulse shows store owners exactly how visitors interact with their
+          site — what gets clicked, what gets ignored, and where sales opportunities
+          are slipping away — so decisions are based on real behavior, not guesswork.
+        </p>
+      </div>
+
+      <div className="mx-auto" style={{ maxWidth: 1040, padding: "var(--space-6) var(--space-4) 0" }}>
+        <h2 style={{ margin: 0 }}>This is what StorePulse provides</h2>
       </div>
 
       <div
         className="mx-auto grid grid-cols-1 sm:grid-cols-3"
-        style={{ maxWidth: 1040, padding: "var(--space-6) var(--space-4) var(--space-8)", gap: "var(--space-3)" }}
+        style={{ maxWidth: 1040, padding: "var(--space-3) var(--space-4) var(--space-6)", gap: "var(--space-3)" }}
       >
         {FEATURES.map((feature) => (
           <Card key={feature.kicker}>
@@ -107,6 +102,31 @@ export default function Landing() {
           </Card>
         ))}
       </div>
+
+      <div className="mx-auto" style={{ maxWidth: 1040, padding: "var(--space-6) var(--space-4) var(--space-8)" }}>
+        <Card elevation="md">
+          <div className="card-kicker">Setup</div>
+          <div className="card-title" style={{ marginBottom: "var(--space-3)" }}>
+            Live in one script tag
+          </div>
+          <p className="card-body">
+            Register a site and you&apos;ll get a script key — drop it in before the
+            closing &lt;/body&gt; tag and page views start reporting automatically
+            from there, like this:
+          </p>
+          <CodeBlock>{SNIPPET}</CodeBlock>
+          <p className="card-body" style={{ marginTop: "var(--space-3)" }}>
+            Need a hand with integration? <a href="#contact">Contact us</a> and
+            we&apos;ll walk you through it.
+          </p>
+          <p className="card-body">
+            If you&apos;re a developer (or have one), here&apos;s the{" "}
+            <Link to="/docs">complete integration guide →</Link>.
+          </p>
+        </Card>
+      </div>
+
+      <SiteFooter />
     </div>
   );
 }

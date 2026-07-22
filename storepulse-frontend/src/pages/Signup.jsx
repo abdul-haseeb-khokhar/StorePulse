@@ -26,7 +26,7 @@ export default function Signup() {
     try {
       const { data } = await api.post("/auth/signup", { fullName, email, password });
       saveSession(data);
-      navigate("/sites/new", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       const errors = getFieldErrors(err);
       setFieldErrors(errors);

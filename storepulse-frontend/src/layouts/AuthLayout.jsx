@@ -12,7 +12,6 @@ export default function AuthLayout({ children, switchTo, switchLabel }) {
   return (
     <div className="min-h-screen">
       <Nav
-        brandTo="/"
         links={[{ to: "/", label: "Overview", end: true }]}
         actions={
           <Link to={switchTo}>

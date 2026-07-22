@@ -10,7 +10,6 @@ export default function AppLayout({ children }) {
   return (
     <div className="min-h-screen">
       <Nav
-        brandTo="/sites"
         links={[
           { to: "/dashboard", label: "Dashboard" },
           { to: "/sites", label: "Sites" },

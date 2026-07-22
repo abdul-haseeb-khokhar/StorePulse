@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { Mail, MessageCircle, Phone } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
+import CodeBlock from "../components/ui/CodeBlock";
 import api, { API_BASE_URL, getApiErrorMessage } from "../lib/api";
+import { CONTACT_GMAIL_URL, CONTACT_WHATSAPP, CONTACT_PHONE } from "../lib/contact";
 
 export default function SiteSetup() {
   const { siteId } = useParams();
@@ -11,7 +14,7 @@ export default function SiteSetup() {
   const [site, setSite] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [copyLabel, setCopyLabel] = useState("Copy snippet");
+  const [copyLabel, setCopyLabel] = useState("Copy script");
 
   useEffect(() => {
     let ignore = false;
@@ -41,7 +44,7 @@ export default function SiteSetup() {
     try {
       await navigator.clipboard.writeText(snippet);
       setCopyLabel("Copied");
-      setTimeout(() => setCopyLabel("Copy snippet"), 1600);
+      setTimeout(() => setCopyLabel("Copy script"), 1600);
     } catch {
       // Clipboard access can fail (e.g. no permission); fail silently.
     }
@@ -53,7 +56,7 @@ export default function SiteSetup() {
         className="mx-auto"
         style={{ maxWidth: 640, padding: "var(--space-6) var(--space-4) var(--space-8)" }}
       >
-        <h1 style={{ marginBottom: "var(--space-4)" }}>Add a site</h1>
+        <h1 style={{ marginBottom: "var(--space-4)" }}>Site setup</h1>
 
         {loading ? (
           <Card>
@@ -69,26 +72,8 @@ export default function SiteSetup() {
           <Card elevation="md">
             <div className="card-kicker">{site.domain}</div>
             <div className="card-title">{site.name} is ready</div>
-            <p className="card-body">
-              Integrating tracking usually isn&apos;t a copy-paste job for a live store.
-              Send this snippet to your developer and have them add it before the
-              closing &lt;/body&gt; tag on every page you want to track.
-            </p>
-            <p
-              className="card-body"
-              style={{
-                fontFamily: "ui-monospace,SF Mono,Menlo,monospace",
-                fontSize: 13,
-                background: "var(--paper)",
-                border: "1px solid var(--divider)",
-                borderRadius: "var(--radius-sm)",
-                padding: "var(--space-3)",
-                overflowX: "auto",
-                whiteSpace: "pre",
-              }}
-            >
-              {snippet}
-            </p>
+            <p className="card-body">This is your snippet.</p>
+            <CodeBlock>{snippet}</CodeBlock>
             <div className="flex" style={{ gap: "var(--space-2)", marginTop: "var(--space-3)" }}>
               <Button variant="secondary" onClick={handleCopy}>
                 {copyLabel}
@@ -97,18 +82,45 @@ export default function SiteSetup() {
                 Go to dashboard
               </Button>
             </div>
-            <div className="card-meta" style={{ marginTop: "var(--space-3)", gap: "var(--space-3)" }}>
-              <a href="mailto:dev@storepulse.io">dev@storepulse.io</a>
-              <a href="https://wa.me/10000000000" target="_blank" rel="noopener noreferrer">
-                WhatsApp: +1 000 000 0000
+            <p className="card-body" style={{ marginTop: "var(--space-3)" }}>
+              Need a hand with integration? Reach us however&apos;s easiest:
+            </p>
+            <div className="flex items-center" style={{ gap: "var(--space-4)" }}>
+              <a
+                href={CONTACT_GMAIL_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center text-sm"
+                style={{ gap: 6 }}
+              >
+                <Mail className="h-4 w-4 text-muted" />
+                Email
+              </a>
+              <a
+                href={`https://wa.me/${CONTACT_WHATSAPP}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center text-sm"
+                style={{ gap: 6 }}
+              >
+                <MessageCircle className="h-4 w-4 text-muted" />
+                WhatsApp
+              </a>
+              <a href={`tel:+${CONTACT_PHONE}`} className="flex items-center text-sm" style={{ gap: 6 }}>
+                <Phone className="h-4 w-4 text-muted" />
+                Call
               </a>
             </div>
+            <p className="card-body">
+              If you&apos;re a developer (or have one), here&apos;s the{" "}
+              <Link to="/docs">complete integration guide →</Link>.
+            </p>
           </Card>
         )}
 
         {site && (
           <p className="text-sm" style={{ marginTop: "var(--space-3)" }}>
-            Need to rotate the API key later? <Link to={`/sites/${site.id}/settings`}>Manage this site</Link>
+            Need to make changes later? <Link to={`/sites/${site.id}/settings`}>View site settings</Link>
           </p>
         )}
       </main>

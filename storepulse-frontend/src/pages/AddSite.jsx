@@ -75,9 +75,6 @@ export default function AddSite() {
               error={fieldErrors.domain}
               required
             />
-            <p className="text-xs" style={{ opacity: 0.65, marginTop: "-6px" }}>
-              We support Shopify, WooCommerce, Magento, and custom builds.
-            </p>
 
             {error && (
               <p className="text-sm" style={{ color: "var(--brick)" }}>

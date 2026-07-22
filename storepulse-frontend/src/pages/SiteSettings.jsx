@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+import { Mail, MessageCircle, Phone } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
 import Field from "../components/ui/Field";
 import Button from "../components/ui/Button";
 import Dialog from "../components/ui/Dialog";
+import CodeBlock from "../components/ui/CodeBlock";
 import api, { API_BASE_URL, getApiErrorMessage } from "../lib/api";
+import { CONTACT_GMAIL_URL, CONTACT_WHATSAPP, CONTACT_PHONE } from "../lib/contact";
 
 export default function SiteSettings() {
   const { siteId } = useParams();
@@ -99,48 +102,46 @@ export default function SiteSettings() {
                   </p>
                 )}
                 {showRegenNotice && (
-                  <>
-                    <p className="text-sm" style={{ color: "var(--stamp)" }}>
-                      Key regenerated. The old key stops working immediately — contact
-                      your developer so they can update the integration with the new
-                      key.
-                    </p>
-                    <div className="card-meta" style={{ gap: "var(--space-3)" }}>
-                      <a href="mailto:dev@storepulse.io">dev@storepulse.io</a>
-                      <a href="https://wa.me/10000000000" target="_blank" rel="noopener noreferrer">
-                        WhatsApp: +1 000 000 0000
-                      </a>
-                    </div>
-                  </>
+                  <p className="text-sm" style={{ color: "var(--stamp)" }}>
+                    Key regenerated. Update your tracking snippet from your codebase.
+                  </p>
                 )}
               </div>
             </Card>
 
             <Card>
               <div className="card-kicker">Tracking snippet</div>
-              <p className="card-body">
-                Share this with your developer — it&apos;s what they add to the store&apos;s
-                codebase to enable tracking.
+              <p className="card-body">This is your tracking snippet.</p>
+              <CodeBlock>{snippet}</CodeBlock>
+              <p className="card-body" style={{ marginTop: "var(--space-3)" }}>
+                If you&apos;re a developer (or have one), here&apos;s the{" "}
+                <Link to="/docs">complete integration guide →</Link>.
               </p>
-              <p
-                className="card-body"
-                style={{
-                  fontFamily: "ui-monospace,SF Mono,Menlo,monospace",
-                  fontSize: 13,
-                  background: "var(--paper)",
-                  border: "1px solid var(--divider)",
-                  borderRadius: "var(--radius-sm)",
-                  padding: "var(--space-3)",
-                  overflowX: "auto",
-                  whiteSpace: "pre",
-                }}
-              >
-                {snippet}
-              </p>
-              <div className="card-meta" style={{ gap: "var(--space-3)" }}>
-                <a href="mailto:dev@storepulse.io">dev@storepulse.io</a>
-                <a href="https://wa.me/10000000000" target="_blank" rel="noopener noreferrer">
-                  WhatsApp: +1 000 000 0000
+              <p className="card-body">Need a hand with integration? Reach us however&apos;s easiest:</p>
+              <div className="flex items-center" style={{ gap: "var(--space-4)" }}>
+                <a
+                  href={CONTACT_GMAIL_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center text-sm"
+                  style={{ gap: 6 }}
+                >
+                  <Mail className="h-4 w-4 text-muted" />
+                  Email
+                </a>
+                <a
+                  href={`https://wa.me/${CONTACT_WHATSAPP}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center text-sm"
+                  style={{ gap: 6 }}
+                >
+                  <MessageCircle className="h-4 w-4 text-muted" />
+                  WhatsApp
+                </a>
+                <a href={`tel:+${CONTACT_PHONE}`} className="flex items-center text-sm" style={{ gap: 6 }}>
+                  <Phone className="h-4 w-4 text-muted" />
+                  Call
                 </a>
               </div>
             </Card>

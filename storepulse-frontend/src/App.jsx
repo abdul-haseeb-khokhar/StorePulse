@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 import Landing from "./pages/Landing";
+import Docs from "./pages/Docs";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import AddSite from "./pages/AddSite";
@@ -17,6 +18,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route path="/docs" element={<Docs />} />
 
           {/* Auth */}
           <Route path="/login" element={<Login />} />
