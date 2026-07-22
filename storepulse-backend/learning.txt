@@ -84,3 +84,17 @@ Completed validation today of all modules
 I have learnt quite a lot about "zod" a validation package that is used to validate the data coming from client on runtime and sent back with error code before hitting main logic of code
 Learnt about some new functionality like .parse .refine .superRefine .regex of zod 
 
+7/22/2026
+Problem) How to send mail to user for email verification
+
+Solution):
+Now i m gonna be adding email verfication module and for this im gonna be using "Resend"
+As i have found this one quite easy to use, provide wit a restAPI, handle all protocol level config itself, builtin dashboard to check if any problem facing.
+instead these things are missing in nodemailer even though its not a 3rd party service still a lot of burden to handle.
+
+Then for signup Im creating diff token fields for sigup verification and email change verification as this is professional approach to have different security tokens for different fields by OWASP
+
+Run through npx commands npx prisma migrate dev -> for development stage, create new migrations
+npx prisma migrate deploy -> use fro deployment or when you wanna use already created migrations not creating new migrations
+npx prisma migrate reset -> Wipe dev db completely and reapplied all migrations from scratch
+npx prisma migrate status -> shows which migrations have been applied and which are pending

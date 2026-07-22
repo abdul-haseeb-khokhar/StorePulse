@@ -1,8 +1,12 @@
-const {z} = require('zod');
+const {z, email} = require('zod');
 
 const fullNameValidator = z.string()
     .min(2, "Full name must be atleast 2 characters")
     .max(50, 'Full name too long');
+
+const emailValidator = z.string()
+    .email('Invalid email address')
+    .toLowerCase();
 
 const passwordValidator = z.string()
     .min(8, 'Password must be atleast 8 characters')
@@ -13,18 +17,14 @@ const passwordValidator = z.string()
 const registerSchema = z.object({
     body: z.object({
         fullName: fullNameValidator,
-        email: z.string()
-            .email("Invalid email address")
-            .toLowerCase(),
+        email: emailValidator,
         password: passwordValidator
     }),
 });
 
 const loginSchema = z.object({
     body: z.object({
-        email: z.string()
-            .email("Invalid email address")
-            .toLowerCase(),
+        email: emailValidator,
         password: z.string()
             .min(1, 'Password is required')
     })
@@ -42,4 +42,20 @@ const changePasswordSchema = z.object({
         newPassword: passwordValidator
     })
 })
-module.exports = {registerSchema, loginSchema, changeNameSchema, changePasswordSchema}
+
+const resendVerificationSchema = z.object({
+    body: z.object({
+        email: emailValidator
+    })
+})
+
+const requestEmailChangeSchema = z.object({
+    body: z.object({
+        newEmail: emailValidator
+    })
+})
+
+
+module.exports = {registerSchema, loginSchema, changeNameSchema, changePasswordSchema,
+    resendVerificationSchema, requestEmailChangeSchema
+}
