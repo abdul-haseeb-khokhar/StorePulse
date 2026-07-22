@@ -25,7 +25,7 @@ async function  createUser(fullName, email, hashedPassword) {
 }
 
 async function updateUserName(userId, fullName) {
-    return prisma.user.update({ where: {id: userId, data: {fullName}}})
+    return prisma.user.update({ where: {id: userId}, data: {fullName}})
 }
 
 async function updateUserPassword(userId, hashedPassword) {

@@ -38,7 +38,8 @@ async function meController(req, res, next) {
 
 async function updateNameController(req, res, next) {
     try {
-        const updated = await changeName(req.user.id, req.user.fullName);
+        console.log(req.body.fullName)
+        const updated = await changeName(req.user.id, req.body.fullName);
         res.json({message: 'Name updated successfully'})
     } catch (err) {
         next(err);

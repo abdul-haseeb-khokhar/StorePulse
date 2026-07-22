@@ -38,7 +38,8 @@ const changeNameSchema = z.object({
 
 const changePasswordSchema = z.object({
     body: z.object({
-        currentPassword: passwordValidator
+        currentPassword: z.string(1, "Missing current password"),
+        newPassword: passwordValidator
     })
 })
 module.exports = {registerSchema, loginSchema, changeNameSchema, changePasswordSchema}
