@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { CheckCircle2, XCircle } from "lucide-react";
-import AuthLayout from "../layouts/AuthLayout";
+import BlankLayout from "../layouts/BlankLayout";
 import Card from "../components/ui/Card";
 import Field from "../components/ui/Field";
 import Button from "../components/ui/Button";
@@ -11,37 +11,35 @@ export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
 
-  const [status, setStatus] = useState("verifying"); // verifying | success | error
-  const [error, setError] = useState(null);
+  // verifying | success | error
+  const [status, setStatus] = useState(() => (token ? "verifying" : "error"));
+  const [error, setError] = useState(() =>
+    token ? null : "This verification link is missing its token.",
+  );
 
   const [resendEmail, setResendEmail] = useState("");
   const [resendLoading, setResendLoading] = useState(false);
   const [resendSent, setResendSent] = useState(false);
 
+  const requestedTokenRef = useRef(null);
+
   useEffect(() => {
-    let ignore = false;
+    if (!token) return;
+    // The token is single-use server-side; StrictMode's dev-only double
+    // effect invocation would otherwise fire this twice, and the second
+    // (now-invalid) call would overwrite the first call's success result.
+    // The ref (not per-run local state) is what makes the guard survive
+    // across both invocations, so only one request is ever sent.
+    if (requestedTokenRef.current === token) return;
+    requestedTokenRef.current = token;
 
-    async function verify() {
-      if (!token) {
+    api
+      .get("/auth/verify-email", { params: { token } })
+      .then(() => setStatus("success"))
+      .catch((err) => {
         setStatus("error");
-        setError("This verification link is missing its token.");
-        return;
-      }
-      try {
-        await api.get("/auth/verify-email", { params: { token } });
-        if (!ignore) setStatus("success");
-      } catch (err) {
-        if (!ignore) {
-          setStatus("error");
-          setError(getApiErrorMessage(err, "This verification link is invalid or has expired."));
-        }
-      }
-    }
-
-    verify();
-    return () => {
-      ignore = true;
-    };
+        setError(getApiErrorMessage(err, "This verification link is invalid or has expired."));
+      });
   }, [token]);
 
   async function handleResend(e) {
@@ -58,7 +56,7 @@ export default function VerifyEmail() {
   }
 
   return (
-    <AuthLayout switchTo="/login" switchLabel="Log in">
+    <BlankLayout>
       <Card elevation="md">
         {status === "verifying" && (
           <>
@@ -79,12 +77,9 @@ export default function VerifyEmail() {
               <CheckCircle2 className="h-5 w-5" style={{ color: "var(--gold)" }} />
               <div className="card-title">Email verified</div>
             </div>
-            <p className="card-body" style={{ marginBottom: "var(--space-4)" }}>
-              Your account is ready. You can log in now.
+            <p className="card-body">
+              Your account is ready. Close this tab and log in to your account.
             </p>
-            <Link to="/login">
-              <Button block>Go to login</Button>
-            </Link>
           </>
         )}
 
@@ -128,6 +123,6 @@ export default function VerifyEmail() {
           </>
         )}
       </Card>
-    </AuthLayout>
+    </BlankLayout>
   );
 }
