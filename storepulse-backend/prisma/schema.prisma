@@ -12,41 +12,50 @@ datasource db {
 }
 
 model User {
-  id String @id @default(uuid())
-  fullName String 
-  email String @unique
-  password String
+  id        String   @id @default(uuid())
+  fullName  String
+  email     String   @unique
+  password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  isEmailVerified Boolean @default(false)
+
+  emailVerificationToken  String?
+  emailVerificationExpiry DateTime?
+
+  pendingEmail            String?
+  pendingEmailToken       String?
+  pendingEmailTokenExpiry String?
 
   sites Site[]
 }
 
 model Site {
-  id String @id @default(uuid())
-  name String
-  domain String 
-  apiKey String @unique
-  userId String
+  id        String   @id @default(uuid())
+  name      String
+  domain    String
+  apiKey    String   @unique
+  userId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id])
+  user   User    @relation(fields: [userId], references: [id])
   events Event[]
 
   @@index([userId])
 }
 
 model Event {
-  id String @id @default(uuid())
-  type EventType
-  pageUrl String
-  referrer String?
-  productId String?
+  id          String    @id @default(uuid())
+  type        EventType
+  pageUrl     String
+  referrer    String?
+  productId   String?
   productName String?
-  visitorId String
-  siteId String
-  createdAt DateTime @default(now())
+  visitorId   String
+  siteId      String
+  createdAt   DateTime  @default(now())
 
   site Site @relation(fields: [siteId], references: [id])
 
