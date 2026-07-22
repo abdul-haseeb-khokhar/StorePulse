@@ -18,7 +18,12 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // A wrong "current password" on the change-password endpoint is also a
+    // 401, but it's a validation outcome, not an expired/invalid session —
+    // clearing the session here would log the user out for mistyping it.
+    const isWrongCurrentPassword =
+      error.response?.data?.message === "Current password is incorrect";
+    if (error.response?.status === 401 && !isWrongCurrentPassword) {
       clearSession();
     }
     return Promise.reject(error);
@@ -32,6 +37,8 @@ const FIELD_LABELS = {
   fullName: "Full name",
   email: "Email",
   password: "Password",
+  currentPassword: "Current password",
+  newPassword: "New password",
   name: "Site name",
   domain: "Domain",
 };

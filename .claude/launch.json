@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--prefix", "storepulse-frontend"],
       "port": 5173
+    },
+    {
+      "name": "storepulse-backend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "storepulse-backend"],
+      "port": 5000
     }
   ]
 }

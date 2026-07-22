@@ -5,6 +5,7 @@ import AuthLayout from "../layouts/AuthLayout";
 import Card from "../components/ui/Card";
 import Field from "../components/ui/Field";
 import Button from "../components/ui/Button";
+import PasswordRequirements from "../components/ui/PasswordRequirements";
 import api, { getApiErrorMessage, getFieldErrors } from "../lib/api";
 import { saveSession } from "../lib/auth";
 
@@ -14,6 +15,7 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
@@ -75,6 +77,7 @@ export default function Signup() {
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onFocus={() => setIsPasswordFocused(true)}
             error={fieldErrors.password}
             rightAction={
               <button
@@ -88,6 +91,8 @@ export default function Signup() {
             }
             required
           />
+
+          <PasswordRequirements password={password} visible={isPasswordFocused} />
 
           {error && (
             <p className="text-sm" style={{ color: "var(--brick)" }}>
