@@ -1,4 +1,4 @@
-const {signUp, login, getUserById} = require('./auth.service')
+const {signUp, login, getUserById, changeName, changePassword} = require('./auth.service')
 
 async function signUpController(req, res, next) {
     console.log("signUpcontorller is running")
@@ -36,6 +36,24 @@ async function meController(req, res, next) {
     }
 }
 
+async function updateNameController(req, res, next) {
+    try {
+        console.log(req.body.fullName)
+        const updated = await changeName(req.user.id, req.body.fullName);
+        res.json({message: 'Name updated successfully'})
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function updatePasswordController(req, res, next) {
+    try {
+        await changePassword(req.user.id, req.body.currentPassword, req.body.newPassword);
+        res.json({message: 'Password updated successfully'});
+    } catch (error) {
+        next(error);
+    }
+}
 module.exports = {
-    signUpController, loginController, meController
+    signUpController, loginController, meController, updateNameController, updatePasswordController
 }
