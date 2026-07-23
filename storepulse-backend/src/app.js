@@ -3,7 +3,7 @@ const cors = require('cors')
 
 const sitesRoutes = require('./modules/sites/sites.routes');
 const authRoutes  = require('./modules/auth/auth.routes');
-const ingestRoutes = require('../src/modules/ingest/ingest.routes');
+const ingestRoutes = require('./modules/ingest/ingest.routes');
 const analyticsRoutes = require('./modules/analytics/analytics.routes');
 
 const AppError = require('./utils/AppError')
