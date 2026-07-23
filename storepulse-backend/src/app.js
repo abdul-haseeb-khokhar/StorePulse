@@ -7,18 +7,23 @@ const ingestRoutes = require('./modules/ingest/ingest.routes');
 const analyticsRoutes = require('./modules/analytics/analytics.routes');
 
 const AppError = require('./utils/AppError')
-const { nextTick } = require('node:process')
-const { appendFile } = require('node:fs')
 
 const app = express()
-
-app.use(cors())
 app.use(express.json())
 
-app.use('/api/auth', authRoutes);
-app.use('/api/sites', sitesRoutes)
-app.use('/api/events', ingestRoutes)
-app.use('/api/analytics', analyticsRoutes);
+const dashboardCors = cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true,
+})
+
+const ingestCors = cors({
+    origin: true,
+    methods: ['POST'],
+})
+app.use('/api/auth', dashboardCors , authRoutes);
+app.use('/api/sites', dashboardCors , sitesRoutes)
+app.use('/api/events', ingestCors , ingestRoutes)
+app.use('/api/analytics', dashboardCors , analyticsRoutes);
 
 app.use(express.static("public"));
 
