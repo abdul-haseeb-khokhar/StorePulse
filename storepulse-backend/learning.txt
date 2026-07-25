@@ -92,6 +92,8 @@ Problem) How to send mail to user for email verification
 Solution):
 Now i m gonna be adding email verfication module and for this im gonna be using "Resend"
 As i have found this one quite easy to use, provide wit a restAPI, handle all protocol level config itself, builtin dashboard to check if any problem facing.
+One limitation for using is that it requires an own domain to send emails to different gmails but for testing you can use the one provided by them but it is only be used for gmail you have used signing up in resend.
+
 instead these things are missing in nodemailer even though its not a 3rd party service still a lot of burden to handle.
 
 Then for signup Im creating diff token fields for sigup verification and email change verification as this is professional approach to have different security tokens for different fields by OWASP
@@ -118,3 +120,7 @@ Tool: Caddy is the one that do that entirely. It is a web server that sits infro
 Caddy act as a middleman taking request from browser and sending reponses back.
 
 We do this by changing configuration of caddy through Caddyfile
+
+Now back to resend limitation problem with buying domain.
+Ok bought domain from cloudflare cost me 14.50$/year, comes back to resend.com and added domain it automatically configure dns record and on ask i authorize it to add this to cloudflare dns records.
+Took sometime and automatically verified my domain.
