@@ -36,13 +36,13 @@ async function signUp(fullName, email, password) {
 async function login(email, password) {
     console.log('Login service is called')
     const user = await findUserByEmail(email);
-    if(!user) {
-        throw new AppError("User doesn't exist", 401)
+    
+    const isPasswordValid = user && await comparePassword(password, user.password);
+    
+    if(!user || !isPasswordValid) {
+        throw new AppError("Email or password is invalid!", 401)
     }
-    const isPasswordValid = await comparePassword(password, user.password);
-    if(!isPasswordValid){
-        throw new AppError('Invalid password.', 401);
-    }
+    
 
     if(!user.isEmailVerified) {
         throw new AppError('Please verify your email before logging in.', 403)
