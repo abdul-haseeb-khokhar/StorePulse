@@ -9,6 +9,7 @@ const trackEventSchema = z.object({
         pageUrl: z.string().url("pageUrl must be a valid URL"),
         referrer: z.string().optional().nullable(),
         productId: z.string().optional().nullable(),
+        productName: z.string().optional().nullable(),
         visitorId: z.string().uuid('VisitorId must be a valid UUID'),
     }).superRefine((data, ctx) => {
         if(data.type === 'PRODUCT_CLICK' && !data.productId) {

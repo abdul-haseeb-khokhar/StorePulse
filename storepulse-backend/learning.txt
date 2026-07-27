@@ -92,6 +92,8 @@ Problem) How to send mail to user for email verification
 Solution):
 Now i m gonna be adding email verfication module and for this im gonna be using "Resend"
 As i have found this one quite easy to use, provide wit a restAPI, handle all protocol level config itself, builtin dashboard to check if any problem facing.
+One limitation for using is that it requires an own domain to send emails to different gmails but for testing you can use the one provided by them but it is only be used for gmail you have used signing up in resend.
+
 instead these things are missing in nodemailer even though its not a 3rd party service still a lot of burden to handle.
 
 Then for signup Im creating diff token fields for sigup verification and email change verification as this is professional approach to have different security tokens for different fields by OWASP
@@ -100,3 +102,25 @@ Run through npx commands npx prisma migrate dev -> for development stage, create
 npx prisma migrate deploy -> use fro deployment or when you wanna use already created migrations not creating new migrations
 npx prisma migrate reset -> Wipe dev db completely and reapplied all migrations from scratch
 npx prisma migrate status -> shows which migrations have been applied and which are pending
+
+7/25/2026
+Yesterday I have completed the deployment of frontend and backend ,
+frontend i deployed it on vercel 
+and backend deployment that was quite a hard process as i want this process to be free so searching through alot of deployment platforms, (used claud though)
+so finaly used GCP as my backend serves two purposes one is server that runs take every api request and response and second is backend worker that flushes events gathered in redis list every 10s
+
+So created a instance set firewall to take requests at 5000 port and it provides me with a ip address that i can send my requests on but then i got again another problem,
+
+Problem): Mixed content: It is a problem caused by browser that since my backend is ip and is http while deployed frontend is https so browser automatically denied any request between these two because of security concerns.
+
+Solution): The solution is to buy a domain that will do. But it is paid. So the free solution was using a service called sslip.io 
+It resolves your ip in hostname to a dns that will resolve automatically to the respective IP 
+
+Tool: Caddy is the one that do that entirely. It is a web server that sits infront of you app. It converts the incoming https to http as our server doesn't know about https.
+Caddy act as a middleman taking request from browser and sending reponses back.
+
+We do this by changing configuration of caddy through Caddyfile
+
+Now back to resend limitation problem with buying domain.
+Ok bought domain from cloudflare cost me 14.50$/year, comes back to resend.com and added domain it automatically configure dns record and on ask i authorize it to add this to cloudflare dns records.
+Took sometime and automatically verified my domain.

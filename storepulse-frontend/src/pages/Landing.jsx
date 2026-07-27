@@ -3,11 +3,8 @@ import Nav from "../components/ui/Nav";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Tag from "../components/ui/Tag";
-import CodeBlock from "../components/ui/CodeBlock";
+import HeroAnimation from "../components/ui/HeroAnimation";
 import SiteFooter from "../components/ui/SiteFooter";
-import { API_BASE_URL } from "../lib/api";
-
-const SNIPPET = `<script src="${API_BASE_URL}/track.js"\n  data-site-key="YOUR_SITE_KEY"></script>`;
 
 const FEATURES = [
   {
@@ -46,15 +43,13 @@ export default function Landing() {
         <Tag variant="outline" className="w-fit whitespace-nowrap">
           Traffic monitoring for ecommerce
         </Tag>
-        <h1 style={{ fontSize: "clamp(32px, 9vw, 56px)", lineHeight: 1.02, margin: 0 }}>
+        <h1 className="landing-hero-heading" style={{ lineHeight: 1.02, margin: 0 }}>
           See exactly how shoppers move through your store
         </h1>
-        <p style={{ fontSize: 18, lineHeight: 1.55, maxWidth: "56ch", opacity: 0.8, margin: 0 }}>
-          Drop one script tag on your storefront. StorePulse tracks page views and
-          product clicks in real time and gives you a clean dashboard per site — no
-          cookies banner, no bloated suite.
-        </p>
-        <div className="flex" style={{ gap: "var(--space-2)", marginTop: "var(--space-2)" }}>
+
+        <HeroAnimation />
+
+        <div className="flex landing-hero-cta" style={{ gap: "var(--space-2)", marginTop: "var(--space-2)" }}>
           <Link to="/signup">
             <Button>Start tracking free</Button>
           </Link>
@@ -92,7 +87,7 @@ export default function Landing() {
 
       <div
         className="mx-auto grid grid-cols-1 sm:grid-cols-3"
-        style={{ maxWidth: 1040, padding: "var(--space-3) var(--space-4) var(--space-6)", gap: "var(--space-3)" }}
+        style={{ maxWidth: 1040, padding: "var(--space-3) var(--space-4) var(--space-8)", gap: "var(--space-3)" }}
       >
         {FEATURES.map((feature) => (
           <Card key={feature.kicker}>
@@ -101,29 +96,6 @@ export default function Landing() {
             <p className="card-body">{feature.body}</p>
           </Card>
         ))}
-      </div>
-
-      <div className="mx-auto" style={{ maxWidth: 1040, padding: "var(--space-6) var(--space-4) var(--space-8)" }}>
-        <Card elevation="md">
-          <div className="card-kicker">Setup</div>
-          <div className="card-title" style={{ marginBottom: "var(--space-3)" }}>
-            Live in one script tag
-          </div>
-          <p className="card-body">
-            Register a site and you&apos;ll get a script key — drop it in before the
-            closing &lt;/body&gt; tag and page views start reporting automatically
-            from there, like this:
-          </p>
-          <CodeBlock>{SNIPPET}</CodeBlock>
-          <p className="card-body" style={{ marginTop: "var(--space-3)" }}>
-            Need a hand with integration? <a href="#contact">Contact us</a> and
-            we&apos;ll walk you through it.
-          </p>
-          <p className="card-body">
-            If you&apos;re a developer (or have one), here&apos;s the{" "}
-            <Link to="/docs">complete integration guide →</Link>.
-          </p>
-        </Card>
       </div>
 
       <SiteFooter />

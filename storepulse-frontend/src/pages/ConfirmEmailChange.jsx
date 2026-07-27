@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { CheckCircle2, XCircle } from "lucide-react";
-import AuthLayout from "../layouts/AuthLayout";
+import BlankLayout from "../layouts/BlankLayout";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import api, { getApiErrorMessage } from "../lib/api";
@@ -11,40 +11,37 @@ export default function ConfirmEmailChange() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
 
-  const [status, setStatus] = useState("verifying"); // verifying | success | error
-  const [error, setError] = useState(null);
+  // verifying | success | error
+  const [status, setStatus] = useState(() => (token ? "verifying" : "error"));
+  const [error, setError] = useState(() =>
+    token ? null : "This confirmation link is missing its token.",
+  );
+
+  const requestedTokenRef = useRef(null);
 
   useEffect(() => {
-    let ignore = false;
+    if (!token) return;
+    // Single-use server-side; the ref (not per-run local state) survives
+    // StrictMode's dev-only double effect invocation, so only one request
+    // is ever sent instead of a second (now-invalid) call overwriting the
+    // first call's success result.
+    if (requestedTokenRef.current === token) return;
+    requestedTokenRef.current = token;
 
-    async function confirm() {
-      if (!token) {
+    api
+      .get("/auth/confirm-email-change", { params: { token } })
+      .then(() => setStatus("success"))
+      .catch((err) => {
         setStatus("error");
-        setError("This confirmation link is missing its token.");
-        return;
-      }
-      try {
-        await api.get("/auth/confirm-email-change", { params: { token } });
-        if (!ignore) setStatus("success");
-      } catch (err) {
-        if (!ignore) {
-          setStatus("error");
-          setError(getApiErrorMessage(err, "This confirmation link is invalid or has expired."));
-        }
-      }
-    }
-
-    confirm();
-    return () => {
-      ignore = true;
-    };
+        setError(getApiErrorMessage(err, "This confirmation link is invalid or has expired."));
+      });
   }, [token]);
 
   const returnTo = isAuthenticated() ? "/settings" : "/login";
   const returnLabel = isAuthenticated() ? "Back to settings" : "Go to login";
 
   return (
-    <AuthLayout switchTo="/login" switchLabel="Log in">
+    <BlankLayout>
       <Card elevation="md">
         {status === "verifying" && (
           <>
@@ -65,12 +62,9 @@ export default function ConfirmEmailChange() {
               <CheckCircle2 className="h-5 w-5" style={{ color: "var(--gold)" }} />
               <div className="card-title">Email updated</div>
             </div>
-            <p className="card-body" style={{ marginBottom: "var(--space-4)" }}>
-              Your new email address is confirmed.
+            <p className="card-body">
+              Your new email address is confirmed. Close this tab and log in to your account.
             </p>
-            <Link to={returnTo}>
-              <Button block>{returnLabel}</Button>
-            </Link>
           </>
         )}
 
@@ -94,6 +88,6 @@ export default function ConfirmEmailChange() {
           </>
         )}
       </Card>
-    </AuthLayout>
+    </BlankLayout>
   );
 }

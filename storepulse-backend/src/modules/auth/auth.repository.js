@@ -86,6 +86,7 @@ async function confirmPendingEmail(userId, newEmail) {
     return prisma.user.update({
         where:{id: userId},
         data: {
+            email: newEmail,
             pendingEmail: null,
             pendingEmailToken: null,
             pendingEmailTokenExpiry: null,

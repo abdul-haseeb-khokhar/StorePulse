@@ -83,7 +83,9 @@ async function getSummary({siteId, userId, startDate, endDate}) {
     }
 }
 
-async function getTopProducts(siteId, {startDate, endDate, limit}) {
+async function getTopProducts(siteId, userId,{startDate, endDate, limit}) {
+    await getSiteById({siteId, userId});
+
     const range = resolveDateBoundary(startDate, endDate);
     const rows = await getTopClickedProducts({siteId, ...range, limit});
 
@@ -94,7 +96,9 @@ async function getTopProducts(siteId, {startDate, endDate, limit}) {
     }));
 }
 
-async function getTopReferrersService(siteId, {startDate, endDate, limit}) {
+async function getTopReferrersService(siteId, userId,{startDate, endDate, limit}) {
+    await getSiteById({siteId, userId});
+    
     const range = resolveDateBoundary(startDate, endDate);
     const rows = await getTopReferrers({siteId, ...range, limit});
 
