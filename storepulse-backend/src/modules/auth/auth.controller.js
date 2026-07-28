@@ -1,4 +1,4 @@
-const {signUp, login, getUserById, changeName, changePassword, verifyEmail, resendVerification, requestEmailChange, confirmEmailChange} = require('./auth.service')
+const {signUp, login, getUserById, changeName, changePassword, verifyEmail, resendVerification, requestEmailChange, confirmEmailChange, forgotPassword, resetPassword} = require('./auth.service')
 
 async function signUpController(req, res, next) {
     console.log("signUpcontorller is running")
@@ -94,7 +94,29 @@ async function confirmEmailChangeController(req, res, next) {
         next(error);
     }
 }
+
+async function forgotPasswordController(req, res, next) {
+    try {
+        const {email} = req.body;
+        const result = await forgotPassword(email);
+        res.status(200).json(result)
+    } catch (error) {
+        next(error)
+    }
+}
+
+async function resetPasswordController(req, res, next) {
+    try {
+        const {token , newPassword} = req.body;
+        const result = await resetPassword(token, newPassword);
+
+        res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+}
 module.exports = {
     signUpController, loginController, meController, updateNameController, updatePasswordController,
-    verifyEmailController, resendVerificationController, requestEmailChangeController, confirmEmailChangeController
+    verifyEmailController, resendVerificationController, requestEmailChangeController, confirmEmailChangeController,
+    forgotPasswordController, resetPasswordController
 }

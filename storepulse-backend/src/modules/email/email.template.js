@@ -68,4 +68,21 @@ function emailChangeTemplate({ fullName, confirmUrl}) {
     return {subject: 'Confirm your new StorePulse email', html, text};
 }
 
-module.exports = { verificationEmailTemplate, emailChangeTemplate}
+function passwordResetTemplate({fullName, resetUrl}) {
+    const kicker = 'Account';
+    const heading = 'Reset your password';
+    const bodyText = `Hi ${fullName}, we received a request to reset the password on your StorePulse account. Choose a new password to continue.`;
+    const html = baseLayout({
+        kicker,
+        heading,
+        bodyText,
+        buttonText: 'Reset password',
+        buttonUrl: resetUrl,
+        footerNote: 'This link expires in 1 hour. If you didn\'t request this, you can safely ignore this email — your password will remain unchanged.'
+    });
+    const text = `Hi ${fullName},\n\nWe received a request to reset the password on your StorePulse account. Reset it here:\n${resetUrl}\n\nThis link expires in 1 hour. If you didn't request this, ignore this email.`;
+
+    return {subject: 'Reset your StorePulse password', html, text};
+}
+
+module.exports = { verificationEmailTemplate, emailChangeTemplate, passwordResetTemplate}

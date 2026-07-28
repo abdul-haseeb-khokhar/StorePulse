@@ -55,7 +55,20 @@ const requestEmailChangeSchema = z.object({
     })
 })
 
+const forgotPasswordSchema = z.object({
+    body: z.object({
+        email: emailValidator
+    })
+})
+
+const resetPasswordSchema = z.object({
+    body: z.object({
+        token: z.string().min(1, 'Token is required'),
+        newPassword: passwordValidator
+    })
+})
+
 
 module.exports = {registerSchema, loginSchema, changeNameSchema, changePasswordSchema,
-    resendVerificationSchema, requestEmailChangeSchema
+    resendVerificationSchema, requestEmailChangeSchema, forgotPasswordSchema, resetPasswordSchema
 }
