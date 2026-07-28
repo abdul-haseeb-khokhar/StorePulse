@@ -7,12 +7,33 @@ import Field from "../components/ui/Field";
 import Button from "../components/ui/Button";
 import Dialog from "../components/ui/Dialog";
 import PasswordRequirements from "../components/ui/PasswordRequirements";
+import Skeleton from "../components/ui/Skeleton";
 import api, { getApiErrorMessage, getFieldErrors } from "../lib/api";
 import { clearSession, getToken, saveSession } from "../lib/auth";
+
+function ProfileSkeleton() {
+  return (
+    <Card elevation="md" style={{ marginBottom: "var(--space-3)" }}>
+      <Skeleton width={70} height={10} style={{ marginBottom: "var(--space-2)" }} />
+      <Skeleton width={160} height={22} style={{ marginBottom: "var(--space-3)" }} />
+      <div className="grid" style={{ gap: "var(--space-3)" }}>
+        <div>
+          <Skeleton width={70} height={10} style={{ marginBottom: 5 }} />
+          <Skeleton height={36} />
+        </div>
+        <div>
+          <Skeleton width={40} height={10} style={{ marginBottom: 5 }} />
+          <Skeleton height={36} />
+        </div>
+      </div>
+    </Card>
+  );
+}
 
 export default function Settings() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
 
@@ -54,6 +75,8 @@ export default function Settings() {
         }
       } catch (err) {
         if (!ignore) setError(getApiErrorMessage(err, "Could not load account settings."));
+      } finally {
+        if (!ignore) setLoading(false);
       }
     }
 
@@ -199,7 +222,9 @@ export default function Settings() {
       >
         <h1 style={{ marginBottom: "var(--space-4)" }}>Profile</h1>
 
-        {error ? (
+        {loading ? (
+          <ProfileSkeleton />
+        ) : error ? (
           <Card>
             <p className="card-body" style={{ color: "var(--brick)" }}>
               {error}
@@ -210,7 +235,7 @@ export default function Settings() {
             <Card elevation="md" style={{ marginBottom: "var(--space-3)" }}>
               <div className="card-kicker">Account</div>
               <div className="card-title" style={{ marginBottom: "var(--space-3)" }}>
-                {user?.fullName || "Loading…"}
+                {user?.fullName}
               </div>
               <form
                 onSubmit={handleNameSubmit}

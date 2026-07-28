@@ -217,6 +217,17 @@ textarea.input { min-height: 90px; resize: vertical; }
 .tag-neutral { background: color-mix(in srgb, var(--ink) 8%, var(--paper-card)); color: var(--muted); }
 .tag-outline { border: 1px solid var(--divider); color: var(--ink); }
 
+/* — skeleton loaders — */
+.skeleton {
+  display: block;
+  background: color-mix(in srgb, var(--ink) 10%, var(--paper-card));
+  animation: skeletonPulse 1.4s ease-in-out infinite;
+}
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
 /* — landing hero — */
 .landing-hero-heading { font-size: clamp(28px, 7vw, 46px); }
 @media (max-width: 640px) {

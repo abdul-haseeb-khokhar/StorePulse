@@ -5,8 +5,24 @@ import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import CodeBlock from "../components/ui/CodeBlock";
+import Skeleton from "../components/ui/Skeleton";
 import api, { API_BASE_URL, getApiErrorMessage } from "../lib/api";
 import { CONTACT_GMAIL_URL, CONTACT_WHATSAPP, CONTACT_PHONE } from "../lib/contact";
+
+function SiteSetupSkeleton() {
+  return (
+    <Card elevation="md">
+      <Skeleton width={100} height={10} style={{ marginBottom: "var(--space-2)" }} />
+      <Skeleton width={180} height={22} style={{ marginBottom: "var(--space-3)" }} />
+      <Skeleton width="60%" height={12} style={{ marginBottom: "var(--space-3)" }} />
+      <Skeleton height={60} style={{ marginBottom: "var(--space-3)" }} />
+      <div className="flex" style={{ gap: "var(--space-2)" }}>
+        <Skeleton width={120} height={36} />
+        <Skeleton width={150} height={36} />
+      </div>
+    </Card>
+  );
+}
 
 export default function SiteSetup() {
   const { siteId } = useParams();
@@ -59,9 +75,7 @@ export default function SiteSetup() {
         <h1 style={{ marginBottom: "var(--space-4)" }}>Site setup</h1>
 
         {loading ? (
-          <Card>
-            <p className="card-body">Loading…</p>
-          </Card>
+          <SiteSetupSkeleton />
         ) : error && !site ? (
           <Card>
             <p className="card-body" style={{ color: "var(--brick)" }}>

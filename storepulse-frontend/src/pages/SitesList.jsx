@@ -5,6 +5,7 @@ import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import Tag from "../components/ui/Tag";
+import Skeleton from "../components/ui/Skeleton";
 import api, { getApiErrorMessage } from "../lib/api";
 
 function formatNumber(value) {
@@ -41,6 +42,20 @@ function SiteCard({ site }) {
         >
           <Settings className="h-4 w-4" />
         </Link>
+      </div>
+    </Card>
+  );
+}
+
+function SiteCardSkeleton() {
+  return (
+    <Card elevation="sm">
+      <Skeleton width={90} height={10} style={{ marginBottom: "var(--space-2)" }} />
+      <Skeleton width={140} height={18} style={{ marginBottom: "var(--space-2)" }} />
+      <Skeleton width="70%" height={12} style={{ marginBottom: "var(--space-3)" }} />
+      <div className="flex items-center justify-between">
+        <Skeleton width={50} height={20} />
+        <Skeleton width={16} height={16} />
       </div>
     </Card>
   );
@@ -103,9 +118,14 @@ export default function SitesList() {
         </div>
 
         {loading ? (
-          <Card>
-            <p className="card-body">Loading your sites…</p>
-          </Card>
+          <div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+            style={{ gap: "var(--space-3)" }}
+          >
+            <SiteCardSkeleton />
+            <SiteCardSkeleton />
+            <SiteCardSkeleton />
+          </div>
         ) : error ? (
           <Card>
             <p className="card-body" style={{ color: "var(--brick)" }}>

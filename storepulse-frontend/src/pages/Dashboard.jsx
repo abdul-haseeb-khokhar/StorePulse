@@ -8,6 +8,7 @@ import Seg from "../components/ui/Seg";
 import Button from "../components/ui/Button";
 import StatCard from "../components/dashboard/StatCard";
 import TrafficChart from "../components/dashboard/TrafficChart";
+import DashboardSkeleton from "../components/dashboard/DashboardSkeleton";
 import api, { getApiErrorMessage } from "../lib/api";
 
 const rangeLabels = {
@@ -197,9 +198,7 @@ export default function Dashboard() {
         style={{ maxWidth: 1040, padding: "var(--space-6) var(--space-4) var(--space-8)" }}
       >
         {loadingSites ? (
-          <Card>
-            <p className="card-body">Loading dashboard…</p>
-          </Card>
+          <DashboardSkeleton showHeader />
         ) : sites.length === 0 ? (
           <Card className="flex flex-col items-center text-center" style={{ padding: "var(--space-8)" }}>
             <div className="card-title">Add a site to start tracking analytics</div>
@@ -270,9 +269,7 @@ export default function Dashboard() {
                 </p>
               </Card>
             ) : loadingAnalytics && !summary ? (
-              <Card>
-                <p className="card-body">Loading analytics…</p>
-              </Card>
+              <DashboardSkeleton />
             ) : (
               <>
                 <div

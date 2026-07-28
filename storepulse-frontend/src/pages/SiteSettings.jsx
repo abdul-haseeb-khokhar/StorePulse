@@ -7,8 +7,41 @@ import Field from "../components/ui/Field";
 import Button from "../components/ui/Button";
 import Dialog from "../components/ui/Dialog";
 import CodeBlock from "../components/ui/CodeBlock";
+import Skeleton from "../components/ui/Skeleton";
 import api, { API_BASE_URL, getApiErrorMessage } from "../lib/api";
 import { CONTACT_GMAIL_URL, CONTACT_WHATSAPP, CONTACT_PHONE } from "../lib/contact";
+
+function SiteSettingsSkeleton() {
+  return (
+    <>
+      <Card elevation="md" style={{ marginBottom: "var(--space-3)" }}>
+        <Skeleton width={100} height={10} style={{ marginBottom: "var(--space-2)" }} />
+        <Skeleton width={160} height={22} style={{ marginBottom: "var(--space-3)" }} />
+        <div className="grid" style={{ gap: "var(--space-3)" }}>
+          <div>
+            <Skeleton width={70} height={10} style={{ marginBottom: 5 }} />
+            <Skeleton height={36} />
+          </div>
+          <div>
+            <Skeleton width={60} height={10} style={{ marginBottom: 5 }} />
+            <Skeleton height={36} />
+          </div>
+          <div>
+            <Skeleton width={50} height={10} style={{ marginBottom: 5 }} />
+            <Skeleton height={36} />
+          </div>
+          <Skeleton width={140} height={36} />
+        </div>
+      </Card>
+
+      <Card>
+        <Skeleton width={120} height={10} style={{ marginBottom: "var(--space-2)" }} />
+        <Skeleton width="90%" height={12} style={{ marginBottom: "var(--space-3)" }} />
+        <Skeleton height={60} />
+      </Card>
+    </>
+  );
+}
 
 export default function SiteSettings() {
   const { siteId } = useParams();
@@ -67,9 +100,7 @@ export default function SiteSettings() {
         <h1 style={{ marginBottom: "var(--space-4)" }}>Site settings</h1>
 
         {loading ? (
-          <Card>
-            <p className="card-body">Loading…</p>
-          </Card>
+          <SiteSettingsSkeleton />
         ) : error && !site ? (
           <Card>
             <p className="card-body" style={{ color: "var(--brick)" }}>
