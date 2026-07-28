@@ -102,6 +102,10 @@ export default function Login() {
             required
           />
 
+          <p className="text-xs" style={{ textAlign: "right", opacity: 0.65 }}>
+            <Link to="/forgot-password">Forgot password?</Link>
+          </p>
+
           {error && (
             <p className="text-sm" style={{ color: "var(--brick)" }}>
               {error}
