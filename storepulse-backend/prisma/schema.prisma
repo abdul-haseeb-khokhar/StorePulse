@@ -28,6 +28,9 @@ model User {
   pendingEmailToken       String?
   pendingEmailTokenExpiry DateTime?
 
+  passwordResetToken      String?
+  passwordResetTokenExpiry DateTime?
+
   sites Site[]
 }
 

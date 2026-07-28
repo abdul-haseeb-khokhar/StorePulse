@@ -30,6 +30,7 @@ async function recordEvent({apiKey, type, pageUrl, referrer, productId, productN
         productName: productName || null, 
         visitorId,
         siteId: site.id,
+        createdAt: new Date(),
     });
 }
 module.exports = {

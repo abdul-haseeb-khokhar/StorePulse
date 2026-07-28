@@ -1,15 +1,17 @@
 const {findUserByEmail, createUser, findUserById, updateUserName, updateUserPassword, 
     setVerificationToken, findUserByVerificationToken, markEmailVerified,
-    setPendingEmailToken, findUserByPendingEmailToken, confirmPendingEmail
+    setPendingEmailToken, findUserByPendingEmailToken, confirmPendingEmail,
+    setPasswordResetToken, findUserByPasswordResetToken, resetUserPassword
 } = require('./auth.repository')
 const {generateToken, hashToken} = require('../../utils/verificationToken');
 const {hashPassword, comparePassword} = require('../../utils/passwordHashing')
 const {signToken} = require('../../utils/jwt')
 const AppError = require('../../utils/AppError');
-const { sendVerificationEmail, sendEmailChangeEmail } = require('../email/email.service');
+const { sendVerificationEmail, sendEmailChangeEmail, sendPasswordResetEmail } = require('../email/email.service');
 
 const VERIFICATION_EXPIRY_MS = 24*60*60*1000;
 const EMAIL_CHANGE_EXPIRY_MS = 60*60*1000;
+const PASSWORD_RESET_EXPIRY_MS = 60*60*1000;
 
 async function signUp(fullName, email, password) {
     console.log("SignUP service is runnig")
@@ -36,13 +38,13 @@ async function signUp(fullName, email, password) {
 async function login(email, password) {
     console.log('Login service is called')
     const user = await findUserByEmail(email);
-    if(!user) {
-        throw new AppError("User doesn't exist", 401)
+    
+    const isPasswordValid = user && await comparePassword(password, user.password);
+    
+    if(!user || !isPasswordValid) {
+        throw new AppError("Email or password is invalid!", 401)
     }
-    const isPasswordValid = await comparePassword(password, user.password);
-    if(!isPasswordValid){
-        throw new AppError('Invalid password.', 401);
-    }
+    
 
     if(!user.isEmailVerified) {
         throw new AppError('Please verify your email before logging in.', 403)
@@ -154,7 +156,42 @@ async function confirmEmailChange(rawToken) {
     return {message: 'Email address updated successfully'};
 }
 
+async function forgotPassword(email) {
+    const user = await findUserByEmail(email);
+
+    if(!user) {
+        return { message: 'If an account with that email exists, a reset link has been sent.'};
+    }
+
+    const rawToken = generateToken();
+    const hashedToken = hashToken(rawToken);
+    const expiry = new Date (Date.now() + PASSWORD_RESET_EXPIRY_MS);
+
+    await setPasswordResetToken(user.id, hashedToken, expiry);
+    await sendPasswordResetEmail({fullName: user.fullName, email: user.email, rawToken});
+
+    return { message: 'If an account with that email exists, a reset link has been sent.'}
+}
+
+async function resetPassword(rawToken, newPassword) {
+    const hashedToken = hashToken(rawToken);
+    const user = await findUserByPasswordResetToken(hashedToken);
+
+    if(!user) {
+        throw new AppError('Invalid or expired reset link', 400);
+    }
+
+    if(user.passwordResetTokenExpiry < new Date()) {
+        throw new AppError('Reset link has expired. Please request a new one', 400);
+    }
+
+    const hashed = await hashPassword(newPassword);
+    await resetUserPassword(user.id, hashed);
+
+    return {message: 'Password reset successfully. You can now log in.'}
+}
+
 module.exports= {
-    signUp, login, getUserById, changeName, changePassword,
+    signUp, login, getUserById, changeName, changePassword, forgotPassword, resetPassword,
     verifyEmail, resendVerification, requestEmailChange, confirmEmailChange
 }

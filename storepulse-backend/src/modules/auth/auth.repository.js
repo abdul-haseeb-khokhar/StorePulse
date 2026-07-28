@@ -93,8 +93,36 @@ async function confirmPendingEmail(userId, newEmail) {
         }
     })
 }
+
+async function setPasswordResetToken(userId, hashedToken, expiry) {
+    return prisma.user.update({
+        where: {id: userId},
+        data: {
+            passwordResetToken: hashedToken,
+            passwordResetTokenExpiry: expiry,
+        }
+    });
+}
+
+async function findUserByPasswordResetToken(hashedToken) {
+    return prisma.user.findFirst({
+        where: {passwordResetToken: hashedToken}
+    });
+}
+
+async function resetUserPassword(userId, hashedPassword) {
+    return prisma.user.update({
+        where: {id: userId},
+        data: {
+            password: hashedPassword,
+            passwordResetToken: null,
+            passwordResetTokenExpiry: null,
+        }
+    });
+}
 module.exports = {
     findUserByEmail, createUser, findUserById, updateUserName, updateUserPassword,
     setVerificationToken, findUserByVerificationToken, markEmailVerified,
-    setPendingEmailToken, findUserByPendingEmailToken, confirmPendingEmail
+    setPendingEmailToken, findUserByPendingEmailToken, confirmPendingEmail,
+    setPasswordResetToken, findUserByPasswordResetToken, resetUserPassword
 } 
