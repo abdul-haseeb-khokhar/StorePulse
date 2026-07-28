@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 import Landing from "./pages/Landing";
 import Docs from "./pages/Docs";
@@ -14,6 +14,7 @@ import SiteSettings from "./pages/SiteSettings";
 import SitesList from "./pages/SitesList";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
+import NotFound from "./pages/NotFound";
 import RequireAuth from "./components/auth/RequireAuth";
 
 export default function App() {
@@ -41,7 +42,7 @@ export default function App() {
             <Route path="/settings" element={<Settings />} />
           </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
