@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Store, Globe } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
 import Field from "../components/ui/Field";
 import Button from "../components/ui/Button";
 import api, { getApiErrorMessage, getFieldErrors } from "../lib/api";
+import { queryKeys } from "../lib/queryKeys";
 
 function normalizeDomain(value) {
   return value
@@ -17,32 +19,33 @@ function normalizeDomain(value) {
 
 export default function AddSite() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const [domain, setDomain] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setError(null);
-    setFieldErrors({});
-    setLoading(true);
-    try {
-      const { data } = await api.post("/sites", {
-        name: name.trim(),
-        domain: normalizeDomain(domain),
-      });
+  const createSiteMutation = useMutation({
+    mutationFn: (payload) => api.post("/sites", payload),
+    onSuccess: ({ data }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.sites.all });
+      queryClient.setQueryData(queryKeys.sites.detail(data.site.id), data.site);
       navigate(`/sites/${data.site.id}/setup`);
-    } catch (err) {
+    },
+    onError: (err) => {
       const errors = getFieldErrors(err);
       setFieldErrors(errors);
       if (Object.keys(errors).length === 0) {
         setError(getApiErrorMessage(err, "Could not create the site. Try again."));
       }
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    setError(null);
+    setFieldErrors({});
+    createSiteMutation.mutate({ name: name.trim(), domain: normalizeDomain(domain) });
   }
 
   return (
@@ -82,7 +85,7 @@ export default function AddSite() {
               </p>
             )}
 
-            <Button type="submit" block loading={loading}>
+            <Button type="submit" block loading={createSiteMutation.isPending}>
               Create site
             </Button>
           </form>

@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Eye, EyeOff, Lock, Pencil } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
@@ -9,6 +10,7 @@ import Dialog from "../components/ui/Dialog";
 import PasswordRequirements from "../components/ui/PasswordRequirements";
 import Skeleton from "../components/ui/Skeleton";
 import api, { getApiErrorMessage, getFieldErrors } from "../lib/api";
+import { queryKeys } from "../lib/queryKeys";
 import { clearSession, getToken, saveSession } from "../lib/auth";
 
 function ProfileSkeleton() {
@@ -32,14 +34,11 @@ function ProfileSkeleton() {
 
 export default function Settings() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [fullName, setFullName] = useState("");
-  const [nameLoading, setNameLoading] = useState(false);
   const [nameError, setNameError] = useState(null);
   const [nameFieldErrors, setNameFieldErrors] = useState({});
   const [nameSuccess, setNameSuccess] = useState(false);
@@ -63,28 +62,29 @@ export default function Settings() {
   const [passwordFieldErrors, setPasswordFieldErrors] = useState({});
   const [passwordSuccess, setPasswordSuccess] = useState(false);
 
+  const meQuery = useQuery({
+    queryKey: queryKeys.me,
+    queryFn: async () => {
+      const { data } = await api.get("/auth/me");
+      return data.user;
+    },
+  });
+  const user = meQuery.data ?? null;
+  const loading = meQuery.isPending;
+  const error = meQuery.isError
+    ? getApiErrorMessage(meQuery.error, "Could not load account settings.")
+    : null;
+
+  // Seed the editable field once on first arrival only — a background
+  // revalidation of ["me"] (e.g. after the name mutation below) must not
+  // stomp on text the user is actively typing.
+  const hasSeededNameRef = useRef(false);
   useEffect(() => {
-    let ignore = false;
-
-    async function loadUser() {
-      try {
-        const { data } = await api.get("/auth/me");
-        if (!ignore) {
-          setUser(data.user);
-          setFullName(data.user.fullName || "");
-        }
-      } catch (err) {
-        if (!ignore) setError(getApiErrorMessage(err, "Could not load account settings."));
-      } finally {
-        if (!ignore) setLoading(false);
-      }
+    if (user && !hasSeededNameRef.current) {
+      setFullName(user.fullName || "");
+      hasSeededNameRef.current = true;
     }
-
-    loadUser();
-    return () => {
-      ignore = true;
-    };
-  }, []);
+  }, [user]);
 
   function startEditingName() {
     setNameError(null);
@@ -135,29 +135,30 @@ export default function Settings() {
     }
   }
 
-  async function handleNameSubmit(e) {
-    e.preventDefault();
-    setNameError(null);
-    setNameFieldErrors({});
-    setNameSuccess(false);
-    setNameLoading(true);
-    try {
-      await api.patch("/auth/me/name", { fullName });
-      const updatedUser = { ...user, fullName };
-      setUser(updatedUser);
+  const nameMutation = useMutation({
+    mutationFn: (nextFullName) => api.patch("/auth/me/name", { fullName: nextFullName }),
+    onSuccess: (_response, nextFullName) => {
+      queryClient.setQueryData(queryKeys.me, (old) => (old ? { ...old, fullName: nextFullName } : old));
       const token = getToken();
-      if (token) saveSession({ token, user: updatedUser });
+      if (token) saveSession({ token, user: queryClient.getQueryData(queryKeys.me) });
       setNameSuccess(true);
       setIsEditingName(false);
-    } catch (err) {
+    },
+    onError: (err) => {
       const errors = getFieldErrors(err);
       setNameFieldErrors(errors);
       if (Object.keys(errors).length === 0) {
         setNameError(getApiErrorMessage(err, "Could not update your name."));
       }
-    } finally {
-      setNameLoading(false);
-    }
+    },
+  });
+
+  function handleNameSubmit(e) {
+    e.preventDefault();
+    setNameError(null);
+    setNameFieldErrors({});
+    setNameSuccess(false);
+    nameMutation.mutate(fullName);
   }
 
   function openPasswordSection() {
@@ -277,7 +278,7 @@ export default function Settings() {
 
                 {isEditingName && (
                   <div className="flex" style={{ gap: "var(--space-2)" }}>
-                    <Button type="submit" loading={nameLoading}>
+                    <Button type="submit" loading={nameMutation.isPending}>
                       Save name
                     </Button>
                     <Button type="button" variant="secondary" onClick={cancelEditingName}>

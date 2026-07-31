@@ -1,3 +1,5 @@
+import { queryClient } from "./queryClient";
+
 const TOKEN_KEY = "storepulse_token";
 const USER_KEY = "storepulse_user";
 
@@ -25,6 +27,11 @@ export function saveSession({ token, user }) {
 export function clearSession() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
+  // Otherwise the next person to log in on this tab (e.g. a shared
+  // computer) could briefly see the previous user's cached data — it's
+  // still "fresh" as far as React Query knows, since nothing told it the
+  // identity behind it just changed.
+  queryClient.clear();
 }
 
 export function isAuthenticated() {

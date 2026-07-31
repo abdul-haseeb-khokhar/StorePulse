@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { Settings } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
@@ -7,6 +7,7 @@ import Button from "../components/ui/Button";
 import Tag from "../components/ui/Tag";
 import Skeleton from "../components/ui/Skeleton";
 import api, { getApiErrorMessage } from "../lib/api";
+import { queryKeys } from "../lib/queryKeys";
 
 function formatNumber(value) {
   return new Intl.NumberFormat().format(value || 0);
@@ -62,44 +63,38 @@ function SiteCardSkeleton() {
 }
 
 export default function SitesList() {
-  const [sites, setSites] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const sitesQuery = useQuery({
+    queryKey: queryKeys.sites.all,
+    queryFn: async () => {
+      const { data } = await api.get("/sites");
+      return data.sites;
+    },
+  });
 
-  useEffect(() => {
-    let ignore = false;
+  const summaryQueries = useQueries({
+    queries: (sitesQuery.data ?? []).map((site) => ({
+      queryKey: queryKeys.analytics.summary(site.id, "7d"),
+      queryFn: async () => {
+        const { data } = await api.get(`/analytics/${site.id}/summary`, {
+          params: { range: "7d" },
+        });
+        return data.summary;
+      },
+      retry: 0,
+    })),
+  });
 
-    async function loadSites() {
-      try {
-        const { data } = await api.get("/sites");
-        if (ignore) return;
-
-        const withSummary = await Promise.all(
-          data.sites.map(async (site) => {
-            try {
-              const { data: summaryData } = await api.get(`/analytics/${site.id}/summary`, {
-                params: { range: "7d" },
-              });
-              return { ...site, summary: summaryData.summary };
-            } catch {
-              return { ...site, summary: null };
-            }
-          }),
-        );
-
-        if (!ignore) setSites(withSummary);
-      } catch (err) {
-        if (!ignore) setError(getApiErrorMessage(err, "Could not load your sites."));
-      } finally {
-        if (!ignore) setLoading(false);
-      }
-    }
-
-    loadSites();
-    return () => {
-      ignore = true;
-    };
-  }, []);
+  const sites = (sitesQuery.data ?? []).map((site, i) => ({
+    ...site,
+    summary: summaryQueries[i]?.data ?? null,
+  }));
+  const loading = sitesQuery.isPending || summaryQueries.some((q) => q.isPending);
+  // Guarded by sites.length === 0 so a background refetch failure (e.g. on
+  // reconnect) can't blank out a list we're already successfully showing.
+  const error =
+    sitesQuery.isError && sites.length === 0
+      ? getApiErrorMessage(sitesQuery.error, "Could not load your sites.")
+      : null;
 
   return (
     <AppLayout>
