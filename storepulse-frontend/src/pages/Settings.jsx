@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Eye, EyeOff, Lock, Pencil } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
@@ -7,18 +8,37 @@ import Field from "../components/ui/Field";
 import Button from "../components/ui/Button";
 import Dialog from "../components/ui/Dialog";
 import PasswordRequirements from "../components/ui/PasswordRequirements";
+import Skeleton from "../components/ui/Skeleton";
 import api, { getApiErrorMessage, getFieldErrors } from "../lib/api";
+import { queryKeys } from "../lib/queryKeys";
 import { clearSession, getToken, saveSession } from "../lib/auth";
+
+function ProfileSkeleton() {
+  return (
+    <Card elevation="md" style={{ marginBottom: "var(--space-3)" }}>
+      <Skeleton width={70} height={10} style={{ marginBottom: "var(--space-2)" }} />
+      <Skeleton width={160} height={22} style={{ marginBottom: "var(--space-3)" }} />
+      <div className="grid" style={{ gap: "var(--space-3)" }}>
+        <div>
+          <Skeleton width={70} height={10} style={{ marginBottom: 5 }} />
+          <Skeleton height={36} />
+        </div>
+        <div>
+          <Skeleton width={40} height={10} style={{ marginBottom: 5 }} />
+          <Skeleton height={36} />
+        </div>
+      </div>
+    </Card>
+  );
+}
 
 export default function Settings() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [fullName, setFullName] = useState("");
-  const [nameLoading, setNameLoading] = useState(false);
   const [nameError, setNameError] = useState(null);
   const [nameFieldErrors, setNameFieldErrors] = useState({});
   const [nameSuccess, setNameSuccess] = useState(false);
@@ -42,26 +62,29 @@ export default function Settings() {
   const [passwordFieldErrors, setPasswordFieldErrors] = useState({});
   const [passwordSuccess, setPasswordSuccess] = useState(false);
 
+  const meQuery = useQuery({
+    queryKey: queryKeys.me,
+    queryFn: async () => {
+      const { data } = await api.get("/auth/me");
+      return data.user;
+    },
+  });
+  const user = meQuery.data ?? null;
+  const loading = meQuery.isPending;
+  const error = meQuery.isError
+    ? getApiErrorMessage(meQuery.error, "Could not load account settings.")
+    : null;
+
+  // Seed the editable field once on first arrival only — a background
+  // revalidation of ["me"] (e.g. after the name mutation below) must not
+  // stomp on text the user is actively typing.
+  const hasSeededNameRef = useRef(false);
   useEffect(() => {
-    let ignore = false;
-
-    async function loadUser() {
-      try {
-        const { data } = await api.get("/auth/me");
-        if (!ignore) {
-          setUser(data.user);
-          setFullName(data.user.fullName || "");
-        }
-      } catch (err) {
-        if (!ignore) setError(getApiErrorMessage(err, "Could not load account settings."));
-      }
+    if (user && !hasSeededNameRef.current) {
+      setFullName(user.fullName || "");
+      hasSeededNameRef.current = true;
     }
-
-    loadUser();
-    return () => {
-      ignore = true;
-    };
-  }, []);
+  }, [user]);
 
   function startEditingName() {
     setNameError(null);
@@ -112,29 +135,30 @@ export default function Settings() {
     }
   }
 
-  async function handleNameSubmit(e) {
-    e.preventDefault();
-    setNameError(null);
-    setNameFieldErrors({});
-    setNameSuccess(false);
-    setNameLoading(true);
-    try {
-      await api.patch("/auth/me/name", { fullName });
-      const updatedUser = { ...user, fullName };
-      setUser(updatedUser);
+  const nameMutation = useMutation({
+    mutationFn: (nextFullName) => api.patch("/auth/me/name", { fullName: nextFullName }),
+    onSuccess: (_response, nextFullName) => {
+      queryClient.setQueryData(queryKeys.me, (old) => (old ? { ...old, fullName: nextFullName } : old));
       const token = getToken();
-      if (token) saveSession({ token, user: updatedUser });
+      if (token) saveSession({ token, user: queryClient.getQueryData(queryKeys.me) });
       setNameSuccess(true);
       setIsEditingName(false);
-    } catch (err) {
+    },
+    onError: (err) => {
       const errors = getFieldErrors(err);
       setNameFieldErrors(errors);
       if (Object.keys(errors).length === 0) {
         setNameError(getApiErrorMessage(err, "Could not update your name."));
       }
-    } finally {
-      setNameLoading(false);
-    }
+    },
+  });
+
+  function handleNameSubmit(e) {
+    e.preventDefault();
+    setNameError(null);
+    setNameFieldErrors({});
+    setNameSuccess(false);
+    nameMutation.mutate(fullName);
   }
 
   function openPasswordSection() {
@@ -199,7 +223,9 @@ export default function Settings() {
       >
         <h1 style={{ marginBottom: "var(--space-4)" }}>Profile</h1>
 
-        {error ? (
+        {loading ? (
+          <ProfileSkeleton />
+        ) : error ? (
           <Card>
             <p className="card-body" style={{ color: "var(--brick)" }}>
               {error}
@@ -210,7 +236,7 @@ export default function Settings() {
             <Card elevation="md" style={{ marginBottom: "var(--space-3)" }}>
               <div className="card-kicker">Account</div>
               <div className="card-title" style={{ marginBottom: "var(--space-3)" }}>
-                {user?.fullName || "Loading…"}
+                {user?.fullName}
               </div>
               <form
                 onSubmit={handleNameSubmit}
@@ -252,7 +278,7 @@ export default function Settings() {
 
                 {isEditingName && (
                   <div className="flex" style={{ gap: "var(--space-2)" }}>
-                    <Button type="submit" loading={nameLoading}>
+                    <Button type="submit" loading={nameMutation.isPending}>
                       Save name
                     </Button>
                     <Button type="button" variant="secondary" onClick={cancelEditingName}>

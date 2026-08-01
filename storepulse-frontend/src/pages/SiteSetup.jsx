@@ -1,40 +1,46 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Mail, MessageCircle, Phone } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import CodeBlock from "../components/ui/CodeBlock";
+import Skeleton from "../components/ui/Skeleton";
 import api, { API_BASE_URL, getApiErrorMessage } from "../lib/api";
+import { queryKeys } from "../lib/queryKeys";
 import { CONTACT_GMAIL_URL, CONTACT_WHATSAPP, CONTACT_PHONE } from "../lib/contact";
+
+function SiteSetupSkeleton() {
+  return (
+    <Card elevation="md">
+      <Skeleton width={100} height={10} style={{ marginBottom: "var(--space-2)" }} />
+      <Skeleton width={180} height={22} style={{ marginBottom: "var(--space-3)" }} />
+      <Skeleton width="60%" height={12} style={{ marginBottom: "var(--space-3)" }} />
+      <Skeleton height={60} style={{ marginBottom: "var(--space-3)" }} />
+      <div className="flex" style={{ gap: "var(--space-2)" }}>
+        <Skeleton width={120} height={36} />
+        <Skeleton width={150} height={36} />
+      </div>
+    </Card>
+  );
+}
 
 export default function SiteSetup() {
   const { siteId } = useParams();
   const navigate = useNavigate();
-  const [site, setSite] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [copyLabel, setCopyLabel] = useState("Copy script");
 
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadSite() {
-      try {
-        const { data } = await api.get(`/sites/${siteId}`);
-        if (!ignore) setSite(data.site);
-      } catch (err) {
-        if (!ignore) setError(getApiErrorMessage(err, "Could not load this site."));
-      } finally {
-        if (!ignore) setLoading(false);
-      }
-    }
-
-    loadSite();
-    return () => {
-      ignore = true;
-    };
-  }, [siteId]);
+  const siteQuery = useQuery({
+    queryKey: queryKeys.sites.detail(siteId),
+    queryFn: async () => {
+      const { data } = await api.get(`/sites/${siteId}`);
+      return data.site;
+    },
+  });
+  const site = siteQuery.data ?? null;
+  const loading = siteQuery.isPending;
+  const error = siteQuery.isError ? getApiErrorMessage(siteQuery.error, "Could not load this site.") : null;
 
   const snippet = site
     ? `<script src="${API_BASE_URL}/track.js"\n  data-site-key="${site.apiKey}"></script>`
@@ -59,9 +65,7 @@ export default function SiteSetup() {
         <h1 style={{ marginBottom: "var(--space-4)" }}>Site setup</h1>
 
         {loading ? (
-          <Card>
-            <p className="card-body">Loading…</p>
-          </Card>
+          <SiteSetupSkeleton />
         ) : error && !site ? (
           <Card>
             <p className="card-body" style={{ color: "var(--brick)" }}>

@@ -1,7 +1,7 @@
-import { createContext, useContext, useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
+import { ThemeContext } from "./theme-context";
 
 const THEME_KEY = "storepulse_theme";
-const ThemeContext = createContext(null);
 
 function getPreferredTheme() {
   const stored = localStorage.getItem(THEME_KEY);
@@ -26,8 +26,4 @@ export function ThemeProvider({ children }) {
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>
   );
-}
-
-export function useTheme() {
-  return useContext(ThemeContext);
 }

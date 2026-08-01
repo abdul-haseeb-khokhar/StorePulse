@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import { Settings } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
@@ -8,7 +9,9 @@ import Seg from "../components/ui/Seg";
 import Button from "../components/ui/Button";
 import StatCard from "../components/dashboard/StatCard";
 import TrafficChart from "../components/dashboard/TrafficChart";
+import DashboardSkeleton from "../components/dashboard/DashboardSkeleton";
 import api, { getApiErrorMessage } from "../lib/api";
+import { queryKeys } from "../lib/queryKeys";
 
 const rangeLabels = {
   "7d": "7 days",
@@ -17,6 +20,13 @@ const rangeLabels = {
 };
 
 const RANGE_DAYS = { "7d": 7, "30d": 30, "90d": 90 };
+
+// Events land via the storefront's tracking snippet, outside React Query's
+// cache entirely — polling is what keeps the stat cards/chart feeling live
+// while this page is open, since nothing else would trigger a refetch of
+// already-fresh-enough data. Paused automatically while the tab isn't
+// focused (React Query's refetchIntervalInBackground default is false).
+const LIVE_METRICS_REFETCH_MS = 30_000;
 
 // The top-products/top-referrers endpoints take explicit startDate/endDate
 // query params (unlike summary/traffic, which take a `range` string the
@@ -47,120 +57,93 @@ function formatChartDate(date) {
 
 export default function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [sites, setSites] = useState([]);
   const [selectedSiteId, setSelectedSiteId] = useState(searchParams.get("site") || "");
   const [range, setRange] = useState(searchParams.get("range") || "30d");
-  const [summary, setSummary] = useState(null);
-  const [traffic, setTraffic] = useState([]);
-  const [topProducts, setTopProducts] = useState([]);
-  const [topReferrers, setTopReferrers] = useState([]);
-  const [loadingSites, setLoadingSites] = useState(true);
-  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
-  const [error, setError] = useState(null);
+
+  const sitesQuery = useQuery({
+    queryKey: queryKeys.sites.all,
+    queryFn: async () => {
+      const { data } = await api.get("/sites");
+      return data.sites;
+    },
+  });
+  const sites = sitesQuery.data ?? [];
+  const loadingSites = sitesQuery.isPending;
+
+  // Derived during render rather than synced via setState-in-effect: falls
+  // back to the first site once the list arrives, same default the old
+  // fetch-success handler picked, without needing an extra render pass.
+  const effectiveSiteId = selectedSiteId || sites[0]?.id || "";
 
   useEffect(() => {
-    let ignore = false;
-
-    async function loadSites() {
-      try {
-        const { data } = await api.get("/sites");
-        if (ignore) return;
-        setSites(data.sites);
-        setSelectedSiteId((currentSiteId) => currentSiteId || data.sites[0]?.id || "");
-      } catch (err) {
-        if (!ignore) setError(getApiErrorMessage(err, "Could not load your sites."));
-      } finally {
-        if (!ignore) setLoadingSites(false);
-      }
-    }
-
-    loadSites();
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!selectedSiteId) return;
+    if (!effectiveSiteId) return;
 
     const nextParams = new URLSearchParams();
-    nextParams.set("site", selectedSiteId);
+    nextParams.set("site", effectiveSiteId);
     nextParams.set("range", range);
     setSearchParams(nextParams, { replace: true });
-  }, [range, selectedSiteId, setSearchParams]);
+  }, [range, effectiveSiteId, setSearchParams]);
 
-  useEffect(() => {
-    if (!selectedSiteId) return;
+  const summaryQuery = useQuery({
+    queryKey: queryKeys.analytics.summary(effectiveSiteId, range),
+    queryFn: async () => {
+      const { data } = await api.get(`/analytics/${effectiveSiteId}/summary`, { params: { range } });
+      return data.summary;
+    },
+    enabled: Boolean(effectiveSiteId),
+    refetchInterval: LIVE_METRICS_REFETCH_MS,
+  });
 
-    let ignore = false;
+  const trafficQuery = useQuery({
+    queryKey: queryKeys.analytics.traffic(effectiveSiteId, range),
+    queryFn: async () => {
+      const { data } = await api.get(`/analytics/${effectiveSiteId}/traffic`, { params: { range } });
+      return data.traffic.map((item) => ({ ...item, date: formatChartDate(item.date) }));
+    },
+    enabled: Boolean(effectiveSiteId),
+    refetchInterval: LIVE_METRICS_REFETCH_MS,
+  });
 
-    async function loadAnalytics() {
-      setLoadingAnalytics(true);
-      setError(null);
-      try {
-        const [summaryResponse, trafficResponse] = await Promise.all([
-          api.get(`/analytics/${selectedSiteId}/summary`, { params: { range } }),
-          api.get(`/analytics/${selectedSiteId}/traffic`, { params: { range } }),
-        ]);
+  const summary = summaryQuery.data ?? null;
+  const traffic = trafficQuery.data ?? [];
+  const analyticsErrorObj = summaryQuery.error ?? trafficQuery.error ?? null;
+  const error = analyticsErrorObj ? getApiErrorMessage(analyticsErrorObj, "Could not load analytics.") : null;
+  const loadingAnalytics =
+    Boolean(effectiveSiteId) && (summaryQuery.isPending || trafficQuery.isPending);
 
-        if (ignore) return;
-        setSummary(summaryResponse.data.summary);
-        setTraffic(
-          trafficResponse.data.traffic.map((item) => ({
-            ...item,
-            date: formatChartDate(item.date),
-          })),
-        );
-      } catch (err) {
-        if (!ignore) setError(getApiErrorMessage(err, "Could not load analytics."));
-      } finally {
-        if (!ignore) setLoadingAnalytics(false);
-      }
-    }
-
-    loadAnalytics();
-    return () => {
-      ignore = true;
-    };
-  }, [range, selectedSiteId]);
-
-  // Kept separate from the summary/traffic fetch above: these two panels
+  // Kept separate from the summary/traffic queries above: these two panels
   // are supplementary, so a problem with either endpoint falls back to an
   // empty state instead of taking down the stat cards and chart too.
-  useEffect(() => {
-    if (!selectedSiteId) return;
-
-    let ignore = false;
-
-    async function loadRankings() {
+  const topProductsQuery = useQuery({
+    queryKey: queryKeys.analytics.topProducts(effectiveSiteId, range),
+    queryFn: async () => {
       const { startDate, endDate } = getDateBoundaryParams(range);
-      try {
-        const [productsResponse, referrersResponse] = await Promise.all([
-          api.get(`/analytics/${selectedSiteId}/top-products`, {
-            params: { startDate, endDate, limit: 5 },
-          }),
-          api.get(`/analytics/${selectedSiteId}/top-referrers`, {
-            params: { startDate, endDate, limit: 5 },
-          }),
-        ]);
-        if (ignore) return;
-        setTopProducts(productsResponse.data.data || []);
-        setTopReferrers(referrersResponse.data.data || []);
-      } catch {
-        if (!ignore) {
-          setTopProducts([]);
-          setTopReferrers([]);
-        }
-      }
-    }
+      const { data } = await api.get(`/analytics/${effectiveSiteId}/top-products`, {
+        params: { startDate, endDate, limit: 5 },
+      });
+      return data.data || [];
+    },
+    enabled: Boolean(effectiveSiteId),
+    retry: 0,
+  });
 
-    loadRankings();
-    return () => {
-      ignore = true;
-    };
-  }, [range, selectedSiteId]);
+  const topReferrersQuery = useQuery({
+    queryKey: queryKeys.analytics.topReferrers(effectiveSiteId, range),
+    queryFn: async () => {
+      const { startDate, endDate } = getDateBoundaryParams(range);
+      const { data } = await api.get(`/analytics/${effectiveSiteId}/top-referrers`, {
+        params: { startDate, endDate, limit: 5 },
+      });
+      return data.data || [];
+    },
+    enabled: Boolean(effectiveSiteId),
+    retry: 0,
+  });
 
-  const selectedSite = sites.find((site) => site.id === selectedSiteId);
+  const topProducts = topProductsQuery.data ?? [];
+  const topReferrers = topReferrersQuery.data ?? [];
+
+  const selectedSite = sites.find((site) => site.id === effectiveSiteId);
   const rangeLabel = rangeLabels[range];
 
   const stats = useMemo(() => {
@@ -197,9 +180,7 @@ export default function Dashboard() {
         style={{ maxWidth: 1040, padding: "var(--space-6) var(--space-4) var(--space-8)" }}
       >
         {loadingSites ? (
-          <Card>
-            <p className="card-body">Loading dashboard…</p>
-          </Card>
+          <DashboardSkeleton showHeader />
         ) : sites.length === 0 ? (
           <Card className="flex flex-col items-center text-center" style={{ padding: "var(--space-8)" }}>
             <div className="card-title">Add a site to start tracking analytics</div>
@@ -228,7 +209,7 @@ export default function Dashboard() {
                 <label className="flex items-center" style={{ gap: 6 }}>
                   <span className="sr-only">Selected site</span>
                   <select
-                    value={selectedSiteId}
+                    value={effectiveSiteId}
                     onChange={(event) => setSelectedSiteId(event.target.value)}
                     className="input"
                   >
@@ -263,16 +244,14 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {error ? (
+            {error && !summary ? (
               <Card>
                 <p className="card-body" style={{ color: "var(--brick)" }}>
                   {error}
                 </p>
               </Card>
             ) : loadingAnalytics && !summary ? (
-              <Card>
-                <p className="card-body">Loading analytics…</p>
-              </Card>
+              <DashboardSkeleton />
             ) : (
               <>
                 <div

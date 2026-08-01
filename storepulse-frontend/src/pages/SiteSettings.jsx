@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Mail, MessageCircle, Phone } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
@@ -7,51 +8,76 @@ import Field from "../components/ui/Field";
 import Button from "../components/ui/Button";
 import Dialog from "../components/ui/Dialog";
 import CodeBlock from "../components/ui/CodeBlock";
+import Skeleton from "../components/ui/Skeleton";
 import api, { API_BASE_URL, getApiErrorMessage } from "../lib/api";
+import { queryKeys } from "../lib/queryKeys";
 import { CONTACT_GMAIL_URL, CONTACT_WHATSAPP, CONTACT_PHONE } from "../lib/contact";
+
+function SiteSettingsSkeleton() {
+  return (
+    <>
+      <Card elevation="md" style={{ marginBottom: "var(--space-3)" }}>
+        <Skeleton width={100} height={10} style={{ marginBottom: "var(--space-2)" }} />
+        <Skeleton width={160} height={22} style={{ marginBottom: "var(--space-3)" }} />
+        <div className="grid" style={{ gap: "var(--space-3)" }}>
+          <div>
+            <Skeleton width={70} height={10} style={{ marginBottom: 5 }} />
+            <Skeleton height={36} />
+          </div>
+          <div>
+            <Skeleton width={60} height={10} style={{ marginBottom: 5 }} />
+            <Skeleton height={36} />
+          </div>
+          <div>
+            <Skeleton width={50} height={10} style={{ marginBottom: 5 }} />
+            <Skeleton height={36} />
+          </div>
+          <Skeleton width={140} height={36} />
+        </div>
+      </Card>
+
+      <Card>
+        <Skeleton width={120} height={10} style={{ marginBottom: "var(--space-2)" }} />
+        <Skeleton width="90%" height={12} style={{ marginBottom: "var(--space-3)" }} />
+        <Skeleton height={60} />
+      </Card>
+    </>
+  );
+}
 
 export default function SiteSettings() {
   const { siteId } = useParams();
-  const [site, setSite] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [regenerating, setRegenerating] = useState(false);
+  const queryClient = useQueryClient();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [showRegenNotice, setShowRegenNotice] = useState(false);
+  const [regenerateError, setRegenerateError] = useState(null);
 
-  useEffect(() => {
-    let ignore = false;
+  const siteQuery = useQuery({
+    queryKey: queryKeys.sites.detail(siteId),
+    queryFn: async () => {
+      const { data } = await api.get(`/sites/${siteId}`);
+      return data.site;
+    },
+  });
+  const site = siteQuery.data ?? null;
+  const loading = siteQuery.isPending;
+  const loadError = siteQuery.isError
+    ? getApiErrorMessage(siteQuery.error, "Could not load this site.")
+    : null;
 
-    async function loadSite() {
-      try {
-        const { data } = await api.get(`/sites/${siteId}`);
-        if (!ignore) setSite(data.site);
-      } catch (err) {
-        if (!ignore) setError(getApiErrorMessage(err, "Could not load this site."));
-      } finally {
-        if (!ignore) setLoading(false);
-      }
-    }
-
-    loadSite();
-    return () => {
-      ignore = true;
-    };
-  }, [siteId]);
-
-  async function handleRegenerate() {
-    setError(null);
-    setRegenerating(true);
-    try {
-      const { data } = await api.patch(`/sites/${siteId}/api-key`);
-      setSite(data.site);
+  const regenerateMutation = useMutation({
+    mutationFn: () => api.patch(`/sites/${siteId}/api-key`),
+    onSuccess: ({ data }) => {
+      queryClient.setQueryData(queryKeys.sites.detail(siteId), data.site);
       setShowRegenNotice(true);
-    } catch (err) {
-      setError(getApiErrorMessage(err, "Could not regenerate the API key."));
-    } finally {
-      setRegenerating(false);
-      setConfirmOpen(false);
-    }
+    },
+    onError: (err) => setRegenerateError(getApiErrorMessage(err, "Could not regenerate the API key.")),
+    onSettled: () => setConfirmOpen(false),
+  });
+
+  function handleRegenerate() {
+    setRegenerateError(null);
+    regenerateMutation.mutate();
   }
 
   const snippet = site
@@ -67,13 +93,11 @@ export default function SiteSettings() {
         <h1 style={{ marginBottom: "var(--space-4)" }}>Site settings</h1>
 
         {loading ? (
-          <Card>
-            <p className="card-body">Loading…</p>
-          </Card>
-        ) : error && !site ? (
+          <SiteSettingsSkeleton />
+        ) : loadError && !site ? (
           <Card>
             <p className="card-body" style={{ color: "var(--brick)" }}>
-              {error}
+              {loadError}
             </p>
           </Card>
         ) : (
@@ -96,9 +120,9 @@ export default function SiteSettings() {
                 <Button variant="secondary" onClick={() => setConfirmOpen(true)}>
                   Regenerate key
                 </Button>
-                {error && (
+                {regenerateError && (
                   <p className="text-sm" style={{ color: "var(--brick)" }}>
-                    {error}
+                    {regenerateError}
                   </p>
                 )}
                 {showRegenNotice && (
@@ -157,7 +181,7 @@ export default function SiteSettings() {
               <Button variant="secondary" onClick={() => setConfirmOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleRegenerate} loading={regenerating}>
+              <Button onClick={handleRegenerate} loading={regenerateMutation.isPending}>
                 Regenerate
               </Button>
             </>

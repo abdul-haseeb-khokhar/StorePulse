@@ -1,6 +1,6 @@
 import { ComposedChart, Bar, Line, XAxis, ResponsiveContainer, Tooltip } from "recharts";
 import Card from "../ui/Card";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../context/useTheme";
 
 // Resolved from --stamp / a soft tint of it in index.css — hardcoded
 // rather than var(...) to avoid relying on CSS custom property

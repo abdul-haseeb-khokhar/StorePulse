@@ -100,7 +100,15 @@ export function getFieldErrors(error) {
 }
 
 export function getApiErrorMessage(error, fallback = "Something went wrong. Try again.") {
-  const data = error.response?.data;
+  // No `response` at all means the request never reached the server
+  // (backend down, DNS failure, offline) rather than the server rejecting
+  // it — that's a different problem than whatever `fallback` describes,
+  // so it gets its own message instead of reusing a per-action fallback.
+  if (!error.response) {
+    return "Can't reach the server. Check your connection and try again.";
+  }
+
+  const data = error.response.data;
   if (data?.message) return data.message;
 
   if (Array.isArray(data?.details) && data.details.length > 0) {
