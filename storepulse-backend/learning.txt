@@ -124,3 +124,10 @@ We do this by changing configuration of caddy through Caddyfile
 Now back to resend limitation problem with buying domain.
 Ok bought domain from cloudflare cost me 14.50$/year, comes back to resend.com and added domain it automatically configure dns record and on ask i authorize it to add this to cloudflare dns records.
 Took sometime and automatically verified my domain.
+
+8/1/2026
+Today i have learnt some more about prisma funcitons, First findunique is only applicable on fields that are primary keys or carry @unique constraint.
+Same goes for update and delete's filtering too. 
+And There is select, omit and include too, Select is if you want to allow some fields to be returned, omit is mirror opposite of select and include is for relation fields,
+include does is, It along with all the columns of table also returns the selected relation fields.
+We can't use include and select on the same level but in nesting condition we can use them.

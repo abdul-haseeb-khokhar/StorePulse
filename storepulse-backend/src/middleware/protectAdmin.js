@@ -1,8 +1,8 @@
 const {verifyToken} = require('../utils/jwt');
 const AppError = require('../utils/AppError');
-const {findUserById} = require('../modules/auth/auth.repository');
+const {findAdminById} = require('../modules/adminAuth/adminAuth.repository');
 
-async function protect(req, res, next) {
+async function protectAdmin(req, res, next) {
     try {
         const authHeader = req.headers.authorization;
         if(!authHeader || !authHeader.startsWith('Bearer ')){
@@ -13,16 +13,13 @@ async function protect(req, res, next) {
 
         const decoded = verifyToken(token);
 
-        const user = await findUserById(decoded.userId);
-        
-        if(!user) {
-            throw new AppError('User not found', 404);
-        }
-        if(user.status !== 'Active') {
-            throw new AppError(user.status === 'Banned' ? 'User is banned by admin.' : "This user doesn't exist",user.status === 'Banned' ? 403 : 404);
+        const admin = await findAdminById(decoded.adminId);
+
+        if(!admin) {
+            throw new AppError('Admin not found', 404);
         }
 
-        req.user = {id: decoded.userId, isAdmin: user.isAdmin};
+        req.admin = {id: admin.id, role: admin.role};
 
         next()
     } catch (error) {
@@ -34,4 +31,4 @@ async function protect(req, res, next) {
     }
 }
 
-module.exports = protect;
+module.exports = protectAdmin;
