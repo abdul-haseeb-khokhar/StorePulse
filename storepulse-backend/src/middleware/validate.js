@@ -1,5 +1,4 @@
 const validate = (schema) => (req, res, next) => {
-    console.log("validate middleware is called");
     const result = schema.safeParse({
         body: req.body,
         query: req.query,

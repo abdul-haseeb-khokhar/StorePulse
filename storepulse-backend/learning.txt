@@ -131,3 +131,11 @@ Same goes for update and delete's filtering too.
 And There is select, omit and include too, Select is if you want to allow some fields to be returned, omit is mirror opposite of select and include is for relation fields,
 include does is, It along with all the columns of table also returns the selected relation fields.
 We can't use include and select on the same level but in nesting condition we can use them.
+
+8/3/2026
+Learnt about a security feature , it is related to credentials timing when a real password is provided then a false one,
+a real password took more time since bcrypt.compare is a slower process because of multiple password check security concern,
+it is byitself no quite a problem but it tells attacker about the email or user exist inn our db so what we do is even user is there or not we 
+compare with a dummy hash so that the time diff can be decreased .
+
+Learnt about indexing in database how it works and how to create indexes using sql and prisma queries.

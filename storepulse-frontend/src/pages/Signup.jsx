@@ -74,6 +74,7 @@ export default function Signup() {
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             error={fieldErrors.fullName}
+            maxLength={50}
             required
           />
 

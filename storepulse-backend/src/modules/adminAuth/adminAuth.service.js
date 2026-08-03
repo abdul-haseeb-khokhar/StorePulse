@@ -1,6 +1,6 @@
 const {findAdminByEmail, findAdminById, createAdminInvite, updateAdminInvite, findAdminByInviteToken, activateAdmin, listAdmins} = require('./adminAuth.repository');
 const {generateToken, hashToken} = require('../../utils/verificationToken');
-const {hashPassword, comparePassword} = require('../../utils/passwordHashing');
+const {hashPassword, comparePassword, DUMMY_PASSWORD_HASH} = require('../../utils/passwordHashing');
 const {signToken} = require('../../utils/jwt');
 const AppError = require('../../utils/AppError');
 const {sendAdminInviteEmail} = require('../email/email.service');
@@ -65,9 +65,11 @@ async function acceptInvite(rawToken, fullName, password) {
 async function loginAdmin(email, password) {
     const admin = await findAdminByEmail(email);
 
-    const isPasswordValid = admin && admin.isActive && await comparePassword(password, admin.password);
+    // A pending (not-yet-activated) admin has no password set yet, so
+    // comparePassword still needs the dummy hash fallback for that case too.
+    const isPasswordValid = await comparePassword(password, admin?.password || DUMMY_PASSWORD_HASH);
 
-    if(!admin || !isPasswordValid) {
+    if(!admin || !admin.isActive || !isPasswordValid) {
         throw new AppError('Email or password is invalid!', 401);
     }
 

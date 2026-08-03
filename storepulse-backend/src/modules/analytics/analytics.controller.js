@@ -1,4 +1,5 @@
 const {getTrafficOverview, getSummary, getTopProducts, getTopReferrersService} = require('./analytics.service');
+const {getLastFlushAt} = require('../ingest/ingest.buffer');
 
 function getDateRangeFromQuery(range) {
     const endDate = new Date();
@@ -17,12 +18,12 @@ async function getTrafficController(req, res, next) {
         const {startDate, endDate} = getDateRangeFromQuery(range);
 
         const traffic = await getTrafficOverview({siteId, userId, startDate, endDate});
+        const dataAsOf = await getLastFlushAt(siteId);
 
-        res.status(200).json({traffic});
+        res.status(200).json({traffic, dataAsOf});
 
     } catch (error) {
-        console.log(error)
-        next(error);        
+        next(error);
     }
 }
 
@@ -35,7 +36,8 @@ async function getSummaryController(req, res, next) {
         const {startDate, endDate} = getDateRangeFromQuery(range);
 
         const summary = await getSummary({siteId, userId, startDate, endDate});
-        res.status(200).json({summary});
+        const dataAsOf = await getLastFlushAt(siteId);
+        res.status(200).json({summary, dataAsOf});
     } catch (error) {
         next(error)
     }

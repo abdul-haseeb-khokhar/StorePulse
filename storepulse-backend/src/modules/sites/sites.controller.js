@@ -1,7 +1,6 @@
 const {addSite, getUserSites, regenerateApiKey, getSiteById} = require('./sites.service')
 
 async function addSiteController(req, res, next) {
-    console.log('addSite controller is runnig')
     try{
         const {name, domain} = req.body;
         const userId = req.user.id;
@@ -15,7 +14,6 @@ async function addSiteController(req, res, next) {
 }
 
 async function getUserSitesController(req, res, next) {
-    console.log('getuserSite controller is running')
     try{
         const userId = req.user.id;
         const sites = await getUserSites(userId);
@@ -27,7 +25,6 @@ async function getUserSitesController(req, res, next) {
 }
 
 async function getSiteByIdController(req, res, next) {
-    console.log('getsitebyid controller is runnig')
     try {
         const {siteId} = req.params;
         const userId = req.user.id;
@@ -41,7 +38,6 @@ async function getSiteByIdController(req, res, next) {
 }
 
 async function regenerateApiKeyController(req, res, next) {
-    console.log('regenerateapi key controller is runing')
     try {
         const {siteId} = req.params;
         const userId = req.user.id;

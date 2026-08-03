@@ -63,6 +63,7 @@ export default function AdminAcceptInvite() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 error={fieldErrors.fullName}
+                maxLength={50}
                 required
               />
 

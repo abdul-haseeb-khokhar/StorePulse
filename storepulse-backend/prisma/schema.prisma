@@ -33,6 +33,10 @@ model User {
   passwordResetTokenExpiry DateTime?
 
   sites Site[]
+
+  @@index([emailVerificationToken])
+  @@index([pendingEmailToken])
+  @@index([passwordResetToken])
 }
 
 model Site {

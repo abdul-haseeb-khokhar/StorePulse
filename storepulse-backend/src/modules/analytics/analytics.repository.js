@@ -52,7 +52,7 @@ async function getTopClickedProducts({siteId, startDate, endDate, limit = 10}) {
         where: {
             siteId,
             type: 'PRODUCT_CLICK',
-            createdAt: {gte: startDate, lte: endDate},
+            createdAt: {gte: startDate, lt: endDate},
             productId: {not: null}
         },
         _count: {productId: true},
@@ -67,7 +67,7 @@ async function getTopReferrers({siteId, startDate, endDate, limit = 10}) {
         where: {
             siteId,
             type: 'PAGE_VIEW',
-            createdAt: {gte: startDate, lte: endDate},
+            createdAt: {gte: startDate, lt: endDate},
         },
 
         _count: {referrer: true},
