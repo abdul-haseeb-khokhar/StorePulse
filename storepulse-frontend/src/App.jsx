@@ -16,6 +16,14 @@ import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import RequireAuth from "./components/auth/RequireAuth";
+import RequireAdminAuth from "./components/auth/RequireAdminAuth";
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminAcceptInvite from "./pages/admin/AdminAcceptInvite";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminUserDetail from "./pages/admin/AdminUserDetail";
+import AdminSites from "./pages/admin/AdminSites";
+import AdminAdmins from "./pages/admin/AdminAdmins";
 
 export default function App() {
   return (
@@ -40,6 +48,18 @@ export default function App() {
             <Route path="/sites/:siteId/setup" element={<SiteSetup />} />
             <Route path="/sites/:siteId/settings" element={<SiteSettings />} />
             <Route path="/settings" element={<Settings />} />
+          </Route>
+
+          {/* Admin — no links to these from the customer-facing app; reachable only by direct URL */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/accept-invite" element={<AdminAcceptInvite />} />
+
+          <Route element={<RequireAdminAuth />}>
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/users/:id" element={<AdminUserDetail />} />
+            <Route path="/admin/sites" element={<AdminSites />} />
+            <Route path="/admin/admins" element={<AdminAdmins />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
