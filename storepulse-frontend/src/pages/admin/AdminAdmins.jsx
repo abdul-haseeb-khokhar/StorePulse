@@ -9,10 +9,12 @@ import Dialog from "../../components/ui/Dialog";
 import Skeleton from "../../components/ui/Skeleton";
 import adminApi from "../../lib/adminApi";
 import { getApiErrorMessage, getFieldErrors } from "../../lib/api";
+import { getStoredAdmin } from "../../lib/adminAuth";
 import { queryKeys } from "../../lib/queryKeys";
 
 export default function AdminAdmins() {
   const queryClient = useQueryClient();
+  const isSuperAdmin = getStoredAdmin()?.role === "SUPERADMIN";
   const [inviteOpen, setInviteOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
@@ -71,7 +73,7 @@ export default function AdminAdmins() {
       >
         <div className="flex items-baseline justify-between" style={{ marginBottom: "var(--space-4)" }}>
           <h1 style={{ margin: 0 }}>Admins</h1>
-          <Button onClick={openInvite}>Invite admin</Button>
+          {isSuperAdmin && <Button onClick={openInvite}>Invite admin</Button>}
         </div>
 
         {loading ? (

@@ -18,6 +18,9 @@ async function protectAdmin(req, res, next) {
         if(!admin) {
             throw new AppError('Admin not found', 404);
         }
+        if(!admin.isActive) {
+            throw new AppError('Your admin access has been deactivated.', 403);
+        }
 
         req.admin = {id: admin.id, role: admin.role};
 

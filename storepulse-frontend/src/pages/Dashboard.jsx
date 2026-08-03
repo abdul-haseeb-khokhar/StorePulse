@@ -69,6 +69,13 @@ export default function Dashboard() {
   });
   const sites = sitesQuery.data ?? [];
   const loadingSites = sitesQuery.isPending;
+  // Guarded by sites.length === 0 so a background refetch failure (e.g. on
+  // reconnect) can't blank out a dashboard we're already successfully
+  // showing — see SitesList.jsx for the same pattern.
+  const sitesError =
+    sitesQuery.isError && sites.length === 0
+      ? getApiErrorMessage(sitesQuery.error, "Could not load your sites.")
+      : null;
 
   // Derived during render rather than synced via setState-in-effect: falls
   // back to the first site once the list arrives, same default the old
@@ -181,6 +188,13 @@ export default function Dashboard() {
       >
         {loadingSites ? (
           <DashboardSkeleton showHeader />
+        ) : sitesError ? (
+          <Card className="flex flex-col items-center text-center" style={{ padding: "var(--space-8)" }}>
+            <div className="card-title">Could not load your sites</div>
+            <p className="card-body" style={{ color: "var(--brick)" }}>
+              {sitesError}
+            </p>
+          </Card>
         ) : sites.length === 0 ? (
           <Card className="flex flex-col items-center text-center" style={{ padding: "var(--space-8)" }}>
             <div className="card-title">Add a site to start tracking analytics</div>
