@@ -22,6 +22,16 @@ async function createAdminInvite({email, hashedToken, expiry}) {
     });
 }
 
+async function updateAdminInvite(adminId, {hashedToken, expiry}) {
+    return prisma.admin.update({
+        where: {id: adminId},
+        data: {
+            inviteToken: hashedToken,
+            inviteTokenExpiry: expiry,
+        }
+    });
+}
+
 async function findAdminByInviteToken(hashedToken) {
     return prisma.admin.findFirst({
         where: {inviteToken: hashedToken}
@@ -49,5 +59,5 @@ async function listAdmins() {
 }
 
 module.exports = {
-    findAdminByEmail, findAdminById, createAdminInvite, findAdminByInviteToken, activateAdmin, listAdmins
+    findAdminByEmail, findAdminById, createAdminInvite, updateAdminInvite, findAdminByInviteToken, activateAdmin, listAdmins
 }

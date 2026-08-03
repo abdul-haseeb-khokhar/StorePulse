@@ -1,4 +1,4 @@
-const {findAdminByEmail, findAdminById, createAdminInvite, findAdminByInviteToken, activateAdmin, listAdmins} = require('./adminAuth.repository');
+const {findAdminByEmail, findAdminById, createAdminInvite, updateAdminInvite, findAdminByInviteToken, activateAdmin, listAdmins} = require('./adminAuth.repository');
 const {generateToken, hashToken} = require('../../utils/verificationToken');
 const {hashPassword, comparePassword} = require('../../utils/passwordHashing');
 const {signToken} = require('../../utils/jwt');
@@ -9,7 +9,7 @@ const INVITE_EXPIRY_MS = 24 * 60 * 60 * 1000;
 
 async function inviteAdmin(email) {
     const existingAdmin = await findAdminByEmail(email);
-    if(existingAdmin) {
+    if(existingAdmin?.isActive) {
         throw new AppError('An admin account with this email already exists', 409);
     }
 
@@ -17,8 +17,27 @@ async function inviteAdmin(email) {
     const hashedToken = hashToken(rawToken);
     const expiry = new Date(Date.now() + INVITE_EXPIRY_MS);
 
-    await createAdminInvite({email, hashedToken, expiry});
-    await sendAdminInviteEmail({email, rawToken});
+    // DB write happens first — this is the durable, authoritative step.
+    // Once this succeeds, the invite exists and can always be resent (see
+    // the existingAdmin branch below), so a failure past this point is
+    // always recoverable by just inviting the same address again.
+    if(existingAdmin) {
+        // A still-pending invite (never activated) — resending updates its
+        // token/expiry in place rather than erroring, since a superadmin
+        // legitimately needs to resend a lost or expired invite too.
+        await updateAdminInvite(existingAdmin.id, {hashedToken, expiry});
+    } else {
+        await createAdminInvite({email, hashedToken, expiry});
+    }
+
+    try {
+        await sendAdminInviteEmail({email, rawToken});
+    } catch (error) {
+        throw new AppError(
+            'Invite was saved, but the email failed to send. Click "Invite admin" for this address again to resend it.',
+            502
+        );
+    }
 
     return {message: 'Invite sent. The new admin will receive an email to set their password.'};
 }

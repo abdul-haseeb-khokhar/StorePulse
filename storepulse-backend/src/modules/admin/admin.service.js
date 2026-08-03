@@ -10,7 +10,7 @@ async function updateUserStatusService(userId, status, adminId) {
     }
 
     if(user.status === 'Deleted') {
-        throw new AppError("This is a deleted user and can't be modified",401);
+        throw new AppError("This is a deleted user and can't be modified", 400);
     }
 
     let result;

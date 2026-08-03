@@ -17,7 +17,20 @@ const validate = (schema) => (req, res, next) => {
     }
 
     req.body = result.data.body ?? req.body;
-    req.query = result.data.query ?? req.query;
+    // Express 5 defines req.query as a getter-only accessor (recomputed from
+    // the raw querystring on every read), so a plain `req.query = ...`
+    // assignment silently no-ops in this non-strict CommonJS module — the
+    // coerced/defaulted values (e.g. page/limit as numbers) never actually
+    // reach the controller. Overriding the property descriptor replaces the
+    // getter with a plain writable value instead.
+    if (result.data.query) {
+        Object.defineProperty(req, 'query', {
+            value: result.data.query,
+            writable: true,
+            configurable: true,
+            enumerable: true,
+        });
+    }
     req.params = result.data.params ?? req.params;
     next();
 }
