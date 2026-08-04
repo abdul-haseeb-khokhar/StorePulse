@@ -55,10 +55,33 @@ function formatChartDate(date) {
   );
 }
 
+// Events sit in a Redis buffer for up to ~10s (see ingest.buffer.js) before
+// landing in Postgres, which is what analytics reads from — so "now" is
+// never quite what's on screen. Rather than hide that gap, dataAsOf (set by
+// the backend to its last successful buffer flush) lets this render an
+// honest "as of Xs ago" instead of implying the numbers are live.
+function formatRelativeTime(msAgo) {
+  const seconds = Math.max(0, Math.round(msAgo / 1000));
+  if (seconds < 5) return "just now";
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.round(minutes / 60);
+  return `${hours}h ago`;
+}
+
 export default function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedSiteId, setSelectedSiteId] = useState(searchParams.get("site") || "");
   const [range, setRange] = useState(searchParams.get("range") || "30d");
+
+  // Ticks once a second purely to re-render the "as of Xs ago" label — the
+  // underlying data only actually changes on the 30s poll above.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const sitesQuery = useQuery({
     queryKey: queryKeys.sites.all,
@@ -69,6 +92,13 @@ export default function Dashboard() {
   });
   const sites = sitesQuery.data ?? [];
   const loadingSites = sitesQuery.isPending;
+  // Guarded by sites.length === 0 so a background refetch failure (e.g. on
+  // reconnect) can't blank out a dashboard we're already successfully
+  // showing — see SitesList.jsx for the same pattern.
+  const sitesError =
+    sitesQuery.isError && sites.length === 0
+      ? getApiErrorMessage(sitesQuery.error, "Could not load your sites.")
+      : null;
 
   // Derived during render rather than synced via setState-in-effect: falls
   // back to the first site once the list arrives, same default the old
@@ -88,7 +118,7 @@ export default function Dashboard() {
     queryKey: queryKeys.analytics.summary(effectiveSiteId, range),
     queryFn: async () => {
       const { data } = await api.get(`/analytics/${effectiveSiteId}/summary`, { params: { range } });
-      return data.summary;
+      return { summary: data.summary, dataAsOf: data.dataAsOf };
     },
     enabled: Boolean(effectiveSiteId),
     refetchInterval: LIVE_METRICS_REFETCH_MS,
@@ -98,14 +128,18 @@ export default function Dashboard() {
     queryKey: queryKeys.analytics.traffic(effectiveSiteId, range),
     queryFn: async () => {
       const { data } = await api.get(`/analytics/${effectiveSiteId}/traffic`, { params: { range } });
-      return data.traffic.map((item) => ({ ...item, date: formatChartDate(item.date) }));
+      return {
+        traffic: data.traffic.map((item) => ({ ...item, date: formatChartDate(item.date) })),
+        dataAsOf: data.dataAsOf,
+      };
     },
     enabled: Boolean(effectiveSiteId),
     refetchInterval: LIVE_METRICS_REFETCH_MS,
   });
 
-  const summary = summaryQuery.data ?? null;
-  const traffic = trafficQuery.data ?? [];
+  const summary = summaryQuery.data?.summary ?? null;
+  const traffic = trafficQuery.data?.traffic ?? [];
+  const dataAsOf = summaryQuery.data?.dataAsOf ?? trafficQuery.data?.dataAsOf ?? null;
   const analyticsErrorObj = summaryQuery.error ?? trafficQuery.error ?? null;
   const error = analyticsErrorObj ? getApiErrorMessage(analyticsErrorObj, "Could not load analytics.") : null;
   const loadingAnalytics =
@@ -181,6 +215,13 @@ export default function Dashboard() {
       >
         {loadingSites ? (
           <DashboardSkeleton showHeader />
+        ) : sitesError ? (
+          <Card className="flex flex-col items-center text-center" style={{ padding: "var(--space-8)" }}>
+            <div className="card-title">Could not load your sites</div>
+            <p className="card-body" style={{ color: "var(--brick)" }}>
+              {sitesError}
+            </p>
+          </Card>
         ) : sites.length === 0 ? (
           <Card className="flex flex-col items-center text-center" style={{ padding: "var(--space-8)" }}>
             <div className="card-title">Add a site to start tracking analytics</div>
@@ -203,6 +244,11 @@ export default function Dashboard() {
                   {selectedSite?.domain}
                 </Tag>
                 <h1 style={{ margin: 0 }}>{selectedSite?.name}</h1>
+                {dataAsOf && (
+                  <p className="text-sm" style={{ opacity: 0.6, marginTop: "var(--space-1)", marginBottom: 0 }}>
+                    Data as of {formatRelativeTime(now - new Date(dataAsOf).getTime())}
+                  </p>
+                )}
               </div>
 
               <div className="flex items-center" style={{ gap: "var(--space-3)" }}>

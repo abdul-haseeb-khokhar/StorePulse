@@ -1,5 +1,5 @@
 const {sendEmail} = require('./email.provider');
-const {verificationEmailTemplate, emailChangeTemplate, passwordResetTemplate} = require('./email.template');
+const {verificationEmailTemplate, emailChangeTemplate, passwordResetTemplate, adminInviteTemplate} = require('./email.template');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
@@ -27,4 +27,12 @@ async function sendPasswordResetEmail({fullName, email, rawToken}) {
     return sendEmail({to: email, subject, html, text});
 }
 
-module.exports = {sendVerificationEmail, sendEmailChangeEmail, sendPasswordResetEmail};
+async function sendAdminInviteEmail({email, rawToken}) {
+    const acceptUrl = `${FRONTEND_URL}/admin/accept-invite?token=${rawToken}`;
+
+    const {subject, html, text} = adminInviteTemplate({acceptUrl});
+
+    return sendEmail({to: email, subject, html, text});
+}
+
+module.exports = {sendVerificationEmail, sendEmailChangeEmail, sendPasswordResetEmail, sendAdminInviteEmail};

@@ -1,20 +1,17 @@
 const prisma = require('../../config/prisma')
 
 async function findUserByEmail(email) {
-    console.log('Find user by email. is called')
     return prisma.user.findUnique({
         where: {email}
     });
 }
 async function findUserById(id) {
-    console.log("finduser by id is called")
     return prisma.user.findUnique({
         where: {id}
     })
 }
 
 async function  createUser(fullName, email, hashedPassword) {
-    console.log('Create User is called')
     return prisma.user.create({
         data: {
             fullName,
@@ -33,7 +30,6 @@ async function updateUserPassword(userId, hashedPassword) {
 }
 
 async function setVerificationToken(userId, hashedToken, expiry) {
-    console.log('Set verification token is called');
     return prisma.user.update({
         where: {id: userId},
         data: {
@@ -44,14 +40,12 @@ async function setVerificationToken(userId, hashedToken, expiry) {
 }
 
 async function findUserByVerificationToken(hashedToken) {
-    console.log('Find user by verification token is called');
     return prisma.user.findFirst({
         where: {emailVerificationToken: hashedToken}
     });
 }
 
 async function markEmailVerified(userId) {
-    console.log('Mark email verified is called');
     return prisma.user.update({
         where: {id: userId},
         data: {
@@ -63,7 +57,6 @@ async function markEmailVerified(userId) {
 }
 
 async function setPendingEmailToken(userId, pendingEmail, hashedToken, expiry) {
-    console.log('Set pending email token is called');
     return prisma.user.update({
         where: {id: userId},
         data: {
@@ -75,14 +68,12 @@ async function setPendingEmailToken(userId, pendingEmail, hashedToken, expiry) {
 }
 
 async function findUserByPendingEmailToken(hashedToken) {
-    console.log('Find user by pending email token is called');
     return prisma.user.findFirst({
         where: {pendingEmailToken: hashedToken}
     });
 }
 
 async function confirmPendingEmail(userId, newEmail) {
-    console.log('Confirm pending email is called');
     return prisma.user.update({
         where:{id: userId},
         data: {

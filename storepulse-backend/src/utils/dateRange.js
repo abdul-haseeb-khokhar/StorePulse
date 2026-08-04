@@ -8,13 +8,21 @@ function formateDateKey(date) {
 }
 
 function buildDateRange(startDate, endDate) {
+    // Normalized to UTC, not local midnight: "createdAt" is a naive
+    // `timestamp` column, so Postgres stores exactly the UTC-equivalent
+    // value Prisma sends, and DATE_TRUNC('day', ...) in analytics.repository
+    // truncates on that same basis. Using local midnight here (as on a
+    // server running outside UTC) would shift every day boundary and stop
+    // this list from lining up with the DB's day buckets at all.
     const days = [];
     const current = new Date(startDate);
+    current.setUTCHours(0, 0, 0, 0);
     const end = new Date(endDate);
+    end.setUTCHours(0, 0, 0, 0);
 
-    while (current < end) {
+    while (current <= end) {
         days.push(formateDateKey(current));
-        current.setDate(current.getDate() + 1)
+        current.setUTCDate(current.getUTCDate() + 1)
     }
 
     return days;

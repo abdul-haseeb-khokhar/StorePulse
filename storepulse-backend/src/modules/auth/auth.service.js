@@ -4,17 +4,17 @@ const {findUserByEmail, createUser, findUserById, updateUserName, updateUserPass
     setPasswordResetToken, findUserByPasswordResetToken, resetUserPassword
 } = require('./auth.repository')
 const {generateToken, hashToken} = require('../../utils/verificationToken');
-const {hashPassword, comparePassword} = require('../../utils/passwordHashing')
+const {hashPassword, comparePassword, DUMMY_PASSWORD_HASH} = require('../../utils/passwordHashing')
 const {signToken} = require('../../utils/jwt')
 const AppError = require('../../utils/AppError');
 const { sendVerificationEmail, sendEmailChangeEmail, sendPasswordResetEmail } = require('../email/email.service');
+const { updateUserStatus } = require('../admin/admin.repository');
 
 const VERIFICATION_EXPIRY_MS = 24*60*60*1000;
 const EMAIL_CHANGE_EXPIRY_MS = 60*60*1000;
 const PASSWORD_RESET_EXPIRY_MS = 60*60*1000;
 
 async function signUp(fullName, email, password) {
-    console.log("SignUP service is runnig")
     const existingUser = await findUserByEmail(email)
     if(existingUser){
         throw new AppError('An account with this email already exists', 409)
@@ -36,19 +36,22 @@ async function signUp(fullName, email, password) {
 }
 
 async function login(email, password) {
-    console.log('Login service is called')
     const user = await findUserByEmail(email);
-    
-    const isPasswordValid = user && await comparePassword(password, user.password);
-    
+
+    const isPasswordValid = await comparePassword(password, user?.password || DUMMY_PASSWORD_HASH);
+
     if(!user || !isPasswordValid) {
         throw new AppError("Email or password is invalid!", 401)
     }
     
+    if(user.status === 'Banned'){
+        throw new AppError('This user is banned by admin', 403);
+    }
 
-    if(!user.isEmailVerified) {
+    if(!user.isEmailVerified && user.status === 'Inactive') {
         throw new AppError('Please verify your email before logging in.', 403)
     }
+
 
     const token = signToken({userId: user.id})
     return {
@@ -58,7 +61,6 @@ async function login(email, password) {
 }
 
 async function getUserById(id) {
-    console.log('getuserbyid service is called')
     const user = await findUserById(id);
     if(!user){
         throw new AppError("User not found", 404);
@@ -97,6 +99,9 @@ async function verifyEmail(rawToken) {
     }
 
     await markEmailVerified(user.id);
+    if(user.status === 'Inactive') {
+        await updateUserStatus(user.id, {status: 'Active'});
+    }
     return {
         message: 'Email verified successfully. You can now log in.'
     };

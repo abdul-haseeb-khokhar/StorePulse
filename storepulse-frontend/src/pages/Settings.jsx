@@ -249,6 +249,7 @@ export default function Settings() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   error={nameFieldErrors.fullName}
+                  maxLength={50}
                   readOnly={!isEditingName}
                   rightAction={
                     !isEditingName && (

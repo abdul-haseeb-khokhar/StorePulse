@@ -10,10 +10,13 @@ import ThemeToggle from "./ThemeToggle";
  * gets it in the same spot without each page wiring it in separately.
  * The brand is plain text — not a link to anywhere.
  */
-export default function Nav({ links = [], actions = null }) {
+export default function Nav({ links = [], actions = null, brandSuffix = null }) {
   return (
     <nav className="nav">
-      <span className="nav-brand">StorePulse</span>
+      <span className="nav-brand">
+        StorePulse
+        {brandSuffix && <span className="text-muted"> · {brandSuffix}</span>}
+      </span>
       <ThemeToggle />
       {links.map((link) => (
         <NavLink key={link.to} to={link.to} end={link.end}>

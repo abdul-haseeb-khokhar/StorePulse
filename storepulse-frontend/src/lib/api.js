@@ -7,10 +7,29 @@ const api = axios.create({
   baseURL: `${API_BASE_URL}/api`,
 });
 
+// These never require a token — and shouldn't be sent one, since a stale
+// token left over in storage would make a plain "wrong password" 401 from
+// one of these look like an expired session to the response interceptor
+// below (it can't tell "rejected my token" from "rejected my input" once a
+// token is attached either way).
+const PUBLIC_PATHS = [
+  "/auth/login",
+  "/auth/signup",
+  "/auth/forgot-password",
+  "/auth/reset-password",
+  "/auth/resend-verification",
+];
+
+function isPublicPath(url) {
+  return PUBLIC_PATHS.some((path) => url?.startsWith(path));
+}
+
 api.interceptors.request.use((config) => {
-  const token = getToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (!isPublicPath(config.url)) {
+    const token = getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
   return config;
 });
@@ -19,12 +38,24 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     // A wrong "current password" on the change-password endpoint is also a
-    // 401, but it's a validation outcome, not an expired/invalid session —
-    // clearing the session here would log the user out for mistyping it.
+    // 401 on an authenticated request, but it's a validation outcome, not an
+    // expired/invalid session — clearing the session here would log the user
+    // out for mistyping it.
     const isWrongCurrentPassword =
       error.response?.data?.message === "Current password is incorrect";
-    if (error.response?.status === 401 && !isWrongCurrentPassword) {
+
+    // Public endpoints never carry a token (see request interceptor above),
+    // so a 401 anywhere else always means an authenticated request's session
+    // is the problem, not a public endpoint rejecting its own input.
+    if (
+      error.response?.status === 401 &&
+      !isPublicPath(error.config?.url) &&
+      !isWrongCurrentPassword
+    ) {
       clearSession();
+      if (!window.location.pathname.startsWith("/login")) {
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(error);
   },

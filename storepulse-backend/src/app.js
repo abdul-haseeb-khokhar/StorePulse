@@ -1,14 +1,18 @@
 const express = require('express')
 const cors = require('cors')
+const helmet = require('helmet')
 
 const sitesRoutes = require('./modules/sites/sites.routes');
 const authRoutes  = require('./modules/auth/auth.routes');
 const ingestRoutes = require('./modules/ingest/ingest.routes');
 const analyticsRoutes = require('./modules/analytics/analytics.routes');
+const adminRoutes = require('./modules/admin/admin.routes');
+const adminAuthRoutes = require('./modules/adminAuth/adminAuth.routes');
 
 const AppError = require('./utils/AppError')
 
 const app = express()
+app.use(helmet())
 app.use(express.json())
 
 const dashboardCors = cors({
@@ -24,6 +28,8 @@ app.use('/api/auth', dashboardCors , authRoutes);
 app.use('/api/sites', dashboardCors , sitesRoutes)
 app.use('/api/events', ingestCors , ingestRoutes)
 app.use('/api/analytics', dashboardCors , analyticsRoutes);
+app.use('/api/admin/auth', dashboardCors, adminAuthRoutes);
+app.use('/api/admin', dashboardCors, adminRoutes);
 
 app.use(express.static("public"));
 

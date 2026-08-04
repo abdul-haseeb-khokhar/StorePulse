@@ -85,4 +85,21 @@ function passwordResetTemplate({fullName, resetUrl}) {
     return {subject: 'Reset your StorePulse password', html, text};
 }
 
-module.exports = { verificationEmailTemplate, emailChangeTemplate, passwordResetTemplate}
+function adminInviteTemplate({acceptUrl}) {
+    const kicker = 'Admin access';
+    const heading = 'You\'ve been invited as a StorePulse admin';
+    const bodyText = 'An existing admin has invited you to manage StorePulse. Set your password to activate your admin account.';
+    const html = baseLayout({
+        kicker,
+        heading,
+        bodyText,
+        buttonText: 'Set your password',
+        buttonUrl: acceptUrl,
+        footerNote: 'This link expires in 24 hours. If you weren\'t expecting this invite, you can ignore this email.'
+    });
+    const text = `You've been invited to manage StorePulse as an admin.\n\nSet your password to activate your account:\n${acceptUrl}\n\nThis link expires in 24 hours. If you weren't expecting this invite, ignore this email.`;
+
+    return {subject: 'You\'ve been invited to StorePulse admin', html, text};
+}
+
+module.exports = { verificationEmailTemplate, emailChangeTemplate, passwordResetTemplate, adminInviteTemplate}

@@ -10,4 +10,15 @@ export const queryKeys = {
     topReferrers: (siteId, range) => ["analytics", siteId, "top-referrers", range],
   },
   me: ["me"],
+  admin: {
+    stats: ["admin", "stats"],
+    users: {
+      list: (params) => ["admin", "users", params],
+      detail: (id) => ["admin", "users", id],
+    },
+    sites: {
+      list: (params) => ["admin", "sites", params],
+    },
+    admins: ["admin", "admins"],
+  },
 };
