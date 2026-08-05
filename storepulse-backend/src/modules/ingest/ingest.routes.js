@@ -2,8 +2,9 @@ const express = require('express');
 const {recordEventController} = require('./ingest.controller');
 const validate = require('../../middleware/validate');;
 const { trackEventSchema } = require('../../validators/ingest.validator');
+const ingestRateLimiter = require('../../middleware/ingestRateLimiter');
 const router = express.Router();
 
-router.post('/', validate(trackEventSchema), recordEventController);
+router.post('/', ingestRateLimiter, validate(trackEventSchema), recordEventController);
 
 module.exports = router;

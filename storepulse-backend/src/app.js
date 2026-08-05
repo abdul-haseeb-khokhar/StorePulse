@@ -12,6 +12,11 @@ const adminAuthRoutes = require('./modules/adminAuth/adminAuth.routes');
 const AppError = require('./utils/AppError')
 
 const app = express()
+// GCP VM sits behind exactly one reverse proxy (Caddy, terminating TLS via
+// sslip.io) before requests reach this app — trusting one hop lets
+// req.ip resolve to the real client IP from X-Forwarded-For instead of
+// Caddy's own address. Needed for IP-keyed rate limiting to work correctly.
+app.set('trust proxy', 1)
 app.use(helmet())
 app.use(express.json())
 

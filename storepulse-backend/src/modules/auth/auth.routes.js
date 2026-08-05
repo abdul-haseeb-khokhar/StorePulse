@@ -7,11 +7,12 @@ const {signUpController, loginController, meController, updateNameController, up
 const protect = require("../../middleware/protect")
 const {registerSchema, loginSchema, changeNameSchema, changePasswordSchema, resendVerificationSchema, requestEmailChangeSchema, forgotPasswordSchema, resetPasswordSchema, verifyEmailSchema, confirmEmailChangeSchema} = require('../../validators/auth.validator');
 const validate = require('../../middleware/validate');
+const {loginRateLimiterByIp, loginRateLimiterByAccount} = require('../../middleware/loginRateLimiter');
 
 const router = express.Router()
 
 router.post('/signup',validate(registerSchema), signUpController);
-router.post('/login', validate(loginSchema), loginController);
+router.post('/login', loginRateLimiterByIp, loginRateLimiterByAccount, validate(loginSchema), loginController);
 
 router.get('/verify-email', validate(verifyEmailSchema), verifyEmailController);
 router.post('/resend-verification', validate(resendVerificationSchema), resendVerificationController);
