@@ -1,4 +1,5 @@
 const rateLimit = require('express-rate-limit');
+const { ipKeyGenerator } = require('express-rate-limit');
 const { createRedisStore } = require('./rateLimitStore');
 
 // Same shape as the regular login limiter, but stricter — admin accounts are
@@ -11,7 +12,7 @@ const adminLoginRateLimiterByAccount = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     store: createRedisStore('rl:adminLogin:account:'),
-    keyGenerator: (req) => (req.body?.email ? String(req.body.email).toLowerCase() : req.ip),
+    keyGenerator: (req) => (req.body?.email ? String(req.body.email).toLowerCase() : ipKeyGenerator(req.ip)),
     handler: (req, res) => {
         res.status(429).json({ message: 'Too many login attempts. Please try again later.' });
     },

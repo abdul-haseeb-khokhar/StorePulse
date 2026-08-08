@@ -1,4 +1,5 @@
 const rateLimit = require('express-rate-limit');
+const { ipKeyGenerator } = require('express-rate-limit');
 const { createRedisStore } = require('./rateLimitStore');
 
 // Keyed on the attempted email — the actual attack target. Stricter than the
@@ -9,7 +10,7 @@ const loginRateLimiterByAccount = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     store: createRedisStore('rl:login:account:'),
-    keyGenerator: (req) => (req.body?.email ? String(req.body.email).toLowerCase() : req.ip),
+    keyGenerator: (req) => (req.body?.email ? String(req.body.email).toLowerCase() : ipKeyGenerator(req.ip)),
     handler: (req, res) => {
         res.status(429).json({ message: 'Too many login attempts. Please try again later.' });
     },
