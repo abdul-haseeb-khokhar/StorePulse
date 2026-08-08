@@ -79,10 +79,18 @@ export default function Nav({ links = [], actions = null }) {
   return (
     <>
       <nav className="nav">
-        <span className="nav-brand">StorePulse</span>
-        <ThemeToggle />
+        {/* Brand + toggle grouped and kept close together (divider between
+            them, per NYRON's header spec — "Logo + ThemeToggle, separated
+            by border-l"), with the nav's remaining space pushed onto
+            whichever of the two blocks below is actually visible instead
+            of opening up right after the brand. */}
+        <div className="nav-brand-group">
+          <span className="nav-brand">StorePulse</span>
+          <span className="nav-brand-divider" aria-hidden="true" />
+          <ThemeToggle />
+        </div>
 
-        <div className="hidden lg:flex items-center gap-4">
+        <div className="hidden lg:flex items-center gap-4 ml-auto">
           {links.map((link) => (
             <NavLink key={link.to} to={link.to} end={link.end} className="nav-link">
               {link.icon}
@@ -98,7 +106,7 @@ export default function Nav({ links = [], actions = null }) {
             layered utility regardless of source order, so `lg:hidden`
             alone on the button itself was silently losing. A wrapper
             with no competing custom class sidesteps that. */}
-        <div className="lg:hidden">
+        <div className="lg:hidden ml-auto">
           <button
             ref={menuButtonRef}
             type="button"
