@@ -146,50 +146,52 @@ export default function AdminUsers() {
           </Card>
         ) : (
           <Card>
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Status</th>
-                  <th>Verified</th>
-                  <th>Joined</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.id}>
-                    <td>
-                      <Link to={`/admin/users/${user.id}`}>{user.fullName}</Link>
-                    </td>
-                    <td>{user.email}</td>
-                    <td>
-                      <Tag variant={STATUS_TAG_VARIANT[user.status] || "neutral"}>{user.status}</Tag>
-                    </td>
-                    <td>{user.isEmailVerified ? "Yes" : "No"}</td>
-                    <td>{new Date(user.createdAt).toLocaleDateString()}</td>
-                    <td className="flex items-center" style={{ gap: "var(--space-2)" }}>
-                      {user.status !== "Active" && user.status !== "Deleted" && (
-                        <Button variant="secondary" onClick={() => openAction(user, "Active")}>
-                          Activate
-                        </Button>
-                      )}
-                      {user.status !== "Banned" && user.status !== "Deleted" && (
-                        <Button variant="danger" onClick={() => openAction(user, "Banned")}>
-                          Ban
-                        </Button>
-                      )}
-                      {user.status !== "Deleted" && (
-                        <Button variant="danger" onClick={() => openAction(user, "Deleted")}>
-                          Delete
-                        </Button>
-                      )}
-                    </td>
+            <div className="table-wrap">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Verified</th>
+                    <th>Joined</th>
+                    <th></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {users.map((user) => (
+                    <tr key={user.id}>
+                      <td>
+                        <Link to={`/admin/users/${user.id}`}>{user.fullName}</Link>
+                      </td>
+                      <td>{user.email}</td>
+                      <td>
+                        <Tag variant={STATUS_TAG_VARIANT[user.status] || "neutral"}>{user.status}</Tag>
+                      </td>
+                      <td>{user.isEmailVerified ? "Yes" : "No"}</td>
+                      <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+                      <td className="flex items-center" style={{ gap: "var(--space-2)" }}>
+                        {user.status !== "Active" && user.status !== "Deleted" && (
+                          <Button size="sm" variant="secondary" onClick={() => openAction(user, "Active")}>
+                            Activate
+                          </Button>
+                        )}
+                        {user.status !== "Banned" && user.status !== "Deleted" && (
+                          <Button size="sm" variant="danger" onClick={() => openAction(user, "Banned")}>
+                            Ban
+                          </Button>
+                        )}
+                        {user.status !== "Deleted" && (
+                          <Button size="sm" variant="danger" onClick={() => openAction(user, "Deleted")}>
+                            Delete
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </Card>
         )}
 

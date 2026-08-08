@@ -25,7 +25,6 @@ export default function AdminLayout({ children }) {
     <div className="min-h-screen">
       <Nav
         links={links}
-        brandSuffix="Admin"
         actions={
           <Button variant="ghost" onClick={handleLogout}>
             Log out

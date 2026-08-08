@@ -80,28 +80,30 @@ export default function AdminSites() {
           </Card>
         ) : (
           <Card>
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Domain</th>
-                  <th>Owner</th>
-                  <th>Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sites.map((site) => (
-                  <tr key={site.id}>
-                    <td>{site.name}</td>
-                    <td>{site.domain}</td>
-                    <td>
-                      <Link to={`/admin/users/${site.user.id}`}>{site.user.fullName}</Link>
-                    </td>
-                    <td>{new Date(site.createdAt).toLocaleDateString()}</td>
+            <div className="table-wrap">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Domain</th>
+                    <th>Owner</th>
+                    <th>Created</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {sites.map((site) => (
+                    <tr key={site.id}>
+                      <td>{site.name}</td>
+                      <td>{site.domain}</td>
+                      <td>
+                        <Link to={`/admin/users/${site.user.id}`}>{site.user.fullName}</Link>
+                      </td>
+                      <td>{new Date(site.createdAt).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </Card>
         )}
 

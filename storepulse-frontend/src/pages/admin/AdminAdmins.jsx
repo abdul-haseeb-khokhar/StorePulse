@@ -88,36 +88,38 @@ export default function AdminAdmins() {
           </Card>
         ) : (
           <Card>
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th>Invited</th>
-                </tr>
-              </thead>
-              <tbody>
-                {admins.map((admin) => (
-                  <tr key={admin.id}>
-                    <td>{admin.fullName || "—"}</td>
-                    <td>{admin.email}</td>
-                    <td>
-                      <Tag variant={admin.role === "SUPERADMIN" ? "accent" : "neutral"}>
-                        {admin.role}
-                      </Tag>
-                    </td>
-                    <td>
-                      <Tag variant={admin.isActive ? "positive" : "outline"}>
-                        {admin.isActive ? "Active" : "Pending"}
-                      </Tag>
-                    </td>
-                    <td>{new Date(admin.createdAt).toLocaleDateString()}</td>
+            <div className="table-wrap">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Invited</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {admins.map((admin) => (
+                    <tr key={admin.id}>
+                      <td>{admin.fullName || "—"}</td>
+                      <td>{admin.email}</td>
+                      <td>
+                        <Tag variant={admin.role === "SUPERADMIN" ? "accent" : "neutral"}>
+                          {admin.role}
+                        </Tag>
+                      </td>
+                      <td>
+                        <Tag variant={admin.isActive ? "positive" : "outline"}>
+                          {admin.isActive ? "Active" : "Pending"}
+                        </Tag>
+                      </td>
+                      <td>{new Date(admin.createdAt).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </Card>
         )}
 

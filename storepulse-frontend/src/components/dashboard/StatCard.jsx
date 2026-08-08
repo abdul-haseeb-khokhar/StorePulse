@@ -4,15 +4,12 @@ import Tag from "../ui/Tag";
 const tagVariant = { up: "positive", down: "negative", flat: "neutral" };
 
 /**
- * StatCard — the signature element of the design: a stat tile torn off
- * a register tape (see .card-torn in index.css), with the number set
- * in the display mono face like a printed total and a small barcode
- * flourish in the corner. This is the one place the design spends its
- * boldness — every other card on the site stays plain.
+ * StatCard — the number set in the display mono face like a printed
+ * total, with a small barcode flourish in the corner.
  */
 export default function StatCard({ label, value, trend, trendDirection = "up", rangeLabel }) {
   return (
-    <Card elevation="sm" torn>
+    <Card elevation="sm">
       <div className="flex items-start justify-between">
         <div className="card-kicker">{label}</div>
         <span className="barcode" aria-hidden="true" />

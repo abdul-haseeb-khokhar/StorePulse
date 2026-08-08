@@ -10,12 +10,12 @@ function formatNumber(value) {
   return new Intl.NumberFormat().format(value || 0);
 }
 
-// A simpler cousin of components/dashboard/StatCard — same torn-card/barcode
-// language, but without the trend/rangeLabel line, since these are
+// A simpler cousin of components/dashboard/StatCard — same barcode
+// flourish, but without the trend/rangeLabel line, since these are
 // point-in-time platform totals, not numbers being compared to a prior period.
 function StatTile({ label, value }) {
   return (
-    <Card elevation="sm" torn>
+    <Card elevation="sm">
       <div className="flex items-start justify-between">
         <div className="card-kicker">{label}</div>
         <span className="barcode" aria-hidden="true" />
