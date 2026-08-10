@@ -193,7 +193,7 @@ export default function Docs() {
         </button>
       </div>
 
-      <main className="mx-auto" style={{ maxWidth: 720, padding: "var(--space-8) var(--space-4)" }}>
+      <main className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16 flex flex-col gap-6">
         <h1 style={{ marginBottom: "var(--space-2)" }}>Developer guide</h1>
         <p style={{ fontSize: 18, lineHeight: 1.55, opacity: 0.8, marginBottom: "var(--space-6)" }}>
           Integrate StorePulse into your store in under 5 minutes. This guide covers

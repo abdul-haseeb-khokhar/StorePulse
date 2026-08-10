@@ -3,6 +3,7 @@ const variantClass = {
   secondary: "btn-secondary",
   ghost: "btn-ghost",
   danger: "btn-danger",
+  outline: "btn-outline",
 };
 
 // Base .btn in index.css is the "medium" size; sm/lg opt into the other
@@ -29,12 +30,12 @@ export default function Button({
     <button
       type={type}
       disabled={disabled || loading}
-      className={`btn ${variantClass[variant]} ${sizeClass[size]} ${block ? "btn-block" : ""} ${className}`}
+      className={`btn ${variantClass[variant] || "btn-primary"} ${sizeClass[size] || ""} ${block ? "btn-block" : ""} ${className}`}
       {...props}
     >
       {loading ? (
         <span
-          className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"
+          className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent shrink-0"
           aria-hidden="true"
         />
       ) : (
@@ -44,3 +45,4 @@ export default function Button({
     </button>
   );
 }
+

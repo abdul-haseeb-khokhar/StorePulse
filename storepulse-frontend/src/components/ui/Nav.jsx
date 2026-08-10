@@ -1,133 +1,403 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import {
+  ChevronDown,
+  ArrowUpRight,
+  Menu,
+  X,
+  Activity,
+  MousePointerClick,
+  Layers,
+  Zap,
+  ShoppingBag,
+  Code,
+  Users,
+  BookOpen,
+  FileCode,
+  Sparkles,
+} from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import Button from "./Button";
 import { drawerSpring, useReducedMotion } from "../../lib/motion";
 
+const PRODUCT_MENU_ITEMS = [
+  {
+    title: "Traffic Analytics",
+    desc: "Daily visitors, pageviews, and trend detection.",
+    icon: <Activity className="h-4 w-4 text-[var(--stamp)]" />,
+    to: "/docs#analytics",
+  },
+  {
+    title: "Product Click Tracking",
+    desc: "See what shoppers click, touch, and ignore.",
+    icon: <MousePointerClick className="h-4 w-4 text-[var(--stamp)]" />,
+    to: "/docs#click-tracking",
+  },
+  {
+    title: "Multi-Site Hub",
+    desc: "Manage multiple storefronts in one dashboard.",
+    icon: <Layers className="h-4 w-4 text-[var(--stamp)]" />,
+    to: "/docs#multi-site",
+  },
+  {
+    title: "Real-Time Ingestion",
+    desc: "Sub-second event stream buffering.",
+    icon: <Zap className="h-4 w-4 text-[var(--gold)]" />,
+    to: "/docs#real-time",
+  },
+];
+
+const SOLUTIONS_MENU_ITEMS = [
+  {
+    title: "For Shopify Stores",
+    desc: "Seamless Liquid tag integration in under 5 minutes.",
+    icon: <ShoppingBag className="h-4 w-4 text-[var(--stamp)]" />,
+    to: "/docs#shopify",
+  },
+  {
+    title: "For Custom Storefronts",
+    desc: "Vite, Next.js, and React support.",
+    icon: <Code className="h-4 w-4 text-[var(--stamp)]" />,
+    to: "/docs#custom",
+  },
+  {
+    title: "For Agencies & Managers",
+    desc: "Multi-tenant client analytics and access.",
+    icon: <Users className="h-4 w-4 text-[var(--stamp)]" />,
+    to: "/docs#agencies",
+  },
+];
+
+const RESOURCES_MENU_ITEMS = [
+  {
+    title: "Documentation",
+    desc: "Installation guides and quickstart tutorials.",
+    icon: <BookOpen className="h-4 w-4 text-[var(--stamp)]" />,
+    to: "/docs",
+  },
+  {
+    title: "API Reference",
+    desc: "REST endpoints and tracking script specs.",
+    icon: <FileCode className="h-4 w-4 text-[var(--stamp)]" />,
+    to: "/docs#api",
+  },
+  {
+    title: "Changelog",
+    desc: "Latest release notes and UI updates.",
+    icon: <Sparkles className="h-4 w-4 text-[var(--gold)]" />,
+    to: "/docs#changelog",
+  },
+];
+
 /**
- * Nav — the top .nav bar used on every screen. `links` renders as
- * NavLinks (react-router sets aria-current="page" on the active one
- * automatically, which index.css keys off of for the underline);
- * `actions` is a right-side slot that varies per context (CTA button,
- * log out, etc). The theme toggle lives here (before the first link)
- * so every screen gets it in the same spot without each page wiring it
- * in separately. The brand is plain text — not a link to anywhere.
- *
- * Below the `lg` breakpoint, links + actions collapse into a slide-over
- * drawer opened by a hamburger button, per NYRON's documented mobile
- * nav pattern — including its focus management: Escape closes it,
- * focus moves to the drawer's own close button on open and back to the
- * hamburger on close, Tab is trapped inside while it's open, and page
- * scroll is locked for the duration.
- *
- * The drawer/backdrop are rendered as SIBLINGS of <nav>, not children —
- * .nav has `backdrop-filter` for its frosted sticky-header look, and
- * per spec `backdrop-filter` makes an element a containing block for
- * its `position: fixed` descendants (same as `transform`/`filter`
- * would). Nesting the drawer inside <nav> made its `inset: 0` resolve
- * against nav's own ~68px-tall box instead of the viewport.
+ * Nav — Header component modeled after top enterprise navigation bars
+ * (SEMRUSH style layout) integrated with StorePulse's RBG SVG logos,
+ * pill actions, theme toggle, and NYRON Design System standards.
  */
-export default function Nav({ links = [], actions = null }) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function Nav({ links = null, actions = null }) {
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileExpanded, setMobileExpanded] = useState({ product: false, solutions: false, resources: false });
+
+  const navRef = useRef(null);
   const menuButtonRef = useRef(null);
   const drawerRef = useRef(null);
   const closeButtonRef = useRef(null);
   const reduceMotion = useReducedMotion();
   const drawerId = useId();
 
+  // Close dropdown on click outside
   useEffect(() => {
-    if (!isOpen) return undefined;
+    function handleClickOutside(e) {
+      if (navRef.current && !navRef.current.contains(e.target)) {
+        setActiveDropdown(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-    // Captured up front — by the time this cleanup runs (drawer closing),
-    // the button that opened it may have unmounted or React may have
-    // nulled the ref before the effect teardown fires.
-    const menuButton = menuButtonRef.current;
-    document.body.style.overflow = "hidden";
-    const focusTimer = setTimeout(() => closeButtonRef.current?.focus(), 50);
-
+  // Keyboard accessibility
+  useEffect(() => {
     function handleKeyDown(e) {
       if (e.key === "Escape") {
-        setIsOpen(false);
-        return;
-      }
-      if (e.key !== "Tab" || !drawerRef.current) return;
-      const focusables = drawerRef.current.querySelectorAll(
-        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      );
-      if (focusables.length === 0) return;
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
+        setActiveDropdown(null);
+        setMobileOpen(false);
       }
     }
     document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Lock scroll during mobile menu
+  useEffect(() => {
+    if (!mobileOpen) return undefined;
+    const menuBtn = menuButtonRef.current;
+    document.body.style.overflow = "hidden";
+    const focusTimer = setTimeout(() => closeButtonRef.current?.focus(), 50);
 
     return () => {
       document.body.style.overflow = "";
       clearTimeout(focusTimer);
-      document.removeEventListener("keydown", handleKeyDown);
-      menuButton?.focus();
+      menuBtn?.focus();
     };
-  }, [isOpen]);
+  }, [mobileOpen]);
+
+  const toggleDropdown = (name) => {
+    setActiveDropdown((prev) => (prev === name ? null : name));
+  };
+
+  const toggleMobileAccordion = (name) => {
+    setMobileExpanded((prev) => ({ ...prev, [name]: !prev[name] }));
+  };
 
   return (
     <>
-      <nav className="nav">
-        {/* Brand + toggle grouped and kept close together (divider between
-            them, per NYRON's header spec — "Logo + ThemeToggle, separated
-            by border-l"), with the nav's remaining space pushed onto
-            whichever of the two blocks below is actually visible instead
-            of opening up right after the brand. */}
-        <div className="nav-brand-group">
-          <span className="nav-brand">StorePulse</span>
-          <span className="nav-brand-divider" aria-hidden="true" />
-          <ThemeToggle />
-        </div>
+      <header
+        ref={navRef}
+        className="sticky top-0 z-[var(--z-header)] w-full border-b border-[var(--divider)] bg-[var(--paper)]/90 backdrop-blur-md transition-colors duration-200"
+      >
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-20 sm:h-22 lg:h-[88px] flex items-center justify-between gap-4">
+          {/* Logo Section */}
+          <div className="flex items-center gap-6 shrink-0">
+            <Link to="/" className="flex items-center gap-2" aria-label="StorePulse Homepage">
+              {/* Light Theme Logo: rbglogo2.png */}
+              <img
+                src="/STOREPULSE-LOGOS/RBG-LOGO/rbglogo2.png"
+                alt="StorePulse"
+                className="h-10 sm:h-12 lg:h-[50px] w-auto object-contain logo-light"
+              />
+              {/* Dark Theme Logo: rbglogo3.png */}
+              <img
+                src="/STOREPULSE-LOGOS/RBG-LOGO/rbglogo3.png"
+                alt="StorePulse"
+                className="h-10 sm:h-12 lg:h-[50px] w-auto object-contain logo-dark"
+              />
+            </Link>
+          </div>
 
-        <div className="hidden lg:flex items-center gap-4 ml-auto">
-          {links.map((link) => (
-            <NavLink key={link.to} to={link.to} end={link.end} className="nav-link">
-              {link.icon}
-              {link.label}
-            </NavLink>
-          ))}
-          {actions}
-        </div>
+          {/* Desktop Navigation Links (SEMRUSH Pattern) */}
+          <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
+            {links ? (
+              // Custom pages (Dashboard, Admin, etc.)
+              links.map((link) => (
+                <NavLink key={link.to} to={link.to} end={link.end} className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[var(--stamp)] flex items-center gap-1.5 transition-colors">
+                  {link.icon}
+                  <span>{link.label}</span>
+                </NavLink>
+              ))
+            ) : (
+              // Standard SEMRUSH-style Navigation
+              <>
+                {/* Product Dropdown */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => toggleDropdown("product")}
+                    className={`nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[var(--stamp)] inline-flex items-center gap-1.5 transition-colors ${
+                      activeDropdown === "product" ? "text-[var(--stamp)]" : ""
+                    }`}
+                    aria-expanded={activeDropdown === "product"}
+                  >
+                    <span>Product</span>
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${activeDropdown === "product" ? "rotate-180" : ""}`} />
+                  </button>
 
-        {/* Wrapped rather than putting `lg:hidden` directly on the button:
-            Tailwind v4 utilities live in a CSS cascade layer, and .btn's
-            plain (unlayered) `display: inline-flex` always outranks a
-            layered utility regardless of source order, so `lg:hidden`
-            alone on the button itself was silently losing. A wrapper
-            with no competing custom class sidesteps that. */}
-        <div className="lg:hidden ml-auto">
-          <button
-            ref={menuButtonRef}
-            type="button"
-            onClick={() => setIsOpen(true)}
-            className="btn btn-ghost btn-icon"
-            aria-label="Open menu"
-            aria-expanded={isOpen}
-            aria-controls={drawerId}
-          >
-            <Menu className="h-5 w-5" aria-hidden="true" />
-          </button>
-        </div>
-      </nav>
+                  <AnimatePresence>
+                    {activeDropdown === "product" && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                        transition={{ duration: 0.18, ease: "easeOut" }}
+                        className="absolute left-0 top-full mt-2 w-80 rounded-2xl border border-[var(--divider-soft)] bg-[var(--paper-card)] p-3 shadow-xl z-50 grid gap-1"
+                      >
+                        {PRODUCT_MENU_ITEMS.map((item) => (
+                          <Link
+                            key={item.title}
+                            to={item.to}
+                            onClick={() => setActiveDropdown(null)}
+                            className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[var(--stamp-soft)]/50 transition-colors group"
+                          >
+                            <div className="p-2 rounded-lg bg-[var(--paper)] border border-[var(--divider-soft)] shrink-0">
+                              {item.icon}
+                            </div>
+                            <div>
+                              <div className="text-xs sm:text-sm font-semibold text-[var(--ink)] group-hover:text-[var(--stamp)] transition-colors">
+                                {item.title}
+                              </div>
+                              <div className="text-[11px] text-[var(--muted)] leading-tight mt-0.5">
+                                {item.desc}
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
 
+                {/* Pricing Link */}
+                <Link to="/#pricing" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[var(--stamp)] transition-colors">
+                  Pricing
+                </Link>
+
+                {/* Solutions Dropdown */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => toggleDropdown("solutions")}
+                    className={`nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[var(--stamp)] inline-flex items-center gap-1.5 transition-colors ${
+                      activeDropdown === "solutions" ? "text-[var(--stamp)]" : ""
+                    }`}
+                    aria-expanded={activeDropdown === "solutions"}
+                  >
+                    <span>Solutions</span>
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${activeDropdown === "solutions" ? "rotate-180" : ""}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {activeDropdown === "solutions" && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                        transition={{ duration: 0.18, ease: "easeOut" }}
+                        className="absolute left-0 top-full mt-2 w-80 rounded-2xl border border-[var(--divider-soft)] bg-[var(--paper-card)] p-3 shadow-xl z-50 grid gap-1"
+                      >
+                        {SOLUTIONS_MENU_ITEMS.map((item) => (
+                          <Link
+                            key={item.title}
+                            to={item.to}
+                            onClick={() => setActiveDropdown(null)}
+                            className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[var(--stamp-soft)]/50 transition-colors group"
+                          >
+                            <div className="p-2 rounded-lg bg-[var(--paper)] border border-[var(--divider-soft)] shrink-0">
+                              {item.icon}
+                            </div>
+                            <div>
+                              <div className="text-xs sm:text-sm font-semibold text-[var(--ink)] group-hover:text-[var(--stamp)] transition-colors">
+                                {item.title}
+                              </div>
+                              <div className="text-[11px] text-[var(--muted)] leading-tight mt-0.5">
+                                {item.desc}
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Resources Dropdown */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => toggleDropdown("resources")}
+                    className={`nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[var(--stamp)] inline-flex items-center gap-1.5 transition-colors ${
+                      activeDropdown === "resources" ? "text-[var(--stamp)]" : ""
+                    }`}
+                    aria-expanded={activeDropdown === "resources"}
+                  >
+                    <span>Resources</span>
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${activeDropdown === "resources" ? "rotate-180" : ""}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {activeDropdown === "resources" && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                        transition={{ duration: 0.18, ease: "easeOut" }}
+                        className="absolute left-0 top-full mt-2 w-80 rounded-2xl border border-[var(--divider-soft)] bg-[var(--paper-card)] p-3 shadow-xl z-50 grid gap-1"
+                      >
+                        {RESOURCES_MENU_ITEMS.map((item) => (
+                          <Link
+                            key={item.title}
+                            to={item.to}
+                            onClick={() => setActiveDropdown(null)}
+                            className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[var(--stamp-soft)]/50 transition-colors group"
+                          >
+                            <div className="p-2 rounded-lg bg-[var(--paper)] border border-[var(--divider-soft)] shrink-0">
+                              {item.icon}
+                            </div>
+                            <div>
+                              <div className="text-xs sm:text-sm font-semibold text-[var(--ink)] group-hover:text-[var(--stamp)] transition-colors">
+                                {item.title}
+                              </div>
+                              <div className="text-[11px] text-[var(--muted)] leading-tight mt-0.5">
+                                {item.desc}
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Enterprise Link */}
+                <a
+                  href="#contact"
+                  className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[var(--stamp)] inline-flex items-center gap-1 transition-colors"
+                >
+                  <span>Enterprise</span>
+                  <ArrowUpRight className="h-3.5 w-3.5 opacity-70" />
+                </a>
+              </>
+            )}
+          </nav>
+
+          {/* Right Action Slot (Theme Toggle + Log In + Sign Up) */}
+          <div className="hidden lg:flex items-center gap-3">
+            <ThemeToggle />
+            {actions ? (
+              actions
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="outline" size="sm">
+                    Log In
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button variant="primary" size="sm">
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            )}
+          </div>
+
+          {/* Mobile Hamburger Toggle */}
+          <div className="lg:hidden flex items-center gap-2">
+            <ThemeToggle />
+            <button
+              ref={menuButtonRef}
+              type="button"
+              onClick={() => setMobileOpen(true)}
+              className="btn btn-ghost btn-icon"
+              aria-label="Open menu"
+              aria-expanded={mobileOpen}
+              aria-controls={drawerId}
+            >
+              <Menu className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Slide-Over Drawer Navigation */}
       <AnimatePresence>
-        {isOpen && (
+        {mobileOpen && (
           <>
             <motion.div
               key="backdrop"
               className="nav-drawer-backdrop"
-              onClick={() => setIsOpen(false)}
+              onClick={() => setMobileOpen(false)}
               initial={reduceMotion ? false : { opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={reduceMotion ? undefined : { opacity: 0 }}
@@ -137,7 +407,7 @@ export default function Nav({ links = [], actions = null }) {
               key="drawer"
               ref={drawerRef}
               id={drawerId}
-              className="nav-drawer"
+              className="nav-drawer bg-[var(--paper)] text-[var(--ink)]"
               role="dialog"
               aria-modal="true"
               aria-label="Navigation menu"
@@ -146,15 +416,24 @@ export default function Nav({ links = [], actions = null }) {
               exit={reduceMotion ? undefined : { x: "100%" }}
               transition={reduceMotion ? { duration: 0 } : drawerSpring}
             >
-              <div
-                className="flex items-center justify-between"
-                style={{ marginBottom: "var(--space-4)" }}
-              >
-                <span className="nav-brand">StorePulse</span>
+              {/* Header inside drawer */}
+              <div className="flex items-center justify-between pb-4 border-b border-[var(--divider)]">
+                <Link to="/" onClick={() => setMobileOpen(false)}>
+                  <img
+                    src="/STOREPULSE-LOGOS/RBG-LOGO/rbglogo2.png"
+                    alt="StorePulse"
+                    className="h-10 w-auto object-contain logo-light"
+                  />
+                  <img
+                    src="/STOREPULSE-LOGOS/RBG-LOGO/rbglogo3.png"
+                    alt="StorePulse"
+                    className="h-10 w-auto object-contain logo-dark"
+                  />
+                </Link>
                 <button
                   ref={closeButtonRef}
                   type="button"
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => setMobileOpen(false)}
                   className="btn btn-ghost btn-icon"
                   aria-label="Close menu"
                 >
@@ -162,26 +441,140 @@ export default function Nav({ links = [], actions = null }) {
                 </button>
               </div>
 
-              <div className="grid" style={{ gap: "var(--space-1)" }}>
-                {links.map((link) => (
-                  <NavLink
-                    key={link.to}
-                    to={link.to}
-                    end={link.end}
-                    onClick={() => setIsOpen(false)}
-                    className="nav-drawer-link nav-link"
-                  >
-                    {link.icon}
-                    {link.label}
-                  </NavLink>
-                ))}
+              {/* Drawer Links */}
+              <div className="flex flex-col gap-2 py-4">
+                {links ? (
+                  links.map((link) => (
+                    <NavLink
+                      key={link.to}
+                      to={link.to}
+                      end={link.end}
+                      onClick={() => setMobileOpen(false)}
+                      className="px-3 py-2.5 text-sm font-semibold text-[var(--ink)] hover:text-[var(--stamp)] flex items-center gap-2 rounded-xl hover:bg-[var(--stamp-soft)]/50"
+                    >
+                      {link.icon}
+                      <span>{link.label}</span>
+                    </NavLink>
+                  ))
+                ) : (
+                  <>
+                    {/* Product Accordion */}
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => toggleMobileAccordion("product")}
+                        className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-semibold text-[var(--ink)] rounded-xl hover:bg-[var(--stamp-soft)]/50"
+                      >
+                        <span>Product</span>
+                        <ChevronDown className={`h-4 w-4 transition-transform ${mobileExpanded.product ? "rotate-180" : ""}`} />
+                      </button>
+                      {mobileExpanded.product && (
+                        <div className="pl-4 py-1 flex flex-col gap-1 border-l-2 border-[var(--divider)] ml-3 mt-1">
+                          {PRODUCT_MENU_ITEMS.map((item) => (
+                            <Link
+                              key={item.title}
+                              to={item.to}
+                              onClick={() => setMobileOpen(false)}
+                              className="py-1.5 text-xs text-[var(--muted)] hover:text-[var(--stamp)] font-medium"
+                            >
+                              {item.title}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <Link
+                      to="/#pricing"
+                      onClick={() => setMobileOpen(false)}
+                      className="px-3 py-2.5 text-sm font-semibold text-[var(--ink)] hover:text-[var(--stamp)] rounded-xl hover:bg-[var(--stamp-soft)]/50"
+                    >
+                      Pricing
+                    </Link>
+
+                    {/* Solutions Accordion */}
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => toggleMobileAccordion("solutions")}
+                        className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-semibold text-[var(--ink)] rounded-xl hover:bg-[var(--stamp-soft)]/50"
+                      >
+                        <span>Solutions</span>
+                        <ChevronDown className={`h-4 w-4 transition-transform ${mobileExpanded.solutions ? "rotate-180" : ""}`} />
+                      </button>
+                      {mobileExpanded.solutions && (
+                        <div className="pl-4 py-1 flex flex-col gap-1 border-l-2 border-[var(--divider)] ml-3 mt-1">
+                          {SOLUTIONS_MENU_ITEMS.map((item) => (
+                            <Link
+                              key={item.title}
+                              to={item.to}
+                              onClick={() => setMobileOpen(false)}
+                              className="py-1.5 text-xs text-[var(--muted)] hover:text-[var(--stamp)] font-medium"
+                            >
+                              {item.title}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Resources Accordion */}
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => toggleMobileAccordion("resources")}
+                        className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-semibold text-[var(--ink)] rounded-xl hover:bg-[var(--stamp-soft)]/50"
+                      >
+                        <span>Resources</span>
+                        <ChevronDown className={`h-4 w-4 transition-transform ${mobileExpanded.resources ? "rotate-180" : ""}`} />
+                      </button>
+                      {mobileExpanded.resources && (
+                        <div className="pl-4 py-1 flex flex-col gap-1 border-l-2 border-[var(--divider)] ml-3 mt-1">
+                          {RESOURCES_MENU_ITEMS.map((item) => (
+                            <Link
+                              key={item.title}
+                              to={item.to}
+                              onClick={() => setMobileOpen(false)}
+                              className="py-1.5 text-xs text-[var(--muted)] hover:text-[var(--stamp)] font-medium"
+                            >
+                              {item.title}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <a
+                      href="#contact"
+                      onClick={() => setMobileOpen(false)}
+                      className="px-3 py-2.5 text-sm font-semibold text-[var(--ink)] hover:text-[var(--stamp)] flex items-center justify-between rounded-xl hover:bg-[var(--stamp-soft)]/50"
+                    >
+                      <span>Enterprise</span>
+                      <ArrowUpRight className="h-4 w-4 opacity-70" />
+                    </a>
+                  </>
+                )}
               </div>
 
-              {actions && (
-                <div style={{ marginTop: "auto" }} onClick={() => setIsOpen(false)}>
-                  {actions}
-                </div>
-              )}
+              {/* Drawer Bottom Actions */}
+              <div className="mt-auto pt-4 border-t border-[var(--divider)] flex flex-col gap-3">
+                {actions ? (
+                  <div onClick={() => setMobileOpen(false)}>{actions}</div>
+                ) : (
+                  <>
+                    <Link to="/login" onClick={() => setMobileOpen(false)}>
+                      <Button variant="outline" block>
+                        Log In
+                      </Button>
+                    </Link>
+                    <Link to="/signup" onClick={() => setMobileOpen(false)}>
+                      <Button variant="primary" block>
+                        Sign Up
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </div>
             </motion.div>
           </>
         )}
@@ -189,3 +582,4 @@ export default function Nav({ links = [], actions = null }) {
     </>
   );
 }
+
