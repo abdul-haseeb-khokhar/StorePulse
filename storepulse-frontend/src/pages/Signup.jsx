@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Eye, EyeOff, MailCheck } from "lucide-react";
+import { Eye, EyeOff, MailCheck, AlertTriangle } from "lucide-react";
 import AuthLayout from "../layouts/AuthLayout";
 import Card from "../components/ui/Card";
 import Field from "../components/ui/Field";
@@ -38,21 +38,31 @@ export default function Signup() {
     }
   }
 
+  /* Centered Success / Email Confirmation View */
   if (submittedEmail) {
     return (
       <AuthLayout switchTo="/login" switchLabel="Log in">
-        <Card elevation="md">
-          <div
-            className="flex items-center"
-            style={{ gap: "var(--space-2)", marginBottom: "var(--space-3)" }}
-          >
-            <MailCheck className="h-5 w-5" style={{ color: "var(--gold)" }} />
-            <div className="card-title">Check your email</div>
+        <Card elevation="md" className="p-8 sm:p-10 rounded-2xl border border-[var(--divider-soft)] bg-[var(--paper-card)] shadow-xl text-center flex flex-col items-center gap-4">
+          
+          <div className="h-14 w-14 rounded-full bg-[#DDBB55]/15 border border-[#DDBB55]/30 flex items-center justify-center text-[#DDBB55]">
+            <MailCheck className="h-7 w-7" />
           </div>
-          <p className="card-body">
-            We sent a verification link to <strong>{submittedEmail}</strong>. Open it to
-            activate your account, then log in.
-          </p>
+
+          <div className="flex flex-col gap-1.5 max-w-sm">
+            <h1 className="text-xl sm:text-2xl font-bold text-[var(--ink)] font-sora">
+              Check your email
+            </h1>
+            <p className="text-xs sm:text-sm text-[var(--muted)] leading-relaxed">
+              We sent a verification link to <strong className="text-[var(--ink)] font-semibold">{submittedEmail}</strong>. Open it to activate your account, then log in.
+            </p>
+          </div>
+
+          <Link to="/login" className="w-full mt-2">
+            <Button size="md" className="w-full justify-center">
+              Go to Login
+            </Button>
+          </Link>
+
         </Card>
       </AuthLayout>
     );
@@ -60,13 +70,20 @@ export default function Signup() {
 
   return (
     <AuthLayout switchTo="/login" switchLabel="Log in">
-      <Card elevation="md">
-        <div className="card-kicker">Get started</div>
-        <div className="card-title" style={{ marginBottom: "var(--space-4)" }}>
-          Create your account
+      <Card elevation="md" className="p-6 sm:p-8 rounded-2xl border border-[var(--divider-soft)] bg-[var(--paper-card)] shadow-lg">
+        
+        {/* Header */}
+        <div className="mb-6 flex flex-col gap-1">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#DDBB55]">
+            GET STARTED
+          </span>
+          <h1 className="text-xl sm:text-2xl font-bold text-[var(--ink)] font-sora">
+            Create your account
+          </h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid" style={{ gap: "var(--space-3)" }}>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Field
             id="fullName"
             label="Full name"
@@ -102,7 +119,7 @@ export default function Signup() {
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="text-muted"
+                className="text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer p-1"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -113,20 +130,26 @@ export default function Signup() {
 
           <PasswordRequirements password={password} visible={isPasswordFocused} />
 
+          {/* Error Banner */}
           {error && (
-            <p className="text-sm" style={{ color: "var(--brick)" }}>
-              {error}
-            </p>
+            <div className="p-3 rounded-xl bg-[var(--brick-soft)]/20 border border-[var(--brick)]/30 text-xs text-[var(--brick)] flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </div>
           )}
 
-          <Button type="submit" block loading={loading}>
+          <Button type="submit" size="md" loading={loading} className="w-full justify-center mt-2 shadow-xs">
             Create account
           </Button>
 
-          <p className="text-center text-xs" style={{ opacity: 0.65 }}>
-            Already have one? <Link to="/login">Log in</Link>
+          <p className="text-center text-xs text-[var(--muted)] mt-2">
+            Already have an account?{" "}
+            <Link to="/login" className="text-[#DDBB55] font-semibold hover:underline">
+              Log in
+            </Link>
           </p>
         </form>
+
       </Card>
     </AuthLayout>
   );

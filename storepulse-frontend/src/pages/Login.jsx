@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, AlertTriangle, CheckCircle2 } from "lucide-react";
 import AuthLayout from "../layouts/AuthLayout";
 import Card from "../components/ui/Card";
 import Field from "../components/ui/Field";
@@ -61,13 +61,20 @@ export default function Login() {
 
   return (
     <AuthLayout switchTo="/signup" switchLabel="Sign up">
-      <Card elevation="md">
-        <div className="card-kicker">Welcome back</div>
-        <div className="card-title" style={{ marginBottom: "var(--space-4)" }}>
-          Log in to StorePulse
+      <Card elevation="md" className="p-6 sm:p-8 rounded-2xl border border-[var(--divider-soft)] bg-[var(--paper-card)] shadow-lg">
+        
+        {/* Header */}
+        <div className="mb-6 flex flex-col gap-1">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#DDBB55]">
+            WELCOME BACK
+          </span>
+          <h1 className="text-xl sm:text-2xl font-bold text-[var(--ink)] font-sora">
+            Log in to StorePulse
+          </h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid" style={{ gap: "var(--space-3)" }}>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Field
             id="email"
             label="Email"
@@ -93,7 +100,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="text-muted"
+                className="text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer p-1"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -102,42 +109,58 @@ export default function Login() {
             required
           />
 
-          <p className="text-xs" style={{ textAlign: "right", opacity: 0.65 }}>
-            <Link to="/forgot-password">Forgot password?</Link>
-          </p>
+          <div className="flex justify-end text-xs">
+            <Link to="/forgot-password" className="text-[var(--muted)] hover:text-[#DDBB55] transition-colors">
+              Forgot password?
+            </Link>
+          </div>
 
+          {/* Error Banner */}
           {error && (
-            <p className="text-sm" style={{ color: "var(--brick)" }}>
-              {error}
-            </p>
+            <div className="p-3 rounded-xl bg-[var(--brick-soft)]/20 border border-[var(--brick)]/30 text-xs text-[var(--brick)] flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </div>
           )}
 
+          {/* Verification Resend Banner */}
           {needsVerification && (
-            resendSent ? (
-              <p className="text-sm" style={{ color: "var(--gold)" }}>
-                If an account with that email exists and is unverified, a new link has been sent.
-              </p>
-            ) : (
-              <Button
-                type="button"
-                variant="ghost"
-                className="justify-self-start"
-                loading={resendLoading}
-                onClick={handleResend}
-              >
-                Resend verification email
-              </Button>
-            )
+            <div className="p-3 rounded-xl bg-[#DDBB55]/10 border border-[#DDBB55]/30 text-xs flex flex-col gap-2">
+              {resendSent ? (
+                <div className="flex items-center gap-2 text-[#DDBB55]">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  <span>If an account with that email exists, a new verification link has been sent.</span>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[var(--muted)]">Please verify your email address to log in.</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    loading={resendLoading}
+                    onClick={handleResend}
+                    className="shrink-0"
+                  >
+                    Resend Link
+                  </Button>
+                </div>
+              )}
+            </div>
           )}
 
-          <Button type="submit" block loading={loading}>
+          <Button type="submit" size="md" loading={loading} className="w-full justify-center mt-2 shadow-xs">
             Log in
           </Button>
 
-          <p className="text-center text-xs" style={{ opacity: 0.65 }}>
-            No account? <Link to="/signup">Create one</Link>
+          <p className="text-center text-xs text-[var(--muted)] mt-2">
+            Don't have an account?{" "}
+            <Link to="/signup" className="text-[#DDBB55] font-semibold hover:underline">
+              Create one
+            </Link>
           </p>
         </form>
+
       </Card>
     </AuthLayout>
   );

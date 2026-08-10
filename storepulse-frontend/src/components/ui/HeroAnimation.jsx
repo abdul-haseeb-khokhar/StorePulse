@@ -1,46 +1,18 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { Smile, HelpCircle, Package, TrendingUp, PartyPopper } from "lucide-react";
+import { Smile, HelpCircle, Package, TrendingUp, PartyPopper, User, Shirt, Cake, Footprints, Watch } from "lucide-react";
 
 /**
- * HeroAnimation — the landing page's founding story, told as a slow
- * storyboard rather than one continuous blur:
- *
- *   1. buyers walk in, owner is glad to see them (enter)
- *   2. they spread out across the shelves — 6 (3x2) on desktop, 4 (2x2)
- *      on mobile (browse)
- *   3. only one buys, the rest walk back out; owner is puzzled (leave)
- *   4. owner guesses and restocks a few random shelves (restock-random)
- *   5. same crowd, same shelves — same weak result (wave 2)
- *   6. StorePulse reveals which shelf actually gets attention (insight)
- *   7. owner restocks *that one* shelf specifically (restock-targeted)
- *   8. next wave converges on it — most of them buy (wave 3)
- *
- * Each beat is its own named phase with its own duration, so nothing
- * competes for attention at once. Buyers are plain SVG circles driven
- * by three chained CSS keyframes (enter / browse / leave-out|leave-buy)
- * — see index.css "hero animation" section — remounted fresh at each
- * phase so the animation always starts from where the previous beat
- * visually left off, with no JS-driven position tracking required.
+ * HeroAnimation — founding story using lucide icons placed at the exact
+ * 0px-offset coordinates of original circles/rectangles.
  */
 
 const VB_W = 760;
 const COUNTER_X = 380;
 const COUNTER_Y = 65; // offset from aisleY
 
-// Desktop and mobile each get their own sizing so shelves and the owner
-// can render larger on mobile (where there's less going on around them)
-// without touching the fixed-size thought bubble/reaction badge overlay.
-// vbH/aisleY/rows are tuned per mode too, so there's clear breathing room
-// between the two shelf rows and between the shelves and the owner below
-// — mobile gets a taller canvas specifically to make space for that.
 const DESKTOP_METRICS = { vbH: 300, aisleY: 165, shelfW: 130, shelfH: 50, rows: [39, 103], ownerHeadR: 11, ownerBodyH: 23, ownerBodyW: 32, itemSize: 14 };
 const MOBILE_METRICS = { vbH: 340, aisleY: 195, shelfW: 165, shelfH: 62, rows: [42, 130], ownerHeadR: 15, ownerBodyH: 30, ownerBodyW: 42, itemSize: 17 };
 
-// Desktop gets the full 3x2 grid; mobile drops to a 2x2 grid (still at
-// least 4 shelves) so each shelf reads clearly on a small screen. Both
-// layouts share the same id scheme (row * columnCount + col) so the
-// rest of the animation (waves, restock logic) just works off whichever
-// layout is active without needing to know the shelf count.
 function buildLayout(cols, rows, hotId, randomRestockIds, baseItemsPattern) {
   const shelves = cols.flatMap((cx, col) =>
     rows.map((cy, row) => {
@@ -56,19 +28,13 @@ function buildLayout(cols, rows, hotId, randomRestockIds, baseItemsPattern) {
 const DESKTOP_LAYOUT = buildLayout([140, 380, 620], DESKTOP_METRICS.rows, 4, [0, 2, 5], [2, 3, 2, 3, 2, 3]);
 const MOBILE_LAYOUT = buildLayout([230, 530], MOBILE_METRICS.rows, 3, [0, 2], [2, 3, 2, 3]);
 
-// Shoppers already gravitate toward the shelf StorePulse will eventually
-// flag — that's real foot traffic the owner has no way to notice on his
-// own, which is exactly the gap the product fills. Randomized per page
-// load, but weighted so the hot shelf reliably draws the most browsers
-// even though it converts no better than the rest (it doesn't have the
-// variety yet).
 function pickWeightedShelf(layout) {
   return Math.random() < 0.45 ? layout.hotId : layout.otherIds[Math.floor(Math.random() * layout.otherIds.length)];
 }
 
 function buildEarlyWave(layout, delayStep) {
   const shelves = Array.from({ length: 5 }, () => pickWeightedShelf(layout));
-  shelves.push(layout.hotId); // the one sale that does land is already at the hot shelf, unnoticed
+  shelves.push(layout.hotId);
   return shelves.map((shelf, i) => ({ shelf, buys: i === 5, delay: i * delayStep }));
 }
 
@@ -81,11 +47,11 @@ function buildLateWave(layout) {
     { shelf: layout.hotId, buys: true },
     { shelf: otherB ?? otherA, buys: false },
     { shelf: layout.hotId, buys: true },
-  ].map((b, i) => ({ ...b, delay: i * 0.3 }));
+  ].map((b, i) => ({ ...b, delay: i * 0.45 }));
 }
 
 function buildWaves(layout) {
-  return { WAVE1: buildEarlyWave(layout, 0.35), WAVE2: buildEarlyWave(layout, 0.3), WAVE3: buildLateWave(layout) };
+  return { WAVE1: buildEarlyWave(layout, 0.45), WAVE2: buildEarlyWave(layout, 0.4), WAVE3: buildLateWave(layout) };
 }
 
 const DESKTOP_WAVES = buildWaves(DESKTOP_LAYOUT);
@@ -93,52 +59,52 @@ const MOBILE_WAVES = buildWaves(MOBILE_LAYOUT);
 
 const PHASES = [
   {
-    name: "enter1", duration: 2200, waveKey: "WAVE1", stage: "enter",
+    name: "enter1", duration: 3800, waveKey: "WAVE1", stage: "enter",
     thought: { icon: Smile, color: "var(--moss)", text: "Customers walking in — let's see what they're after." },
   },
   {
-    name: "browse1", duration: 2200, waveKey: "WAVE1", stage: "browse",
+    name: "browse1", duration: 3800, waveKey: "WAVE1", stage: "browse",
   },
   {
-    name: "leave1", duration: 2600, waveKey: "WAVE1", stage: "leave",
+    name: "leave1", duration: 4200, waveKey: "WAVE1", stage: "leave",
     thought: { icon: HelpCircle, color: "var(--brick)", text: "Only one of them bought anything." },
   },
   {
-    name: "think", duration: 3600,
+    name: "think", duration: 4800,
     thought: { icon: HelpCircle, color: "var(--brick)", text: "Why did the rest just walk out? What do they actually want?" },
   },
   {
-    name: "restock-random", duration: 3200,
+    name: "restock-random", duration: 4500,
     thought: { icon: Package, color: "var(--stamp)", text: "Let me add more stock and see if that helps." },
   },
   {
-    name: "enter2", duration: 1800, waveKey: "WAVE2", stage: "enter",
+    name: "enter2", duration: 3500, waveKey: "WAVE2", stage: "enter",
     thought: { icon: Smile, color: "var(--moss)", text: "Let's see if the extra stock works." },
   },
   {
-    name: "browse2", duration: 2000, waveKey: "WAVE2", stage: "browse",
+    name: "browse2", duration: 3800, waveKey: "WAVE2", stage: "browse",
   },
   {
-    name: "leave2", duration: 2400, waveKey: "WAVE2", stage: "leave",
+    name: "leave2", duration: 4200, waveKey: "WAVE2", stage: "leave",
     thought: { icon: HelpCircle, color: "var(--brick)", text: "Still just one sale. I'm stocking the wrong things." },
   },
   {
-    name: "insight", duration: 3600,
+    name: "insight", duration: 5000,
     thought: { icon: TrendingUp, color: "var(--gold)", text: "StorePulse: this shelf gets far more attention than the rest." },
   },
   {
-    name: "restock-targeted", duration: 3000,
+    name: "restock-targeted", duration: 4500,
     thought: { icon: Package, color: "var(--gold)", text: "Then let's give that shelf real variety." },
   },
   {
-    name: "enter3", duration: 1800, waveKey: "WAVE3", stage: "enter",
+    name: "enter3", duration: 3500, waveKey: "WAVE3", stage: "enter",
     thought: { icon: Smile, color: "var(--moss)", text: "Customers — let's see if this lands better." },
   },
   {
-    name: "browse3", duration: 2200, waveKey: "WAVE3", stage: "browse",
+    name: "browse3", duration: 3800, waveKey: "WAVE3", stage: "browse",
   },
   {
-    name: "leave3", duration: 3000, waveKey: "WAVE3", stage: "leave",
+    name: "leave3", duration: 4800, waveKey: "WAVE3", stage: "leave",
     thought: { icon: PartyPopper, color: "var(--moss)", text: "Sales are up — now I know what they're looking for." },
   },
 ];
@@ -167,9 +133,6 @@ function useIsMobile() {
   return useMediaQuery("(max-width: 640px)");
 }
 
-// Scrolling past the hero shouldn't keep the phase timer ticking in the
-// background — pause it while the scene is off-screen and pick back up
-// (from the start of the current beat, not mid-beat) once it's visible.
 function useIsVisible(ref) {
   const [isVisible, setIsVisible] = useState(true);
   useEffect(() => {
@@ -181,6 +144,8 @@ function useIsVisible(ref) {
   }, [ref]);
   return isVisible;
 }
+
+const STOCK_ICONS = [Shirt, Cake, Footprints, Watch, Package];
 
 function Shelf({ cx, cy, itemCount, hot, baseItems, shelfW, shelfH, itemSize }) {
   const x = cx - shelfW / 2;
@@ -195,16 +160,16 @@ function Shelf({ cx, cy, itemCount, hot, baseItems, shelfW, shelfH, itemSize }) 
         const isRestock = i >= base;
         const ix = x + 10 + (i % 5) * gap;
         const iy = y + 10 + Math.floor(i / 5) * (itemSize + 8);
+        const Icon = STOCK_ICONS[i % STOCK_ICONS.length];
         return (
-          <rect
+          <Icon
             key={i}
             x={ix}
             y={iy}
-            width={itemSize}
-            height={itemSize}
-            fill={isRestock ? "var(--gold)" : "var(--stamp)"}
-            opacity={isRestock ? 1 : 0.55}
-            className={isRestock ? "hero-anim-item hero-anim-item-pop" : ""}
+            size={itemSize}
+            color={isRestock ? "var(--gold)" : "var(--stamp)"}
+            opacity={isRestock ? 1 : 0.65}
+            className={isRestock ? "hero-anim-item hero-anim-item-pop" : "hero-anim-item"}
             style={isRestock ? { "--hb-delay": `${(i - base) * 0.12}s` } : undefined}
           />
         );
@@ -219,14 +184,17 @@ function Buyer({ shelfById, shelf, buys, delay, stage, duration, aisleY }) {
   const cls =
     stage === "enter" ? "hero-anim-buyer-enter" : stage === "browse" ? "hero-anim-buyer-browse" : buys ? "hero-anim-buyer-leave-buy" : "hero-anim-buyer-leave-out";
   return (
-    <circle
-      cx={0}
-      cy={aisleY}
-      r={5.5}
-      fill="var(--muted)"
+    <g
       className={cls}
       style={{ "--hb-shelf-x": `${s.cx}px`, "--hb-shelf-y": `${shelfY}px`, "--hb-delay": `${delay}s`, "--hb-duration": `${duration}s` }}
-    />
+    >
+      <User
+        x={-6}
+        y={aisleY - 6}
+        size={12}
+        color="var(--muted)"
+      />
+    </g>
   );
 }
 
@@ -241,8 +209,8 @@ export default function HeroAnimation() {
   const vbH = metrics.vbH;
   const aisleY = metrics.aisleY;
   const counterTop = aisleY + COUNTER_Y;
-  const ownerBodyY = counterTop - metrics.ownerBodyH; // body sits flush against the desk
-  const ownerHeadCy = ownerBodyY - metrics.ownerHeadR; // head sits flush against the body
+  const ownerBodyY = counterTop - metrics.ownerBodyH;
+  const ownerHeadCy = ownerBodyY - metrics.ownerHeadR;
   const [phaseIdx, setPhaseIdx] = useState(0);
   const phase = reducedMotion ? "leave3" : PHASES[phaseIdx].name;
   const current = PHASES[phaseIdx];

@@ -3,29 +3,15 @@ import { motion } from "framer-motion";
 import Nav from "../components/ui/Nav";
 import HeroSectionOne from "../components/ui/HeroSectionOne";
 import Button from "../components/ui/Button";
-import Card from "../components/ui/Card";
-import Tag, { Eyebrow } from "../components/ui/Tag";
+import { Eyebrow } from "../components/ui/Tag";
 import HeroAnimation from "../components/ui/HeroAnimation";
+import ScrollStorytelling from "../components/ui/ScrollStorytelling";
+import FastIntegrationSection from "../components/ui/FastIntegrationSection";
+import PricingSection from "../components/ui/PricingSection";
+import FaqSection from "../components/ui/FaqSection";
+import FinalCtaBanner from "../components/ui/FinalCtaBanner";
 import SiteFooter from "../components/ui/SiteFooter";
-import { containerStagger, itemFadeUp, useReducedMotion } from "../lib/motion";
-
-const FEATURES = [
-  {
-    kicker: "Traffic",
-    title: "Daily visitors & trend",
-    body: "A day-by-day read on page views and unique visitors, with the period-over-period change built in.",
-  },
-  {
-    kicker: "Product clicks",
-    title: "What shoppers touch",
-    body: "Tag any element with a product id and see which products get clicked most, ranked automatically.",
-  },
-  {
-    kicker: "Multi-site",
-    title: "Every store, one place",
-    body: "Add as many storefronts as you run. Switch between them from the same dashboard, each with its own key.",
-  },
-];
+import { itemFadeUp, useReducedMotion } from "../lib/motion";
 
 export default function Landing() {
   const reduceMotion = useReducedMotion();
@@ -39,80 +25,48 @@ export default function Landing() {
       {/* Primary Real-Time Intelligence Hero Section */}
       <HeroSectionOne />
 
-      {/* Hero Section */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-20 flex flex-col gap-6">
-        <div className="flex flex-col gap-3 max-w-3xl">
-          <Tag variant="outline" className="w-fit text-xs font-medium">
-            Traffic monitoring for ecommerce
-          </Tag>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1] text-[var(--ink)]">
+      {/* Hero Animation Storyboard Section */}
+      <motion.section
+        id="story"
+        {...reveal(itemFadeUp)}
+        className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-14 flex flex-col gap-5"
+      >
+        <div className="flex flex-col gap-2 max-w-3xl">
+          <Eyebrow>TRAFFIC MONITORING FOR ECOMMERCE</Eyebrow>
+          <h2 className="text-2xl sm:text-3xl lg:text-[34px] font-bold tracking-tight leading-[1.15] text-[var(--ink)]">
             See exactly how shoppers move through your store
-          </h1>
+          </h2>
         </div>
 
         <HeroAnimation />
 
-        <div className="flex flex-wrap items-center gap-4 mt-2">
+        <div className="flex flex-wrap items-center gap-3 mt-1">
           <Link to="/signup">
-            <Button size="lg">Start tracking free</Button>
+            <Button size="md">Start tracking free</Button>
           </Link>
           <Link to="/login">
-            <Button variant="outline" size="lg">I already have an account</Button>
+            <Button variant="outline" size="md">I already have an account</Button>
           </Link>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Why StorePulse Section */}
-      <section className="border-y border-[var(--divider)] bg-[var(--paper-card)]/40">
-        <motion.div
-          {...reveal(itemFadeUp)}
-          className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 lg:py-20 flex flex-col gap-4"
-        >
-          <Eyebrow>Why StorePulse</Eyebrow>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-[var(--ink)] max-w-xl">
-            You can&apos;t improve what you can&apos;t see.
-          </h2>
-          <p className="text-base sm:text-lg text-[var(--muted)] leading-relaxed max-w-3xl">
-            StorePulse shows store owners exactly how visitors interact with their
-            site — what gets clicked, what gets ignored, and where sales opportunities
-            are slipping away — so decisions are based on real behavior, not guesswork.
-          </p>
-        </motion.div>
-      </section>
+      {/* Core Platform Benefits Section */}
+      <ScrollStorytelling />
 
-      {/* Features Grid Section */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 lg:py-24 flex flex-col gap-10">
-        <motion.div {...reveal(itemFadeUp)} className="flex flex-col gap-2">
-          <Eyebrow>Features</Eyebrow>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--ink)]">
-            This is what StorePulse provides
-          </h2>
-        </motion.div>
+      {/* Fast 2-Minute Script Integration Section */}
+      <FastIntegrationSection />
 
-        <motion.div
-          {...reveal(containerStagger)}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-6 lg:gap-8"
-        >
-          {FEATURES.map((feature) => (
-            <motion.div key={feature.kicker} variants={reduceMotion ? undefined : itemFadeUp}>
-              <Card interactive className="h-full p-6">
-                <div className="text-xs font-semibold tracking-widest uppercase text-[var(--stamp)] mb-2">
-                  {feature.kicker}
-                </div>
-                <div className="text-lg font-bold text-[var(--ink)] mb-2">
-                  {feature.title}
-                </div>
-                <p className="text-xs sm:text-sm text-[var(--muted)] leading-relaxed">
-                  {feature.body}
-                </p>
-              </Card>
-            </motion.div>
-          ))}
-        </motion.div>
-      </section>
+      {/* Transparent Pricing & Plans Section */}
+      <PricingSection />
 
+      {/* Expandable Accordion FAQ Section */}
+      <FaqSection />
+
+      {/* Final End-of-Page Signup CTA Banner */}
+      <FinalCtaBanner />
+
+      {/* Site Footer */}
       <SiteFooter />
     </div>
   );
 }
-

@@ -13,6 +13,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
+html {
+  scroll-behavior: smooth;
+}
+
 :root {
   --brand-yellow: #DDBB55;
   --brand-navy: #000C1A;
@@ -290,20 +294,18 @@ button:disabled, select:disabled, [aria-disabled="true"] { cursor: not-allowed; 
   color: var(--muted);
 }
 .input {
-  width: 100%; min-height: 36px; padding: 6px 10px; font: inherit;
-  font-size: 14px; color: var(--ink); caret-color: var(--stamp);
+  width: 100%; min-height: 40px; padding: 8px 12px; font: inherit;
+  font-size: 14px; color: var(--ink); caret-color: #DDBB55;
   background: var(--paper-card);
-  border: 1px solid var(--divider-soft); border-radius: var(--radius-xl);
+  border: 1px solid var(--divider-soft); border-radius: 12px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.input:hover { border-color: color-mix(in srgb, var(--ink) 45%, transparent); }
-/* :focus, not :focus-visible — NYRON's rule for form inputs specifically:
-   users need to see which field is active regardless of mouse or
-   keyboard, unlike buttons/links where a click already shows the user
-   what they activated. A box-shadow ring (not outline) so it follows
-   the input's own border-radius instead of drawing a square halo. */
+.input:hover { border-color: rgba(221, 187, 85, 0.4); }
 .input:focus {
-  border-color: var(--stamp);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--stamp) 35%, transparent);
+  border-color: #DDBB55;
+  box-shadow: 0 0 0 3px rgba(221, 187, 85, 0.15);
+  outline: none;
 }
 .input-adorn-left { padding-left: 32px; }
 .input-adorn-right { padding-right: 32px; }

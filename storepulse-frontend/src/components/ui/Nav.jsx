@@ -159,201 +159,63 @@ export default function Nav({ links = null, actions = null }) {
         className="sticky top-0 z-[var(--z-header)] w-full border-b border-[var(--divider)] bg-[var(--paper)]/90 backdrop-blur-md transition-colors duration-200"
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-20 sm:h-22 lg:h-[88px] flex items-center justify-between gap-4">
-          {/* Logo Section */}
-          <div className="flex items-center gap-6 shrink-0">
-            <Link to="/" className="flex items-center gap-2" aria-label="StorePulse Homepage">
-              {/* Light Theme Logo: rbglogo2.png */}
+          {/* Left Cluster: Logo + Vertical Divider + Theme Toggle (Inline) */}
+          <div className="flex items-center gap-3 shrink-0">
+            <Link to="/" className="flex items-center gap-2 shrink-0" aria-label="StorePulse Homepage">
               <img
                 src="/STOREPULSE-LOGOS/RBG-LOGO/rbglogo2.png"
                 alt="StorePulse"
-                className="h-10 sm:h-12 lg:h-[50px] w-auto object-contain logo-light"
+                className="h-10 sm:h-11 lg:h-12 w-auto object-contain logo-light"
               />
-              {/* Dark Theme Logo: rbglogo3.png */}
               <img
                 src="/STOREPULSE-LOGOS/RBG-LOGO/rbglogo3.png"
                 alt="StorePulse"
-                className="h-10 sm:h-12 lg:h-[50px] w-auto object-contain logo-dark"
+                className="h-10 sm:h-11 lg:h-12 w-auto object-contain logo-dark"
               />
             </Link>
+
+            <div className="h-5 w-[1px] bg-[var(--divider-soft)] opacity-60 mx-1 shrink-0 hidden sm:block" />
+
+            <div className="hidden sm:flex items-center shrink-0">
+              <ThemeToggle />
+            </div>
           </div>
 
-          {/* Desktop Navigation Links (SEMRUSH Pattern) */}
+          {/* Center Navigation Links (Desktop) */}
           <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
             {links ? (
-              // Custom pages (Dashboard, Admin, etc.)
               links.map((link) => (
-                <NavLink key={link.to} to={link.to} end={link.end} className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[var(--stamp)] flex items-center gap-1.5 transition-colors">
+                <NavLink key={link.to} to={link.to} end={link.end} className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] flex items-center gap-1.5 transition-colors">
                   {link.icon}
                   <span>{link.label}</span>
                 </NavLink>
               ))
             ) : (
-              // Standard SEMRUSH-style Navigation
               <>
-                {/* Product Dropdown */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => toggleDropdown("product")}
-                    className={`nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[var(--stamp)] inline-flex items-center gap-1.5 transition-colors ${
-                      activeDropdown === "product" ? "text-[var(--stamp)]" : ""
-                    }`}
-                    aria-expanded={activeDropdown === "product"}
-                  >
-                    <span>Product</span>
-                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${activeDropdown === "product" ? "rotate-180" : ""}`} />
-                  </button>
-
-                  <AnimatePresence>
-                    {activeDropdown === "product" && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                        transition={{ duration: 0.18, ease: "easeOut" }}
-                        className="absolute left-0 top-full mt-2 w-80 rounded-2xl border border-[var(--divider-soft)] bg-[var(--paper-card)] p-3 shadow-xl z-50 grid gap-1"
-                      >
-                        {PRODUCT_MENU_ITEMS.map((item) => (
-                          <Link
-                            key={item.title}
-                            to={item.to}
-                            onClick={() => setActiveDropdown(null)}
-                            className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[var(--stamp-soft)]/50 transition-colors group"
-                          >
-                            <div className="p-2 rounded-lg bg-[var(--paper)] border border-[var(--divider-soft)] shrink-0">
-                              {item.icon}
-                            </div>
-                            <div>
-                              <div className="text-xs sm:text-sm font-semibold text-[var(--ink)] group-hover:text-[var(--stamp)] transition-colors">
-                                {item.title}
-                              </div>
-                              <div className="text-[11px] text-[var(--muted)] leading-tight mt-0.5">
-                                {item.desc}
-                              </div>
-                            </div>
-                          </Link>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                {/* Pricing Link */}
-                <Link to="/#pricing" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[var(--stamp)] transition-colors">
-                  Pricing
-                </Link>
-
-                {/* Solutions Dropdown */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => toggleDropdown("solutions")}
-                    className={`nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[var(--stamp)] inline-flex items-center gap-1.5 transition-colors ${
-                      activeDropdown === "solutions" ? "text-[var(--stamp)]" : ""
-                    }`}
-                    aria-expanded={activeDropdown === "solutions"}
-                  >
-                    <span>Solutions</span>
-                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${activeDropdown === "solutions" ? "rotate-180" : ""}`} />
-                  </button>
-
-                  <AnimatePresence>
-                    {activeDropdown === "solutions" && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                        transition={{ duration: 0.18, ease: "easeOut" }}
-                        className="absolute left-0 top-full mt-2 w-80 rounded-2xl border border-[var(--divider-soft)] bg-[var(--paper-card)] p-3 shadow-xl z-50 grid gap-1"
-                      >
-                        {SOLUTIONS_MENU_ITEMS.map((item) => (
-                          <Link
-                            key={item.title}
-                            to={item.to}
-                            onClick={() => setActiveDropdown(null)}
-                            className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[var(--stamp-soft)]/50 transition-colors group"
-                          >
-                            <div className="p-2 rounded-lg bg-[var(--paper)] border border-[var(--divider-soft)] shrink-0">
-                              {item.icon}
-                            </div>
-                            <div>
-                              <div className="text-xs sm:text-sm font-semibold text-[var(--ink)] group-hover:text-[var(--stamp)] transition-colors">
-                                {item.title}
-                              </div>
-                              <div className="text-[11px] text-[var(--muted)] leading-tight mt-0.5">
-                                {item.desc}
-                              </div>
-                            </div>
-                          </Link>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                {/* Resources Dropdown */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => toggleDropdown("resources")}
-                    className={`nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[var(--stamp)] inline-flex items-center gap-1.5 transition-colors ${
-                      activeDropdown === "resources" ? "text-[var(--stamp)]" : ""
-                    }`}
-                    aria-expanded={activeDropdown === "resources"}
-                  >
-                    <span>Resources</span>
-                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${activeDropdown === "resources" ? "rotate-180" : ""}`} />
-                  </button>
-
-                  <AnimatePresence>
-                    {activeDropdown === "resources" && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                        transition={{ duration: 0.18, ease: "easeOut" }}
-                        className="absolute left-0 top-full mt-2 w-80 rounded-2xl border border-[var(--divider-soft)] bg-[var(--paper-card)] p-3 shadow-xl z-50 grid gap-1"
-                      >
-                        {RESOURCES_MENU_ITEMS.map((item) => (
-                          <Link
-                            key={item.title}
-                            to={item.to}
-                            onClick={() => setActiveDropdown(null)}
-                            className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[var(--stamp-soft)]/50 transition-colors group"
-                          >
-                            <div className="p-2 rounded-lg bg-[var(--paper)] border border-[var(--divider-soft)] shrink-0">
-                              {item.icon}
-                            </div>
-                            <div>
-                              <div className="text-xs sm:text-sm font-semibold text-[var(--ink)] group-hover:text-[var(--stamp)] transition-colors">
-                                {item.title}
-                              </div>
-                              <div className="text-[11px] text-[var(--muted)] leading-tight mt-0.5">
-                                {item.desc}
-                              </div>
-                            </div>
-                          </Link>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                {/* Enterprise Link */}
-                <a
-                  href="#contact"
-                  className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[var(--stamp)] inline-flex items-center gap-1 transition-colors"
-                >
-                  <span>Enterprise</span>
-                  <ArrowUpRight className="h-3.5 w-3.5 opacity-70" />
+                <a href="/#story" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
+                  Story
                 </a>
+                <a href="/#platform" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
+                  Platform
+                </a>
+                <a href="/#integration" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
+                  Integration
+                </a>
+                <a href="/#pricing" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
+                  Pricing
+                </a>
+                <a href="/#faq" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
+                  FAQ
+                </a>
+                <Link to="/docs" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
+                  Docs
+                </Link>
               </>
             )}
           </nav>
 
-          {/* Right Action Slot (Theme Toggle + Log In + Sign Up) */}
-          <div className="hidden lg:flex items-center gap-3">
-            <ThemeToggle />
+          {/* Right Action Slot (Log In + Sign Up on Desktop) */}
+          <div className="hidden lg:flex items-center gap-3 shrink-0">
             {actions ? (
               actions
             ) : (
@@ -372,19 +234,21 @@ export default function Nav({ links = null, actions = null }) {
             )}
           </div>
 
-          {/* Mobile Hamburger Toggle */}
-          <div className="lg:hidden flex items-center gap-2">
-            <ThemeToggle />
+          {/* Mobile Control Slot (Inline Theme Toggle on XS + Hamburger Menu) */}
+          <div className="lg:hidden flex items-center gap-2.5 shrink-0">
+            <div className="sm:hidden flex items-center shrink-0">
+              <ThemeToggle />
+            </div>
             <button
               ref={menuButtonRef}
               type="button"
               onClick={() => setMobileOpen(true)}
-              className="btn btn-ghost btn-icon"
+              className="h-9 w-9 rounded-xl border border-[var(--divider-soft)] bg-[var(--paper-card)] text-[var(--ink)] hover:border-[#DDBB55] flex items-center justify-center transition-colors shrink-0 cursor-pointer shadow-xs"
               aria-label="Open menu"
               aria-expanded={mobileOpen}
               aria-controls={drawerId}
             >
-              <Menu className="h-5 w-5" aria-hidden="true" />
+              <Menu className="h-4.5 w-4.5" aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -458,100 +322,48 @@ export default function Nav({ links = null, actions = null }) {
                   ))
                 ) : (
                   <>
-                    {/* Product Accordion */}
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => toggleMobileAccordion("product")}
-                        className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-semibold text-[var(--ink)] rounded-xl hover:bg-[var(--stamp-soft)]/50"
-                      >
-                        <span>Product</span>
-                        <ChevronDown className={`h-4 w-4 transition-transform ${mobileExpanded.product ? "rotate-180" : ""}`} />
-                      </button>
-                      {mobileExpanded.product && (
-                        <div className="pl-4 py-1 flex flex-col gap-1 border-l-2 border-[var(--divider)] ml-3 mt-1">
-                          {PRODUCT_MENU_ITEMS.map((item) => (
-                            <Link
-                              key={item.title}
-                              to={item.to}
-                              onClick={() => setMobileOpen(false)}
-                              className="py-1.5 text-xs text-[var(--muted)] hover:text-[var(--stamp)] font-medium"
-                            >
-                              {item.title}
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <Link
-                      to="/#pricing"
+                    <a
+                      href="/#story"
                       onClick={() => setMobileOpen(false)}
-                      className="px-3 py-2.5 text-sm font-semibold text-[var(--ink)] hover:text-[var(--stamp)] rounded-xl hover:bg-[var(--stamp-soft)]/50"
+                      className="px-3 py-2.5 text-sm font-semibold text-[var(--ink)] hover:text-[#DDBB55] rounded-xl hover:bg-[var(--paper-card)]"
+                    >
+                      Story
+                    </a>
+                    <a
+                      href="/#platform"
+                      onClick={() => setMobileOpen(false)}
+                      className="px-3 py-2.5 text-sm font-semibold text-[var(--ink)] hover:text-[#DDBB55] rounded-xl hover:bg-[var(--paper-card)]"
+                    >
+                      Platform
+                    </a>
+                    <a
+                      href="/#integration"
+                      onClick={() => setMobileOpen(false)}
+                      className="px-3 py-2.5 text-sm font-semibold text-[var(--ink)] hover:text-[#DDBB55] rounded-xl hover:bg-[var(--paper-card)]"
+                    >
+                      Integration
+                    </a>
+                    <a
+                      href="/#pricing"
+                      onClick={() => setMobileOpen(false)}
+                      className="px-3 py-2.5 text-sm font-semibold text-[var(--ink)] hover:text-[#DDBB55] rounded-xl hover:bg-[var(--paper-card)]"
                     >
                       Pricing
-                    </Link>
-
-                    {/* Solutions Accordion */}
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => toggleMobileAccordion("solutions")}
-                        className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-semibold text-[var(--ink)] rounded-xl hover:bg-[var(--stamp-soft)]/50"
-                      >
-                        <span>Solutions</span>
-                        <ChevronDown className={`h-4 w-4 transition-transform ${mobileExpanded.solutions ? "rotate-180" : ""}`} />
-                      </button>
-                      {mobileExpanded.solutions && (
-                        <div className="pl-4 py-1 flex flex-col gap-1 border-l-2 border-[var(--divider)] ml-3 mt-1">
-                          {SOLUTIONS_MENU_ITEMS.map((item) => (
-                            <Link
-                              key={item.title}
-                              to={item.to}
-                              onClick={() => setMobileOpen(false)}
-                              className="py-1.5 text-xs text-[var(--muted)] hover:text-[var(--stamp)] font-medium"
-                            >
-                              {item.title}
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Resources Accordion */}
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => toggleMobileAccordion("resources")}
-                        className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-semibold text-[var(--ink)] rounded-xl hover:bg-[var(--stamp-soft)]/50"
-                      >
-                        <span>Resources</span>
-                        <ChevronDown className={`h-4 w-4 transition-transform ${mobileExpanded.resources ? "rotate-180" : ""}`} />
-                      </button>
-                      {mobileExpanded.resources && (
-                        <div className="pl-4 py-1 flex flex-col gap-1 border-l-2 border-[var(--divider)] ml-3 mt-1">
-                          {RESOURCES_MENU_ITEMS.map((item) => (
-                            <Link
-                              key={item.title}
-                              to={item.to}
-                              onClick={() => setMobileOpen(false)}
-                              className="py-1.5 text-xs text-[var(--muted)] hover:text-[var(--stamp)] font-medium"
-                            >
-                              {item.title}
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <a
-                      href="#contact"
-                      onClick={() => setMobileOpen(false)}
-                      className="px-3 py-2.5 text-sm font-semibold text-[var(--ink)] hover:text-[var(--stamp)] flex items-center justify-between rounded-xl hover:bg-[var(--stamp-soft)]/50"
-                    >
-                      <span>Enterprise</span>
-                      <ArrowUpRight className="h-4 w-4 opacity-70" />
                     </a>
+                    <a
+                      href="/#faq"
+                      onClick={() => setMobileOpen(false)}
+                      className="px-3 py-2.5 text-sm font-semibold text-[var(--ink)] hover:text-[#DDBB55] rounded-xl hover:bg-[var(--paper-card)]"
+                    >
+                      FAQ
+                    </a>
+                    <Link
+                      to="/docs"
+                      onClick={() => setMobileOpen(false)}
+                      className="px-3 py-2.5 text-sm font-semibold text-[var(--ink)] hover:text-[#DDBB55] rounded-xl hover:bg-[var(--paper-card)]"
+                    >
+                      Docs
+                    </Link>
                   </>
                 )}
               </div>

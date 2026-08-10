@@ -1,389 +1,293 @@
-import { useNavigate } from "react-router-dom";
-import { X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import Nav from "../components/ui/Nav";
 import CodeBlock from "../components/ui/CodeBlock";
 import SiteFooter from "../components/ui/SiteFooter";
-import ThemeToggle from "../components/ui/ThemeToggle";
-import { API_BASE_URL } from "../lib/api";
-
-const SCRIPT_SNIPPET = `<script src="${API_BASE_URL}/track.js"\n  data-site-key="YOUR_SITE_KEY"></script>`;
-
-const SITE_KEY_EXAMPLE = `sp_live_84da57d3461067b6aff00beb1fed7c3f`;
-
-const PRODUCT_CARD_SNIPPET = `<div class="product-card"
-     data-storepulse-product-id="prod_123"
-     data-storepulse-product-name="Blue Ceramic Mug">
-  <img src="mug.jpg" alt="Blue Ceramic Mug" />
-  <h3>Blue Ceramic Mug</h3>
-  <button>Add to Cart</button>
-</div>`;
-
-const PRODUCT_GRID_SNIPPET = `<div class="product-grid">
-  <a href="/products/mug-blue"
-     class="product-card"
-     data-storepulse-product-id="prod_123"
-     data-storepulse-product-name="Blue Ceramic Mug">
-    <img src="mug-blue.jpg" alt="Blue Ceramic Mug" />
-    <span>Blue Ceramic Mug — $18.00</span>
-  </a>
-
-  <a href="/products/mug-red"
-     class="product-card"
-     data-storepulse-product-id="prod_124"
-     data-storepulse-product-name="Red Ceramic Mug">
-    <img src="mug-red.jpg" alt="Red Ceramic Mug" />
-    <span>Red Ceramic Mug — $18.00</span>
-  </a>
-</div>`;
-
-const REACT_SNIPPET = `<div
-  className="product-card"
-  data-storepulse-product-id={product.id}
-  data-storepulse-product-name={product.name}
->
-  {/* card contents */}
-</div>`;
-
-const LIQUID_SNIPPET = `<div
-  class="product-card"
-  data-storepulse-product-id="{{ product.id }}"
-  data-storepulse-product-name="{{ product.title | escape }}"
->`;
-
-const PAGE_VIEW_PAYLOAD = `{
-  "apiKey": "YOUR_SITE_KEY",
-  "visitorId": "uuid-v4-string",
-  "type": "PAGE_VIEW",
-  "pageUrl": "https://store.com/products",
-  "referrer": "https://google.com"
-}`;
-
-const PRODUCT_CLICK_PAYLOAD = `{
-  "apiKey": "YOUR_SITE_KEY",
-  "visitorId": "uuid-v4-string",
-  "type": "PRODUCT_CLICK",
-  "pageUrl": "https://store.com/products",
-  "referrer": "https://google.com",
-  "productId": "prod_123",
-  "productName": "Blue Ceramic Mug"
-}`;
-
-const TROUBLESHOOTING = [
-  {
-    symptom: 'Console error: "Storepulse: missing data-site-key attribute on script tag"',
-    cause: 'You forgot to add data-site-key="..." to the <script> tag.',
-  },
-  {
-    symptom: "Page views not appearing",
-    cause: "Check the script's src domain matches where your API is hosted — events post to {script domain}/api/events.",
-  },
-  {
-    symptom: "Product clicks not tracked",
-    cause: "Ensure data-storepulse-product-id is present on the clicked element or one of its ancestors — the script stops walking up at <body>, so the attribute must be inside <body>.",
-  },
-  {
-    symptom: "Same visitor counted as new every time",
-    cause: "localStorage may be blocked (private browsing, cookie/storage restrictions) — this is expected behavior in those environments.",
-  },
-];
-
-const TOC = [
-  { id: "get-site-key", label: "Get your site key" },
-  { id: "install-script", label: "Install the tracking script" },
-  { id: "page-view-tracking", label: "How page view tracking works" },
-  { id: "product-click-tracking", label: "Tracking product clicks" },
-  { id: "framework-notes", label: "Framework-specific notes" },
-  { id: "verify-integration", label: "Verifying your integration" },
-  { id: "troubleshooting", label: "Troubleshooting" },
-  { id: "event-payloads", label: "Data sent per event" },
-];
-
-function Section({ id, step, title, children, last = false }) {
-  return (
-    <section
-      id={id}
-      style={{
-        padding: "var(--space-8) 0",
-        borderBottom: last ? "none" : "1px solid var(--divider)",
-        scrollMarginTop: "var(--space-6)",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", marginBottom: "var(--space-4)" }}>
-        {step && (
-          <span
-            aria-hidden="true"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 26,
-              height: 26,
-              flexShrink: 0,
-              borderRadius: "50%",
-              background: "var(--stamp)",
-              color: "#fff",
-              fontSize: 13,
-              fontWeight: 700,
-            }}
-          >
-            {step}
-          </span>
-        )}
-        <h2 style={{ margin: 0 }}>{title}</h2>
-      </div>
-      <div className="grid" style={{ gap: "var(--space-3)" }}>
-        {children}
-      </div>
-    </section>
-  );
-}
-
-function SubHeading({ children }) {
-  return (
-    <h3 style={{ marginTop: "var(--space-5)", marginBottom: "var(--space-1)", fontSize: 16 }}>
-      {children}
-    </h3>
-  );
-}
-
-function CodeLabel({ children }) {
-  return (
-    <div className="card-kicker" style={{ marginBottom: "calc(var(--space-1) * -1 + 2px)" }}>
-      {children}
-    </div>
-  );
-}
-
-function P({ children }) {
-  return (
-    <p style={{ fontSize: 15, lineHeight: 1.65, opacity: 0.85, margin: 0 }}>{children}</p>
-  );
-}
+import { Eyebrow } from "../components/ui/Tag";
+import {
+  DOC_SECTIONS,
+  SCRIPT_SNIPPET,
+  SITE_KEY_EXAMPLE,
+  PRODUCT_CARD_SNIPPET,
+  PRODUCT_GRID_SNIPPET,
+  REACT_SNIPPET,
+  LIQUID_SNIPPET,
+  PAGE_VIEW_PAYLOAD,
+  PRODUCT_CLICK_PAYLOAD,
+  TROUBLESHOOTING,
+} from "../lib/docsData";
 
 export default function Docs() {
-  const navigate = useNavigate();
+  const [activeSection, setActiveSection] = useState("get-site-key");
+  const navScrollRef = useRef(null);
 
-  const handleTocClick = (e, id) => {
-    e.preventDefault();
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    window.history.replaceState(null, "", `#${id}`);
+  // Scroll to top on page mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      { rootMargin: "-25% 0px -50% 0px" }
+    );
+
+    DOC_SECTIONS.forEach(({ id }) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const scrollTo = (id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const scrollNav = (direction) => {
+    if (navScrollRef.current) {
+      const scrollAmount = direction === "left" ? -180 : 180;
+      navScrollRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    }
   };
 
   return (
-    <div className="min-h-screen">
-      <div
-        style={{
-          position: "fixed",
-          top: "var(--space-4)",
-          right: "var(--space-4)",
-          zIndex: 10,
-          display: "flex",
-          alignItems: "center",
-          gap: "var(--space-1)",
-        }}
-      >
-        <ThemeToggle />
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="btn btn-ghost btn-icon"
-          aria-label="Close"
-          title="Close"
-        >
-          <X className="h-4 w-4" />
-        </button>
+    <div className="min-h-screen flex flex-col bg-[var(--paper)] text-[var(--ink)] transition-colors duration-200">
+      <Nav />
+
+      {/* Header Banner */}
+      <div className="border-b border-[var(--divider-soft)] bg-[var(--paper)] py-8 sm:py-10 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex items-center space-x-2 mb-2">
+            <Eyebrow>DEVELOPER DOCUMENTATION</Eyebrow>
+          </div>
+          <h1 className="font-sora text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-[var(--ink)] mb-2">
+            StorePulse Integration Guide
+          </h1>
+          <p className="font-sora text-xs sm:text-sm text-[var(--muted)] max-w-2xl leading-relaxed">
+            Everything you need to integrate StorePulse live traffic monitoring and product click telemetry into your store.
+          </p>
+        </div>
       </div>
 
-      <main className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16 flex flex-col gap-6">
-        <h1 style={{ marginBottom: "var(--space-2)" }}>Developer guide</h1>
-        <p style={{ fontSize: 18, lineHeight: 1.55, opacity: 0.8, marginBottom: "var(--space-6)" }}>
-          Integrate StorePulse into your store in under 5 minutes. This guide covers
-          installation, automatic page view tracking, and product click tracking.
-        </p>
+      {/* Mobile Sticky Section Selector with Left & Right Arrow Buttons (No Scrollbar) */}
+      <div className="lg:hidden sticky top-20 z-30 bg-[var(--paper)]/95 backdrop-blur-md border-b border-[var(--divider-soft)] py-2.5 px-4 sm:px-6">
+        <div className="mx-auto max-w-7xl flex items-center gap-2">
 
-        <nav
-          aria-label="On this page"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-            gap: "var(--space-1) var(--space-4)",
-            padding: "var(--space-4)",
-            marginBottom: "var(--space-6)",
-            background: "var(--paper-card)",
-            border: "1px solid var(--divider)",
-          }}
-        >
-          {TOC.map((item, index) => (
-            <a
-              key={item.id}
-              href={`#${item.id}`}
-              onClick={(e) => handleTocClick(e, item.id)}
-              className="docs-toc-link"
-              style={{ fontSize: 14 }}
-            >
-              <span style={{ color: "var(--stamp)", fontWeight: 600 }}>{index + 1}.</span>{" "}
-              {item.label}
-            </a>
-          ))}
-        </nav>
+          <button
+            type="button"
+            onClick={() => scrollNav("left")}
+            className="h-8 w-8 rounded-full border border-[var(--divider-soft)] bg-[var(--paper-card)] text-[var(--ink)] flex items-center justify-center shrink-0 hover:border-[#DDBB55] transition-colors cursor-pointer shadow-xs"
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
 
-        <Section id="get-site-key" step={1} title="Get your site key">
-          <P>
-            Every site you track has a unique <code>apiKey</code> generated when you
-            register it in your StorePulse dashboard. You&apos;ll need this key to
-            install the script.
-          </P>
-          <CodeLabel>Site key format</CodeLabel>
-          <CodeBlock>{SITE_KEY_EXAMPLE}</CodeBlock>
-          <P>Find it on that site&apos;s settings page once you&apos;re logged in.</P>
-        </Section>
-
-        <Section id="install-script" step={2} title="Install the tracking script">
-          <P>
-            Add the following snippet to your site, ideally just before the closing{" "}
-            <code>&lt;/body&gt;</code> tag (or in your global layout/template file):
-          </P>
-          <CodeLabel>HTML</CodeLabel>
-          <CodeBlock>{SCRIPT_SNIPPET}</CodeBlock>
-          <P>
-            Replace <code>data-site-key</code> with the API key for this specific site
-            (find it on that site&apos;s settings page once you&apos;re logged in).
-          </P>
-          <P>
-            <strong>Important:</strong> the script determines where to send events
-            based on its own <code>src</code> URL — it posts to <code>/api/events</code>{" "}
-            on the same domain the script itself is loaded from.
-          </P>
-          <P>
-            That&apos;s it for basic setup. Once this script tag is on the page,{" "}
-            <strong>page views are tracked automatically</strong> — no extra code
-            needed.
-          </P>
-        </Section>
-
-        <Section id="page-view-tracking" step={3} title="How page view tracking works">
-          <P>On every page load, the script:</P>
-          <ol style={{ fontSize: 15, lineHeight: 1.8, opacity: 0.85, margin: 0, paddingLeft: "1.4em" }}>
-            <li>Reads the <code>data-site-key</code> from its own <code>&lt;script&gt;</code> tag</li>
-            <li>
-              Gets or creates a persistent <code>visitorId</code> (a UUID stored in{" "}
-              <code>localStorage</code> under <code>sp_visitor_id</code>, so the same
-              visitor is recognized across sessions on the same browser)
-            </li>
-            <li>Sends a <code>PAGE_VIEW</code> event with the current page URL and referrer</li>
-          </ol>
-          <P>No integration work is required for this — it just works once the script is on the page.</P>
-        </Section>
-
-        <Section id="product-click-tracking" step={4} title="Tracking product clicks">
-          <P>
-            To track clicks on individual products (e.g. product cards, &quot;Add to
-            Cart&quot; buttons, product links), add two <code>data-</code> attributes
-            to the relevant element:
-          </P>
-          <CodeLabel>HTML</CodeLabel>
-          <CodeBlock>{PRODUCT_CARD_SNIPPET}</CodeBlock>
-          <ul style={{ fontSize: 15, lineHeight: 1.8, opacity: 0.85, margin: 0, paddingLeft: "1.4em" }}>
-            <li><code>data-storepulse-product-id</code> — required. Your internal product ID (SKU, database ID, etc.)</li>
-            <li><code>data-storepulse-product-name</code> — recommended. Human-readable name, shown in your analytics dashboard</li>
-          </ul>
-
-          <SubHeading>How click detection works</SubHeading>
-          <P>
-            You don&apos;t need to attach a click handler to every product element
-            yourself. The script listens for clicks anywhere on the page and walks up
-            the DOM tree (<code>event.target</code> → parents) until it finds the
-            nearest ancestor with <code>data-storepulse-product-id</code>.
-          </P>
-          <P>
-            You can put the <code>data-storepulse-*</code> attributes on a wrapping
-            container (like a product card <code>&lt;div&gt;</code>), and clicks
-            anywhere inside it — the image, the title, the button — will register as a
-            click on that product. You do not need to add tracking attributes to every
-            child element individually.
-          </P>
-
-          <SubHeading>Example: e-commerce product grid</SubHeading>
-          <CodeLabel>HTML</CodeLabel>
-          <CodeBlock>{PRODUCT_GRID_SNIPPET}</CodeBlock>
-          <P>
-            Clicking anywhere inside either <code>&lt;a&gt;</code> tag will fire a{" "}
-            <code>PRODUCT_CLICK</code> event with the correct <code>productId</code>{" "}
-            and <code>productName</code>.
-          </P>
-        </Section>
-
-        <Section id="framework-notes" step={5} title="Framework-specific notes">
-          <SubHeading>React / Vue / Next.js / etc.</SubHeading>
-          <P>
-            Just add the same <code>data-storepulse-product-id</code> and{" "}
-            <code>data-storepulse-product-name</code> attributes to your JSX/template
-            elements:
-          </P>
-          <CodeLabel>JSX</CodeLabel>
-          <CodeBlock>{REACT_SNIPPET}</CodeBlock>
-          <P>
-            Since tracking uses event delegation on <code>document</code>, it works
-            automatically with dynamically rendered elements (no need to re-initialize
-            tracking when your component re-renders or new products load).
-          </P>
-
-          <SubHeading>Server-rendered sites (PHP, WordPress, Shopify Liquid, etc.)</SubHeading>
-          <P>
-            Just output the attributes as part of your template&apos;s HTML, using
-            whatever templating syntax your platform uses:
-          </P>
-          <CodeLabel>Liquid</CodeLabel>
-          <CodeBlock>{LIQUID_SNIPPET}</CodeBlock>
-        </Section>
-
-        <Section id="verify-integration" step={6} title="Verifying your integration">
-          <ol style={{ fontSize: 15, lineHeight: 1.8, opacity: 0.85, margin: 0, paddingLeft: "1.4em" }}>
-            <li>Open your site with browser dev tools open (Network tab)</li>
-            <li>
-              Load a page — you should see a <code>POST</code> request to{" "}
-              <code>/api/events</code> with <code>type: "PAGE_VIEW"</code>
-            </li>
-            <li>
-              Click on a tracked product — you should see another request with{" "}
-              <code>type: "PRODUCT_CLICK"</code> and your <code>productId</code>/
-              <code>productName</code> in the payload
-            </li>
-            <li>Check your StorePulse dashboard — events should appear shortly after</li>
-          </ol>
-          <P>
-            <strong>Note:</strong> the script fails silently on network errors (no
-            console errors, no thrown exceptions) so it never breaks your site if
-            StorePulse is temporarily unreachable. This means a missing event won&apos;t
-            show up as an error in your console — always verify using the Network tab
-            or your dashboard, not by watching for JS errors.
-          </P>
-        </Section>
-
-        <Section id="troubleshooting" step={7} title="Troubleshooting">
-          <div className="grid" style={{ gap: "var(--space-3)" }}>
-            {TROUBLESHOOTING.map((item, index) => (
-              <div
-                key={item.symptom}
-                style={{
-                  paddingBottom: "var(--space-3)",
-                  borderBottom: index < TROUBLESHOOTING.length - 1 ? "1px dotted var(--divider)" : "none",
-                }}
+          <div
+            ref={navScrollRef}
+            className="flex-1 overflow-x-auto flex items-center gap-2 no-scrollbar scroll-smooth py-0.5"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            {DOC_SECTIONS.map(({ id, title }) => (
+              <button
+                key={id}
+                onClick={() => scrollTo(id)}
+                className={`whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${activeSection === id
+                  ? "bg-[#DDBB55] text-[#000C1A] shadow-xs"
+                  : "text-[var(--muted)] hover:text-[var(--ink)] bg-[var(--paper-card)] border border-[var(--divider-soft)]"
+                  }`}
               >
-                <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{item.symptom}</div>
-                <div style={{ fontSize: 14, opacity: 0.75, lineHeight: 1.55 }}>{item.cause}</div>
-              </div>
+                {title}
+              </button>
             ))}
           </div>
-        </Section>
 
-        <Section id="event-payloads" step={8} title="Data sent per event" last>
-          <P>For reference, here&apos;s exactly what&apos;s sent to <code>/api/events</code>:</P>
-          <CodeLabel>Page view</CodeLabel>
-          <CodeBlock>{PAGE_VIEW_PAYLOAD}</CodeBlock>
-          <CodeLabel>Product click</CodeLabel>
-          <CodeBlock>{PRODUCT_CLICK_PAYLOAD}</CodeBlock>
-        </Section>
-      </main>
+          <button
+            type="button"
+            onClick={() => scrollNav("right")}
+            className="h-8 w-8 rounded-full border border-[var(--divider-soft)] bg-[var(--paper-card)] text-[var(--ink)] flex items-center justify-center shrink-0 hover:border-[#DDBB55] transition-colors cursor-pointer shadow-xs"
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+
+        </div>
+      </div>
+
+      {/* Main Content Layout — Desktop Sticky Sidebar Left + Documentation Content Right */}
+      <div className="flex-1 mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
+        <div className="flex flex-col lg:flex-row gap-10 xl:gap-14">
+
+          {/* Sticky Table of Contents — Desktop Left Sidebar (Clearance below sticky header) */}
+          <aside className="hidden lg:block w-64 xl:w-72 shrink-0">
+            <div className="sticky top-28">
+              <div className="rounded-2xl border border-[var(--divider-soft)] bg-[var(--paper-card)] overflow-hidden shadow-sm">
+
+                <div className="px-4 py-3 border-b border-[var(--divider-soft)] bg-[var(--paper)]">
+                  <p className="font-sora text-[10px] font-bold tracking-widest uppercase text-[#DDBB55]">
+                    Table of Contents
+                  </p>
+                </div>
+
+                <nav className="flex flex-col p-2 gap-1">
+                  {DOC_SECTIONS.map(({ id, title }) => (
+                    <button
+                      key={id}
+                      onClick={() => scrollTo(id)}
+                      className={`text-left font-sora text-xs py-2 px-3 rounded-xl transition-all duration-150 cursor-pointer leading-snug ${activeSection === id
+                        ? "bg-[#DDBB55] text-[#000C1A] font-bold shadow-xs"
+                        : "text-[var(--muted)] hover:text-[var(--ink)] hover:bg-[var(--paper)] font-medium"
+                        }`}
+                    >
+                      {title}
+                    </button>
+                  ))}
+                </nav>
+
+              </div>
+            </div>
+          </aside>
+
+          {/* Main Documentation Body (With scroll-mt-32 clearance) */}
+          <main className="flex-1 min-w-0">
+            <div className="space-y-12 font-sora text-sm leading-relaxed text-[var(--muted)]">
+
+              {/* 1. Get Your Site Key */}
+              <section id="get-site-key" className="scroll-mt-32 sm:scroll-mt-36 border-b border-[var(--divider-soft)] pb-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-[var(--ink)] mb-3 font-sora">
+                  1. Get Your Site Key
+                </h2>
+                <p className="mb-3">
+                  Before adding the script to your store, you need your unique site key. Each store registered in your StorePulse account gets its own key.
+                </p>
+                <div className="mt-3 p-3.5 rounded-xl border border-[var(--divider-soft)] bg-[var(--paper-card)] flex flex-col gap-2">
+                  <span className="text-xs font-semibold text-[var(--ink)]">Sample Site Key Format:</span>
+                  <CodeBlock code={SITE_KEY_EXAMPLE} language="text" />
+                </div>
+              </section>
+
+              {/* 2. Install the Tracking Script */}
+              <section id="install-script" className="scroll-mt-32 sm:scroll-mt-36 border-b border-[var(--divider-soft)] pb-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-[var(--ink)] mb-3 font-sora">
+                  2. Install the Tracking Script
+                </h2>
+                <p className="mb-3">
+                  Add the tracking script tag to your site’s HTML template. Place it inside the <code className="text-[#DDBB55] font-mono">&lt;head&gt;</code> element or right before the closing <code className="text-[#DDBB55] font-mono">&lt;/body&gt;</code> tag on every page you want to track.
+                </p>
+                <CodeBlock code={SCRIPT_SNIPPET} language="html" />
+              </section>
+
+              {/* 3. How Page View Tracking Works */}
+              <section id="page-view-tracking" className="scroll-mt-32 sm:scroll-mt-36 border-b border-[var(--divider-soft)] pb-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-[var(--ink)] mb-3 font-sora">
+                  3. How Page View Tracking Works
+                </h2>
+                <p className="mb-3">
+                  Once installed, the script automatically tracks page views when a page loads. It captures the current URL, referrer, and an anonymous visitor ID stored in <code className="text-[#DDBB55] font-mono">localStorage</code>.
+                </p>
+                <p>
+                  For Single Page Applications (SPAs) like React or Next.js, the script listens to URL pushState changes and reports virtual pageviews automatically.
+                </p>
+              </section>
+
+              {/* 4. Tracking Product Clicks */}
+              <section id="product-click-tracking" className="scroll-mt-32 sm:scroll-mt-36 border-b border-[var(--divider-soft)] pb-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-[var(--ink)] mb-3 font-sora">
+                  4. Tracking Product Clicks
+                </h2>
+                <p className="mb-4">
+                  To track when visitors click on specific product cards or buy buttons, add custom <code className="text-[#DDBB55] font-mono">data-storepulse-*</code> attributes to your HTML markup:
+                </p>
+
+                <div className="space-y-5">
+                  <div>
+                    <span className="text-xs font-semibold text-[var(--ink)] mb-1.5 block">Single Product Card:</span>
+                    <CodeBlock code={PRODUCT_CARD_SNIPPET} language="html" />
+                  </div>
+
+                  <div>
+                    <span className="text-xs font-semibold text-[var(--ink)] mb-1.5 block">Product Grid List:</span>
+                    <CodeBlock code={PRODUCT_GRID_SNIPPET} language="html" />
+                  </div>
+                </div>
+              </section>
+
+              {/* 5. Framework-Specific Notes */}
+              <section id="framework-notes" className="scroll-mt-32 sm:scroll-mt-36 border-b border-[var(--divider-soft)] pb-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-[var(--ink)] mb-3 font-sora">
+                  5. Framework-Specific Notes
+                </h2>
+                <div className="space-y-5">
+                  <div>
+                    <h3 className="font-semibold text-[var(--ink)] mb-1.5">React / Next.js</h3>
+                    <CodeBlock code={REACT_SNIPPET} language="javascript" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-[var(--ink)] mb-1.5">Shopify Liquid Templates</h3>
+                    <CodeBlock code={LIQUID_SNIPPET} language="html" />
+                  </div>
+                </div>
+              </section>
+
+              {/* 6. Verifying Your Integration */}
+              <section id="verify-integration" className="scroll-mt-32 sm:scroll-mt-36 border-b border-[var(--divider-soft)] pb-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-[var(--ink)] mb-3 font-sora">
+                  6. Verifying Your Integration
+                </h2>
+                <p className="mb-3">
+                  Open your browser’s Developer Tools and look at the Network tab. Filter by <code className="text-[#DDBB55] font-mono">events</code> to see live HTTP POST payloads being sent to StorePulse.
+                </p>
+                <p>
+                  You will see an immediate entry in your StorePulse real-time dashboard feed.
+                </p>
+              </section>
+
+              {/* 7. Troubleshooting */}
+              <section id="troubleshooting" className="scroll-mt-32 sm:scroll-mt-36 border-b border-[var(--divider-soft)] pb-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-[var(--ink)] mb-3 font-sora">
+                  7. Troubleshooting & Gotchas
+                </h2>
+                <div className="space-y-3">
+                  {TROUBLESHOOTING.map(({ symptom, cause }, idx) => (
+                    <div key={idx} className="p-3.5 rounded-xl border border-[var(--divider-soft)] bg-[var(--paper-card)]">
+                      <p className="font-semibold text-[var(--ink)] text-xs mb-1">{symptom}</p>
+                      <p className="text-xs text-[var(--muted)]">{cause}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* 8. Event Payloads */}
+              <section id="event-payloads" className="scroll-mt-32 sm:scroll-mt-36">
+                <h2 className="text-xl sm:text-2xl font-bold text-[var(--ink)] mb-3 font-sora">
+                  8. Data Sent per Event
+                </h2>
+                <div className="space-y-5">
+                  <div>
+                    <span className="text-xs font-semibold text-[var(--ink)] mb-1.5 block">PAGE_VIEW Payload:</span>
+                    <CodeBlock code={PAGE_VIEW_PAYLOAD} language="json" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-semibold text-[var(--ink)] mb-1.5 block">PRODUCT_CLICK Payload:</span>
+                    <CodeBlock code={PRODUCT_CLICK_PAYLOAD} language="json" />
+                  </div>
+                </div>
+              </section>
+
+            </div>
+          </main>
+
+        </div>
+      </div>
 
       <SiteFooter />
     </div>

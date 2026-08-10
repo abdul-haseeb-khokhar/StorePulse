@@ -29,7 +29,7 @@ export default function HeroSectionOne() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <section className="relative overflow-hidden bg-[var(--paper)] text-[var(--ink)] py-6 lg:py-10 lg:max-h-[90vh] flex items-center border-b border-[var(--divider-soft)]">
+    <section className="relative overflow-hidden bg-[var(--paper)] text-[var(--ink)] py-6 lg:py-10 lg:max-h-[90vh] flex items-center">
       {/* Background Decorative Glow — Minimal & Soft */}
       <div
         className="pointer-events-none absolute -top-32 -right-32 h-[350px] w-[350px] rounded-full bg-[#DDBB55]/10 dark:bg-[#DDBB55]/5 blur-[110px]"
@@ -77,7 +77,7 @@ export default function HeroSectionOne() {
             </div>
 
             {/* Integration Line with Pure SVG Icons & etc. */}
-            <div className="pt-3 border-t border-[var(--divider-soft)] flex items-center gap-3 text-xs text-[var(--muted)]">
+            <div className="pt-3 flex items-center gap-3 text-xs text-[var(--muted)]">
               <span className="font-semibold text-[var(--ink)]">Works with:</span>
               <div className="flex items-center gap-3">
                 <img src="/shopify.svg" alt="Shopify" title="Shopify" className="h-4.5 w-4.5 object-contain opacity-80 hover:opacity-100 hover:scale-110 transition-all" />
@@ -85,9 +85,6 @@ export default function HeroSectionOne() {
                 <img src="/woocommerce.svg" alt="WooCommerce" title="WooCommerce" className="h-4.5 w-4.5 object-contain opacity-80 hover:opacity-100 hover:scale-110 transition-all" />
                 <img src="/wordpress.svg" alt="WordPress" title="WordPress" className="h-4.5 w-4.5 object-contain opacity-80 hover:opacity-100 hover:scale-110 transition-all" />
                 <img src="/nextjs.svg" alt="Next.js" title="Next.js" className="h-4.5 w-4.5 object-contain opacity-80 hover:opacity-100 hover:scale-110 transition-all text-[var(--ink)]" />
-                <span className="font-semibold text-[#DDBB55] text-xs ml-0.5">
-                  etc.
-                </span>
               </div>
             </div>
           </motion.div>
