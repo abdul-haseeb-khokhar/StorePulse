@@ -7,8 +7,8 @@ import {
 } from "../../lib/contact";
 
 const NAV_ITEMS = [
-  { name: "STORY", href: "/#story" },
-  { name: "PLATFORM", href: "/#platform" },
+  { name: "OVERVIEW", href: "/#story" },
+  { name: "CAPABILITIES", href: "/#platform" },
   { name: "INTEGRATION", href: "/#integration" },
   { name: "PRICING", href: "/#pricing" },
   { name: "FAQ", href: "/#faq" },
@@ -29,7 +29,10 @@ function WhatsAppIcon(props) {
   );
 }
 
-export default function SiteFooter() {
+export default function SiteFooter({ navItems = null }) {
+  const itemsToRender = navItems || NAV_ITEMS;
+  const isCustomNav = Boolean(navItems);
+
   return (
     <footer className="relative w-full bg-[var(--paper)] text-[var(--ink)] border-t border-[var(--divider-soft)] pt-8 pb-6 transition-colors duration-200 text-left">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full">
@@ -97,7 +100,7 @@ export default function SiteFooter() {
         {/* Section Navigation Links Bar with Animated Underline */}
         <div className="py-4 flex flex-wrap items-center justify-between gap-4 font-sora text-xs sm:text-sm border-b border-[var(--divider-soft)]">
           <div className="flex flex-wrap items-center gap-5 sm:gap-7">
-            {NAV_ITEMS.map((item) => (
+            {itemsToRender.map((item) => (
               <a
                 key={item.name}
                 href={item.href}
@@ -108,16 +111,17 @@ export default function SiteFooter() {
               </a>
             ))}
             
-            {/* Contact link */}
-            <a
-              href={CONTACT_GMAIL_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="group relative inline-flex items-center font-sora text-xs font-bold tracking-wider text-[var(--ink)] hover:text-[#DDBB55] transition-colors duration-150 py-0.5 cursor-pointer"
-            >
-              <span>CONTACT</span>
-              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#DDBB55] transition-all duration-200 ease-out group-hover:w-full" />
-            </a>
+            {!isCustomNav && (
+              <a
+                href={CONTACT_GMAIL_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="group relative inline-flex items-center font-sora text-xs font-bold tracking-wider text-[var(--ink)] hover:text-[#DDBB55] transition-colors duration-150 py-0.5 cursor-pointer"
+              >
+                <span>CONTACT</span>
+                <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#DDBB55] transition-all duration-200 ease-out group-hover:w-full" />
+              </a>
+            )}
           </div>
         </div>
 

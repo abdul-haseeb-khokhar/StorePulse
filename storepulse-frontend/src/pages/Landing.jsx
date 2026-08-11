@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import Nav from "../components/ui/Nav";
+import HomeHeader from "../components/ui/HomeHeader";
 import HeroSectionOne from "../components/ui/HeroSectionOne";
 import Button from "../components/ui/Button";
 import { Eyebrow } from "../components/ui/Tag";
@@ -20,7 +20,7 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
-      <Nav />
+      <HomeHeader />
 
       {/* Primary Real-Time Intelligence Hero Section */}
       <HeroSectionOne />

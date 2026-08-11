@@ -181,42 +181,60 @@ export default function Nav({ links = null, actions = null }) {
             </div>
           </div>
 
-          {/* Center Navigation Links (Desktop) */}
-          <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
-            {links ? (
-              links.map((link) => (
-                <NavLink key={link.to} to={link.to} end={link.end} className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] flex items-center gap-1.5 transition-colors">
-                  {link.icon}
-                  <span>{link.label}</span>
-                </NavLink>
-              ))
-            ) : (
-              <>
-                <a href="/#story" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
-                  Story
-                </a>
-                <a href="/#platform" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
-                  Platform
-                </a>
-                <a href="/#integration" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
-                  Integration
-                </a>
-                <a href="/#pricing" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
-                  Pricing
-                </a>
-                <a href="/#faq" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
-                  FAQ
-                </a>
-                <Link to="/docs" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
-                  Docs
-                </Link>
-              </>
-            )}
-          </nav>
+          {/* Center Navigation Links (Flex-1 + justify-center for perfect centering!) */}
+          <div className="hidden lg:flex items-center justify-center flex-1">
+            <nav className="flex items-center gap-1 xl:gap-2">
+              {links && actions !== null ? (
+                links.map((link) => (
+                  <NavLink key={link.to} to={link.to} end={link.end} className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] flex items-center gap-1.5 transition-colors">
+                    {link.icon}
+                    <span>{link.label}</span>
+                  </NavLink>
+                ))
+              ) : !links ? (
+                <>
+                  <a href="/#story" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
+                    Overview
+                  </a>
+                  <a href="/#platform" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
+                    Capabilities
+                  </a>
+                  <a href="/#integration" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
+                    Integration
+                  </a>
+                  <a href="/#pricing" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
+                    Pricing
+                  </a>
+                  <a href="/#faq" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
+                    FAQ
+                  </a>
+                  <Link to="/docs" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
+                    Docs
+                  </Link>
+                </>
+              ) : null}
+            </nav>
+          </div>
 
-          {/* Right Action Slot (Log In + Sign Up on Desktop) */}
+          {/* Right Action / Navigation Slot */}
           <div className="hidden lg:flex items-center gap-3 shrink-0">
-            {actions ? (
+            {actions === null ? (
+              links && (
+                <nav className="flex items-center gap-1 xl:gap-2">
+                  {links.map((link) => (
+                    <NavLink
+                      key={link.to}
+                      to={link.to}
+                      end={link.end}
+                      className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] flex items-center gap-1.5 transition-colors"
+                    >
+                      {link.icon}
+                      <span>{link.label}</span>
+                    </NavLink>
+                  ))}
+                </nav>
+              )
+            ) : actions ? (
               actions
             ) : (
               <>
@@ -327,14 +345,14 @@ export default function Nav({ links = null, actions = null }) {
                       onClick={() => setMobileOpen(false)}
                       className="px-3 py-2.5 text-sm font-semibold text-[var(--ink)] hover:text-[#DDBB55] rounded-xl hover:bg-[var(--paper-card)]"
                     >
-                      Story
+                      Overview
                     </a>
                     <a
                       href="/#platform"
                       onClick={() => setMobileOpen(false)}
                       className="px-3 py-2.5 text-sm font-semibold text-[var(--ink)] hover:text-[#DDBB55] rounded-xl hover:bg-[var(--paper-card)]"
                     >
-                      Platform
+                      Capabilities
                     </a>
                     <a
                       href="/#integration"
@@ -369,24 +387,26 @@ export default function Nav({ links = null, actions = null }) {
               </div>
 
               {/* Drawer Bottom Actions */}
-              <div className="mt-auto pt-4 border-t border-[var(--divider)] flex flex-col gap-3">
-                {actions ? (
-                  <div onClick={() => setMobileOpen(false)}>{actions}</div>
-                ) : (
-                  <>
-                    <Link to="/login" onClick={() => setMobileOpen(false)}>
-                      <Button variant="outline" block>
-                        Log In
-                      </Button>
-                    </Link>
-                    <Link to="/signup" onClick={() => setMobileOpen(false)}>
-                      <Button variant="primary" block>
-                        Sign Up
-                      </Button>
-                    </Link>
-                  </>
-                )}
-              </div>
+              {actions !== null && (
+                <div className="mt-auto pt-4 border-t border-[var(--divider)] flex flex-col gap-3">
+                  {actions ? (
+                    <div onClick={() => setMobileOpen(false)}>{actions}</div>
+                  ) : (
+                    <>
+                      <Link to="/login" onClick={() => setMobileOpen(false)}>
+                        <Button variant="outline" block>
+                          Log In
+                        </Button>
+                      </Link>
+                      <Link to="/signup" onClick={() => setMobileOpen(false)}>
+                        <Button variant="primary" block>
+                          Sign Up
+                        </Button>
+                      </Link>
+                    </>
+                  )}
+                </div>
+              )}
             </motion.div>
           </>
         )}

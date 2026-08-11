@@ -10,7 +10,10 @@ export default function AuthLayout({ children, switchTo, switchLabel }) {
   return (
     <div className="min-h-screen flex flex-col justify-between bg-[var(--paper)] text-[var(--ink)]">
       <Nav
-        links={[{ to: "/", label: "Overview", end: true }]}
+        links={[
+          { to: "/", label: "Overview", end: true },
+          { to: "/docs", label: "Docs" },
+        ]}
         actions={
           <Link to={switchTo}>
             <Button variant="secondary" size="sm">{switchLabel}</Button>

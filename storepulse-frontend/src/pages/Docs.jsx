@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Nav from "../components/ui/Nav";
+import DocsHeader from "../components/ui/DocsHeader";
 import CodeBlock from "../components/ui/CodeBlock";
 import SiteFooter from "../components/ui/SiteFooter";
 import { Eyebrow } from "../components/ui/Tag";
@@ -62,7 +62,7 @@ export default function Docs() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--paper)] text-[var(--ink)] transition-colors duration-200">
-      <Nav />
+      <DocsHeader />
 
       {/* Header Banner */}
       <div className="border-b border-[var(--divider-soft)] bg-[var(--paper)] py-8 sm:py-10 px-4 sm:px-6 lg:px-8">
@@ -289,7 +289,12 @@ export default function Docs() {
         </div>
       </div>
 
-      <SiteFooter />
+      <SiteFooter
+        navItems={[
+          { name: "OVERVIEW", href: "/" },
+          { name: "DOCS", href: "/docs" },
+        ]}
+      />
     </div>
   );
 }

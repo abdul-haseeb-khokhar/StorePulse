@@ -1,5 +1,4 @@
-import { User } from "lucide-react";
-import Nav from "../components/ui/Nav";
+import AppHeader from "../components/ui/AppHeader";
 
 /**
  * AppLayout — wraps every authenticated screen. Top nav (Dashboard /
@@ -9,13 +8,7 @@ import Nav from "../components/ui/Nav";
 export default function AppLayout({ children }) {
   return (
     <div className="min-h-screen">
-      <Nav
-        links={[
-          { to: "/dashboard", label: "Dashboard" },
-          { to: "/sites", label: "Sites" },
-          { to: "/settings", label: "Profile", icon: <User className="h-4 w-4" /> },
-        ]}
-      />
+      <AppHeader />
       {children}
     </div>
   );
