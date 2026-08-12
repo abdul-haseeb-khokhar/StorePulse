@@ -1,9 +1,23 @@
-const {createSite, findSiteById, findSitesByUserId, updateApiKey} = require('./sites.repository')
+const {createSite, findSiteById, findSitesByUserId, updateApiKey, findUserPlan} = require('./sites.repository')
 const {generateApiKey} = require('../../utils/apiKey')
 const AppError = require('../../utils/AppError')
 const {invalidateCachedSite} = require('../ingest/ingest.cache')
 
+const PLAN_LIMITS = {
+    Free: {maxSites: 1},
+    Pro: {maxSites: 5},
+    Business: {maxSites: Infinity},
+};
+
 async function addSite({name, domain, userId}) {
+    const plan = await findUserPlan(userId);
+    const {maxSites} = PLAN_LIMITS[plan] || PLAN_LIMITS.Free;
+
+    const existingSites = await findSitesByUserId(userId);
+    if (existingSites.length >= maxSites) {
+        throw new AppError(`Your ${plan} plan allows up to ${maxSites} site(s). Upgrade to add more.`, 403);
+    }
+
     const apiKey = generateApiKey();
 
     const site = await createSite({name, domain, apiKey, userId})

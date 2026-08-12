@@ -81,6 +81,16 @@ async function createAdminLog({adminId, action, targetedUserId}) {
     });
 }
 
+async function upsertUserSubscription({userId, plan, status, currentPeriodEnd}) {
+    return prisma.subscription.upsert({
+        where: {userId},
+        create: {userId, plan, status, currentPeriodEnd},
+        update: {plan, status, currentPeriodEnd},
+        select: {id: true, userId: true, plan: true, status: true, currentPeriodEnd: true, canceledAt: true}
+    });
+}
+
 module.exports = {
-    updateUserStatus, listUsers, findUserByIdWithSites, listSites, getPlatformStats, createAdminLog
+    updateUserStatus, listUsers, findUserByIdWithSites, listSites, getPlatformStats, createAdminLog,
+    upsertUserSubscription,
 }
