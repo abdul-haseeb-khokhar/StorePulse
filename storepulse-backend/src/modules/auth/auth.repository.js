@@ -11,6 +11,19 @@ async function findUserById(id) {
     })
 }
 
+// Separate from findUserById on purpose — that one runs on every
+// authenticated request via the protect middleware, so it stays a plain
+// lookup. This join is only needed for the /me response.
+async function findUserByIdWithSubscription(id) {
+    return prisma.user.findUnique({
+        where: {id},
+        select: {
+            id: true, fullName: true, email: true,
+            subscription: {select: {plan: true, status: true, currentPeriodEnd: true}},
+        },
+    })
+}
+
 async function  createUser(fullName, email, hashedPassword) {
     return prisma.user.create({
         data: {
@@ -112,7 +125,7 @@ async function resetUserPassword(userId, hashedPassword) {
     });
 }
 module.exports = {
-    findUserByEmail, createUser, findUserById, updateUserName, updateUserPassword,
+    findUserByEmail, createUser, findUserById, findUserByIdWithSubscription, updateUserName, updateUserPassword,
     setVerificationToken, findUserByVerificationToken, markEmailVerified,
     setPendingEmailToken, findUserByPendingEmailToken, confirmPendingEmail,
     setPasswordResetToken, findUserByPasswordResetToken, resetUserPassword

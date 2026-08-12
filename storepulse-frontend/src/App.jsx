@@ -14,6 +14,8 @@ import SiteSettings from "./pages/SiteSettings";
 import SitesList from "./pages/SitesList";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
+import Billing from "./pages/Billing";
+import BillingPay from "./pages/BillingPay";
 import NotFound from "./pages/NotFound";
 import RequireAuth from "./components/auth/RequireAuth";
 import RequireGuest from "./components/auth/RequireGuest";
@@ -53,6 +55,8 @@ export default function App() {
             <Route path="/sites/:siteId/setup" element={<SiteSetup />} />
             <Route path="/sites/:siteId/settings" element={<SiteSettings />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/billing" element={<Billing />} />
+            <Route path="/billing/pay/:plan" element={<BillingPay />} />
           </Route>
 
           {/* Admin — no links to these from the customer-facing app; reachable only by direct URL */}

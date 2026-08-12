@@ -36,7 +36,8 @@ async function findUserByIdWithSites(userId) {
     return prisma.user.findUnique({
         where: {id: userId},
         select: {id: true, fullName: true, email: true, status: true, isEmailVerified: true, createdAt: true,
-            sites: {select: {id: true, name: true, domain: true, createdAt: true}}
+            sites: {select: {id: true, name: true, domain: true, createdAt: true}},
+            subscription: {select: {plan: true, status: true, currentPeriodEnd: true}}
         }
     });
 }
@@ -81,6 +82,13 @@ async function createAdminLog({adminId, action, targetedUserId}) {
     });
 }
 
+async function findSubscriptionByUserId(userId) {
+    return prisma.subscription.findUnique({
+        where: {userId},
+        select: {id: true, userId: true, plan: true, status: true, currentPeriodEnd: true, canceledAt: true}
+    });
+}
+
 async function upsertUserSubscription({userId, plan, status, currentPeriodEnd}) {
     return prisma.subscription.upsert({
         where: {userId},
@@ -92,5 +100,5 @@ async function upsertUserSubscription({userId, plan, status, currentPeriodEnd}) 
 
 module.exports = {
     updateUserStatus, listUsers, findUserByIdWithSites, listSites, getPlatformStats, createAdminLog,
-    upsertUserSubscription,
+    upsertUserSubscription, findSubscriptionByUserId,
 }

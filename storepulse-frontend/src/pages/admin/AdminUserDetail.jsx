@@ -8,9 +8,11 @@ import Tag from "../../components/ui/Tag";
 import Button from "../../components/ui/Button";
 import Dialog from "../../components/ui/Dialog";
 import Skeleton from "../../components/ui/Skeleton";
+import Seg from "../../components/ui/Seg";
 import adminApi from "../../lib/adminApi";
 import { getApiErrorMessage } from "../../lib/api";
 import { queryKeys } from "../../lib/queryKeys";
+import { formatDaysRemaining } from "../../lib/plan";
 
 const STATUS_TAG_VARIANT = {
   Active: "positive",
@@ -18,6 +20,26 @@ const STATUS_TAG_VARIANT = {
   Banned: "negative",
   Deleted: "outline",
 };
+
+const PLAN_TAG_VARIANT = {
+  Free: "neutral",
+  Pro: "accent",
+  Business: "positive",
+};
+
+const PLAN_OPTIONS = [
+  { value: "Free", label: "Free" },
+  { value: "Pro", label: "Pro" },
+  { value: "Business", label: "Business" },
+];
+
+// Free has no period to renew, so this only ever shows for Pro/Business.
+// The server computes the actual currentPeriodEnd from whichever of these
+// is picked — no date ever passes through the client.
+const BILLING_CYCLE_OPTIONS = [
+  { value: "monthly", label: "Monthly" },
+  { value: "yearly", label: "Yearly" },
+];
 
 const ACTION_COPY = {
   Active: (name) => `${name} will be able to log in as an active user.`,
@@ -30,6 +52,10 @@ export default function AdminUserDetail() {
   const queryClient = useQueryClient();
   const [pendingStatus, setPendingStatus] = useState(null);
   const [actionError, setActionError] = useState(null);
+  const [planDraft, setPlanDraft] = useState(null);
+  const [cycleDraft, setCycleDraft] = useState("monthly");
+  const [planError, setPlanError] = useState(null);
+  const [planSuccess, setPlanSuccess] = useState(null);
 
   const userQuery = useQuery({
     queryKey: queryKeys.admin.users.detail(id),
@@ -49,11 +75,31 @@ export default function AdminUserDetail() {
     onError: (err) => setActionError(getApiErrorMessage(err, "Could not update this user's status.")),
   });
 
+  const planMutation = useMutation({
+    mutationFn: ({ plan, billingCycle }) =>
+      adminApi.patch(`/admin/users/${id}/plan`, {
+        plan,
+        ...(plan !== "Free" ? { billingCycle } : {}),
+      }),
+    onSuccess: ({ data }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.users.detail(id) });
+      setPlanError(null);
+      setPlanSuccess(data.message);
+    },
+    onError: (err) => {
+      setPlanSuccess(null);
+      setPlanError(getApiErrorMessage(err, "Could not update this user's plan."));
+    },
+  });
+
   const user = userQuery.data;
   const loading = userQuery.isPending;
   const error = userQuery.isError
     ? getApiErrorMessage(userQuery.error, "Could not load this user.")
     : null;
+
+  const currentPlan = user?.subscription?.plan || "Free";
+  const activePlanDraft = planDraft ?? currentPlan;
 
   function openAction(nextStatus) {
     setActionError(null);
@@ -64,6 +110,22 @@ export default function AdminUserDetail() {
     if (!pendingStatus) return;
     setActionError(null);
     statusMutation.mutate(pendingStatus);
+  }
+
+  function submitPlan() {
+    setPlanError(null);
+    setPlanSuccess(null);
+    planMutation.mutate({ plan: activePlanDraft, billingCycle: cycleDraft });
+  }
+
+  function selectPlanDraft(nextPlan) {
+    setPlanSuccess(null);
+    setPlanDraft(nextPlan);
+  }
+
+  function selectCycleDraft(nextCycle) {
+    setPlanSuccess(null);
+    setCycleDraft(nextCycle);
   }
 
   return (
@@ -128,6 +190,66 @@ export default function AdminUserDetail() {
                   </Button>
                 )}
               </div>
+            </Card>
+
+            <Card style={{ marginBottom: "var(--space-3)" }}>
+              <div className="card-kicker">Plan</div>
+              <div
+                className="flex items-center"
+                style={{ gap: "var(--space-2)", marginBottom: "var(--space-3)" }}
+              >
+                <div className="card-title" style={{ margin: 0 }}>
+                  Current: {currentPlan}
+                </div>
+                <Tag variant={PLAN_TAG_VARIANT[currentPlan] || "neutral"}>
+                  {user.subscription?.status || "Active"}
+                </Tag>
+              </div>
+              {user.subscription?.currentPeriodEnd && (
+                <p className="card-body" style={{ marginBottom: "var(--space-3)" }}>
+                  {formatDaysRemaining(user.subscription.currentPeriodEnd)}
+                </p>
+              )}
+
+              <Seg
+                name="plan"
+                options={PLAN_OPTIONS}
+                value={activePlanDraft}
+                onChange={selectPlanDraft}
+                aria-label="Select plan"
+              />
+
+              {activePlanDraft !== "Free" && (
+                <div style={{ marginTop: "var(--space-3)" }}>
+                  <Seg
+                    name="billing-cycle"
+                    options={BILLING_CYCLE_OPTIONS}
+                    value={cycleDraft}
+                    onChange={selectCycleDraft}
+                    aria-label="Billing cycle"
+                  />
+                </div>
+              )}
+
+              {planError && (
+                <p className="card-body" style={{ color: "var(--brick)", marginTop: "var(--space-2)" }}>
+                  {planError}
+                </p>
+              )}
+              {planSuccess && (
+                <p className="card-body" style={{ color: "var(--gold)", marginTop: "var(--space-2)" }}>
+                  {planSuccess}
+                </p>
+              )}
+
+              <Button
+                variant="primary"
+                style={{ marginTop: "var(--space-3)" }}
+                onClick={submitPlan}
+                loading={planMutation.isPending}
+              >
+                Update plan
+              </Button>
             </Card>
 
             <Card>

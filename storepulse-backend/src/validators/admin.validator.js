@@ -38,7 +38,11 @@ const setUserPlanSchema = z.object({
     }),
     body: z.object({
         plan: z.enum(['Free', 'Pro', 'Business']),
-        currentPeriodEnd: z.coerce.date().optional()
+        // The period's end date isn't picked by hand — the admin only
+        // chooses how long it runs, and the server computes the date
+        // itself (see config/plans.js's periodEndFromCycle). Irrelevant
+        // for Free, so left optional here too.
+        billingCycle: z.enum(['monthly', 'yearly']).optional()
     })
 });
 

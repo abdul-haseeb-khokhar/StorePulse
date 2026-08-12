@@ -59,11 +59,11 @@ async function getPlatformStatsController(req, res, next) {
 
 async function setUserPlanController(req, res, next) {
     try{
-        const {plan, currentPeriodEnd} = req.body;
+        const {plan, billingCycle} = req.body;
         const userId = req.params.id;
         const adminId = req.admin.id;
 
-        const result = await setUserPlanService({userId, plan, currentPeriodEnd, adminId});
+        const result = await setUserPlanService({userId, plan, billingCycle, adminId});
 
         res.status(200).json(result);
     }catch(error){

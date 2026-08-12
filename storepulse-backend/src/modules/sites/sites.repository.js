@@ -1,4 +1,5 @@
 const prisma = require('../../config/prisma')
+const {resolveEffectivePlan} = require('../../config/plans')
 
 async function createSite({name, domain, apiKey, userId}) {
     return prisma.site.create({
@@ -29,10 +30,10 @@ async function updateApiKey(id, newApiKey) {
 async function findUserPlan(userId) {
     const subscription = await prisma.subscription.findUnique({
         where: {userId},
-        select: {plan: true}
+        select: {plan: true, currentPeriodEnd: true}
     });
 
-    return subscription?.plan || 'Free';
+    return resolveEffectivePlan(subscription);
 }
 
 module.exports = {

@@ -2,12 +2,8 @@ const {createSite, findSiteById, findSitesByUserId, updateApiKey, findUserPlan} 
 const {generateApiKey} = require('../../utils/apiKey')
 const AppError = require('../../utils/AppError')
 const {invalidateCachedSite} = require('../ingest/ingest.cache')
-
-const PLAN_LIMITS = {
-    Free: {maxSites: 1},
-    Pro: {maxSites: 5},
-    Business: {maxSites: Infinity},
-};
+const {getMonthlyEventCount} = require('../ingest/ingest.usage')
+const {PLAN_LIMITS} = require('../../config/plans')
 
 async function addSite({name, domain, userId}) {
     const plan = await findUserPlan(userId);
@@ -27,6 +23,33 @@ async function addSite({name, domain, userId}) {
 
 async function getUserSites(userId) {
     return findSitesByUserId(userId)
+}
+
+// Per-site, not a single account-wide number — the quota itself is
+// enforced per site (see ingest.service.js), so a combined total here
+// would misrepresent what's actually being checked against the cap.
+async function getUsageSummary(userId) {
+    const plan = await findUserPlan(userId);
+    const {maxMonthlyEvents} = PLAN_LIMITS[plan] || PLAN_LIMITS.Free;
+    const sites = await findSitesByUserId(userId);
+
+    const sitesUsage = await Promise.all(
+        sites.map(async (site) => ({
+            siteId: site.id,
+            name: site.name,
+            domain: site.domain,
+            eventsThisMonth: await getMonthlyEventCount(site.id),
+        }))
+    );
+
+    // JSON has no Infinity — it silently serializes to null, so this makes
+    // "unlimited" an explicit, intentional part of the response shape
+    // instead of relying on that implicit conversion happening to work.
+    return {
+        plan,
+        maxMonthlyEvents: maxMonthlyEvents === Infinity ? null : maxMonthlyEvents,
+        sites: sitesUsage,
+    };
 }
 
 async function getSiteById({siteId, userId}) {
@@ -57,5 +80,5 @@ async function regenerateApiKey({siteId, userId}) {
 }
 
 module.exports = {
-    addSite, getUserSites, regenerateApiKey, getSiteById
+    addSite, getUserSites, regenerateApiKey, getSiteById, getUsageSummary
 }

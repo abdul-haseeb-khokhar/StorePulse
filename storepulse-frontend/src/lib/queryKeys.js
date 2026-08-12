@@ -2,6 +2,7 @@ export const queryKeys = {
   sites: {
     all: ["sites"],
     detail: (siteId) => ["sites", siteId],
+    usage: ["sites", "usage"],
   },
   analytics: {
     summary: (siteId, range) => ["analytics", siteId, "summary", range],

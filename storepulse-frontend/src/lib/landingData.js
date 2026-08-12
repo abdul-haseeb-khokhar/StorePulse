@@ -1,13 +1,25 @@
+// Prices live in .env (see .env.example) so they can be changed without
+// touching code — same reasoning as the bank/contact details in billing.js.
+// Falls back to these defaults if a var is unset, so a missing env value
+// shows a real number instead of "NaN" rendering straight into the UI.
+function envPrice(key, fallback) {
+  const value = Number(import.meta.env[key]);
+  return Number.isFinite(value) ? value : fallback;
+}
+
 export const PLANS = [
   {
-    id: "starter",
-    name: "Starter",
+    id: "free",
+    planId: "Free",
+    name: "Free",
     description: "Perfect for new storefronts testing real-time traffic.",
     monthlyPrice: 0,
     annualPrice: 0,
+    monthlyPricePKR: 0,
+    annualPricePKR: 0,
     popular: false,
     features: [
-      "Up to 2,500 monthly page views",
+      "Up to 10,000 monthly events",
       "1 Ecommerce storefront",
       "Real-time visitor telemetry",
       "7-day data retention",
@@ -18,13 +30,16 @@ export const PLANS = [
   },
   {
     id: "pro",
-    name: "Pro Growth",
+    planId: "Pro",
+    name: "Pro",
     description: "Built for scaling brands optimizing conversion rates.",
-    monthlyPrice: 29,
-    annualPrice: 23,
+    monthlyPrice: envPrice("VITE_PRICE_PRO_MONTHLY_USD", 29),
+    annualPrice: envPrice("VITE_PRICE_PRO_ANNUAL_USD", 23),
+    monthlyPricePKR: envPrice("VITE_PRICE_PRO_MONTHLY_PKR", 8000),
+    annualPricePKR: envPrice("VITE_PRICE_PRO_ANNUAL_PKR", 6500),
     popular: true,
     features: [
-      "Up to 100,000 monthly page views",
+      "Up to 100,000 monthly events",
       "Up to 5 Ecommerce storefronts",
       "Real-time visitor telemetry & heatmaps",
       "90-day data retention",
@@ -36,14 +51,17 @@ export const PLANS = [
     buttonVariant: "primary",
   },
   {
-    id: "enterprise",
-    name: "Enterprise",
+    id: "business",
+    planId: "Business",
+    name: "Business",
     description: "For high-volume stores requiring custom telemetry.",
-    monthlyPrice: 99,
-    annualPrice: 79,
+    monthlyPrice: envPrice("VITE_PRICE_BUSINESS_MONTHLY_USD", 99),
+    annualPrice: envPrice("VITE_PRICE_BUSINESS_ANNUAL_USD", 79),
+    monthlyPricePKR: envPrice("VITE_PRICE_BUSINESS_MONTHLY_PKR", 28000),
+    annualPricePKR: envPrice("VITE_PRICE_BUSINESS_ANNUAL_PKR", 22000),
     popular: false,
     features: [
-      "Unlimited monthly page views",
+      "Unlimited monthly events",
       "Unlimited storefronts",
       "365-day data retention",
       "Custom event webhooks & API access",

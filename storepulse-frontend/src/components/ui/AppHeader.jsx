@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect, useId } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu, X, User } from "lucide-react";
+import { Menu, X, User, CreditCard, LayoutDashboard, Globe } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { drawerSpring, useReducedMotion } from "../../lib/motion";
 
 /**
  * AppHeader — Dedicated Header for Authenticated Screens (`AppLayout.jsx`).
- * Right: Dashboard, Sites, Profile.
+ * Right: Dashboard, Sites, Billing, Profile.
  * NO Log In or Sign Up buttons anywhere (neither desktop nor mobile drawer).
  */
 export default function AppHeader() {
@@ -32,8 +32,9 @@ export default function AppHeader() {
   }, [mobileOpen]);
 
   const links = [
-    { to: "/dashboard", label: "Dashboard" },
-    { to: "/sites", label: "Sites" },
+    { to: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
+    { to: "/sites", label: "Sites", icon: <Globe className="h-4 w-4" /> },
+    { to: "/billing", label: "Billing", icon: <CreditCard className="h-4 w-4" /> },
     { to: "/settings", label: "Profile", icon: <User className="h-4 w-4" /> },
   ];
 

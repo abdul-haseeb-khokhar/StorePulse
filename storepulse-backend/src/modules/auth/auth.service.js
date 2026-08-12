@@ -1,4 +1,4 @@
-const {findUserByEmail, createUser, findUserById, updateUserName, updateUserPassword, 
+const {findUserByEmail, createUser, findUserById, findUserByIdWithSubscription, updateUserName, updateUserPassword,
     setVerificationToken, findUserByVerificationToken, markEmailVerified,
     setPendingEmailToken, findUserByPendingEmailToken, confirmPendingEmail,
     setPasswordResetToken, findUserByPasswordResetToken, resetUserPassword
@@ -9,6 +9,7 @@ const {signToken} = require('../../utils/jwt')
 const AppError = require('../../utils/AppError');
 const { sendVerificationEmail, sendEmailChangeEmail, sendPasswordResetEmail } = require('../email/email.service');
 const { updateUserStatus } = require('../admin/admin.repository');
+const { syncExpiredSubscription } = require('../admin/admin.service');
 
 const VERIFICATION_EXPIRY_MS = 24*60*60*1000;
 const EMAIL_CHANGE_EXPIRY_MS = 60*60*1000;
@@ -61,12 +62,13 @@ async function login(email, password) {
 }
 
 async function getUserById(id) {
-    const user = await findUserById(id);
+    const user = await findUserByIdWithSubscription(id);
     if(!user){
         throw new AppError("User not found", 404);
     }
 
-    return {id: user.id, fullName: user.fullName, email: user.email}
+    const subscription = await syncExpiredSubscription(id, user.subscription);
+    return {id: user.id, fullName: user.fullName, email: user.email, subscription}
 }
 
 async function changeName(userId, fullName) {
