@@ -212,10 +212,7 @@ export default function Dashboard() {
 
   return (
     <AppLayout>
-      <main
-        className="mx-auto"
-        style={{ maxWidth: 1040, padding: "var(--space-6) var(--space-4) var(--space-8)" }}
-      >
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 lg:py-12 flex flex-col gap-6">
         {loadingSites ? (
           <DashboardSkeleton showHeader />
         ) : sitesError ? (

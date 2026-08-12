@@ -64,6 +64,7 @@ export default function ResetPassword() {
                 onChange={(e) => setNewPassword(e.target.value)}
                 onFocus={() => setIsPasswordFocused(true)}
                 error={fieldErrors.newPassword}
+                maxLength={50}
                 rightAction={
                   <button
                     type="button"

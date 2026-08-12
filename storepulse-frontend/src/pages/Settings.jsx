@@ -406,6 +406,7 @@ export default function Settings() {
                     onFocus={() => setIsNewPasswordFocused(true)}
                     icon={<Lock className="h-4 w-4" />}
                     error={passwordFieldErrors.newPassword}
+                    maxLength={50}
                     rightAction={
                       <button
                         type="button"
@@ -434,6 +435,7 @@ export default function Settings() {
                     onChange={(e) => setConfirmNewPassword(e.target.value)}
                     icon={<Lock className="h-4 w-4" />}
                     error={passwordFieldErrors.confirmNewPassword}
+                    maxLength={50}
                     required
                   />
 

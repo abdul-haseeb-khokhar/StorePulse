@@ -13,3 +13,15 @@ export default function Tag({ children, variant = "neutral", className = "", ...
     </span>
   );
 }
+
+export function Eyebrow({ children, className = "" }) {
+  return (
+    <div className={`mb-2.5 flex items-center gap-2 ${className}`}>
+      <span className="h-2 w-5 rounded-full bg-[#DDBB55] inline-block shrink-0" aria-hidden="true" />
+      <span className="font-sora text-xs font-semibold tracking-widest uppercase text-[var(--ink)]">
+        {children}
+      </span>
+    </div>
+  );
+}
+

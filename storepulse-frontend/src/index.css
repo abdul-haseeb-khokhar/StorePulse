@@ -13,39 +13,36 @@
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
+html {
+  scroll-behavior: smooth;
+}
+
 :root {
-  --paper: #f4f5f0;
-  --paper-card: #fbfbf8;
-  --ink: #1c1b18;
-  --stamp: #2f4b7c;
-  --stamp-soft: #dce4ef;
-  --gold: #8a6508;
-  --gold-soft: #f1e6c8;
+  --brand-yellow: #DDBB55;
+  --brand-navy: #000C1A;
+  --brand-white: #FFFFFF;
+
+  --paper: #FFFFFF;
+  --paper-card: #FFFFFF;
+  --ink: #000C1A;
+  --stamp: #DDBB55;
+  --stamp-soft: rgba(221, 187, 85, 0.12);
+  --gold: #DDBB55;
+  --gold-soft: rgba(221, 187, 85, 0.2);
   --brick: #8b2e2e;
   --brick-soft: #f3dede;
   --moss: #3f6b3f;
   --moss-soft: #e2ead9;
 
-  --divider: color-mix(in srgb, var(--ink) 18%, transparent);
-  /* Slightly softer tier for component borders (cards, inputs, dialog)
-     vs. structural dividers (nav, footer bands, table rules), per
-     NYRON's two-tier border convention — but kept close to --divider
-     rather than NYRON's fuller 80%-of-structural drop. NYRON's own
-     palette pairs stark cards (white/zinc-900) against a starker page
-     background; --paper-card here sits only a few RGB points from
-     --paper, so the border is doing most of the work of separating a
-     card from the page and can't be softened as aggressively without
-     the card nearly disappearing. */
-  --divider-soft: color-mix(in srgb, var(--ink) 16%, transparent);
-  --muted: color-mix(in srgb, var(--ink) 55%, transparent);
+  --divider: rgba(0, 12, 26, 0.14);
+  --divider-soft: rgba(0, 12, 26, 0.08);
+  --muted: rgba(0, 12, 26, 0.65);
 
-  /* One font family throughout, headings included — both variables
-     point at Sora so call sites (.card-title, .num, h1-h6) don't need
-     touching individually. */
+  /* One font family throughout: Sora */
   --font-display: "Sora", system-ui, sans-serif;
   --font-body: "Sora", system-ui, sans-serif;
 
-  /* 4px base-unit scale. */
+  /* 4px base-unit scale */
   --space-0: 0px;
   --space-0-5: 2px;
   --space-1: 4px;
@@ -77,58 +74,57 @@
   --radius-full: 9999px;
 
   --shadow-none: none;
-  --shadow-xs: 0 1px 2px color-mix(in srgb, var(--ink) 5%, transparent);
-  --shadow-sm: 0 1px 3px color-mix(in srgb, var(--ink) 10%, transparent), 0 1px 2px color-mix(in srgb, var(--ink) 10%, transparent);
-  --shadow-md: 0 4px 6px color-mix(in srgb, var(--ink) 10%, transparent), 0 2px 4px color-mix(in srgb, var(--ink) 10%, transparent);
-  --shadow-lg: 0 10px 15px color-mix(in srgb, var(--ink) 10%, transparent), 0 4px 6px color-mix(in srgb, var(--ink) 10%, transparent);
-  --shadow-xl: 0 20px 25px color-mix(in srgb, var(--ink) 10%, transparent), 0 8px 10px color-mix(in srgb, var(--ink) 10%, transparent);
-  --shadow-2xl: 0 25px 50px color-mix(in srgb, var(--ink) 25%, transparent);
+  --shadow-xs: 0 1px 2px rgba(0, 12, 26, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 12, 26, 0.08), 0 1px 2px rgba(0, 12, 26, 0.06);
+  --shadow-md: 0 4px 6px rgba(0, 12, 26, 0.08), 0 2px 4px rgba(0, 12, 26, 0.06);
+  --shadow-lg: 0 10px 15px rgba(0, 12, 26, 0.1), 0 4px 6px rgba(0, 12, 26, 0.06);
+  --shadow-xl: 0 20px 25px rgba(0, 12, 26, 0.1), 0 8px 10px rgba(0, 12, 26, 0.06);
+  --shadow-2xl: 0 25px 50px rgba(0, 12, 26, 0.2);
 
-  /* Motion timing, shared with the Framer Motion presets in src/lib/motion.js. */
   --duration-fast: 200ms;
   --duration-normal: 300ms;
   --duration-slow: 450ms;
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* Z-index scale — only two layers currently need one, but named rather
-     than left as bare numbers so a third (e.g. a future mobile drawer)
-     has an obvious place to slot in above header, below dialog. */
   --z-header: 40;
   --z-dialog: 50;
   --z-drawer: 50;
 }
 
-/* Dark mode — same "register" palette inverted onto a night till-roll:
-   dark paper, cream ink, brand accents lifted a shade so they still
-   read against the darker ground. --divider/--muted/--text-muted stay
-   defined in terms of --ink above, so they invert for free; shadows
-   are relit here since a shadow mixed toward light ink would glow
-   instead of recede. */
+/* Dark mode — Midnight Navy #000C1A background, pure white text, minimal #DDBB55 yellow accents */
 :root[data-theme="dark"] {
-  --paper: #17181c;
-  --paper-card: #1f2126;
-  --ink: #ececec;
-  --stamp: #6d93d6;
-  --stamp-soft: #263349;
-  --gold: #e0b458;
-  --gold-soft: #382e1c;
+  --paper: #000C1A;
+  --paper-card: #051427;
+  --ink: #FFFFFF;
+  --stamp: #DDBB55;
+  --stamp-soft: rgba(221, 187, 85, 0.16);
+  --gold: #DDBB55;
+  --gold-soft: rgba(221, 187, 85, 0.25);
   --brick: #e2867f;
   --brick-soft: #3b2423;
   --moss: #8fc48f;
   --moss-soft: #263326;
 
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.45), 0 2px 4px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5), 0 4px 6px rgba(0, 0, 0, 0.45);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.55), 0 8px 10px rgba(0, 0, 0, 0.5);
-  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.65);
+  --divider: rgba(255, 255, 255, 0.12);
+  --divider-soft: rgba(221, 187, 85, 0.15);
+  --muted: rgba(255, 255, 255, 0.65);
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.65);
+  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.75);
 }
 
-/* .tag-accent normally darkens --stamp toward black for legible text on
-   a light soft-blue chip; in dark mode --stamp is already light-on-dark,
-   so keep it as-is instead of mixing it toward invisibility. */
+/* Logo theme switching */
+.logo-dark { display: none !important; }
+.logo-light { display: block !important; }
+
+:root[data-theme="dark"] .logo-dark { display: block !important; }
+:root[data-theme="dark"] .logo-light { display: none !important; }
+
 :root[data-theme="dark"] .tag-accent { color: var(--stamp); }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -142,16 +138,13 @@ body {
   line-height: 1.55;
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
-  /* So the theme toggle fades between palettes instead of snapping —
-     every color-mix(var(--ink)...) token recalculates on the same
-     tick, so this one rule covers the whole page. */
   transition: background-color var(--duration-fast) var(--ease-in-out),
     color var(--duration-fast) var(--ease-in-out);
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display); font-weight: 700;
-  line-height: 1.1; letter-spacing: -0.01em; margin: 0 0 var(--space-2);
+  line-height: 1.1; letter-spacing: -0.025em; margin: 0 0 var(--space-2);
 }
 h1 { font-size: 38px; }
 h2 { font-size: 28px; }
@@ -159,11 +152,10 @@ h3 { font-size: 22px; }
 h4 { font-size: 18px; }
 h5 { font-size: 15px; }
 h6 { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
-/* NYRON reserves tighter tracking for large headings only — h4-h6 stay
-   at the shared -0.01em (h6 already overrides it above). */
-h1, h2, h3 { letter-spacing: -0.025em; }
+
 p { margin: 0 0 var(--space-3); }
-a { color: var(--stamp); text-underline-offset: 3px; }
+a { color: var(--ink); text-underline-offset: 3px; transition: color var(--duration-fast) var(--ease-in-out); }
+a:hover { color: var(--stamp); }
 img { display: block; max-width: 100%; }
 button, a, select, summary, [role="button"], [role="link"] { cursor: pointer; }
 button:disabled, select:disabled, [aria-disabled="true"] { cursor: not-allowed; }
@@ -171,16 +163,12 @@ button:disabled, select:disabled, [aria-disabled="true"] { cursor: not-allowed; 
 .num { font-family: var(--font-display); font-variant-numeric: tabular-nums; }
 :focus { outline: none; }
 :focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }
-::selection { background: var(--stamp-soft); }
+::selection { background: var(--stamp-soft); color: var(--ink); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 
-/* Same rationale as body's transition above, applied to every surface
-   that carries its own background/border color rather than inheriting
-   the page's — otherwise these would still hard-snap on theme toggle
-   even with the body fading smoothly around them. */
 .card, .input, .dialog, .tag, .nav, .seg {
   transition: background-color var(--duration-fast) var(--ease-in-out),
     border-color var(--duration-fast) var(--ease-in-out);
@@ -188,37 +176,57 @@ button:disabled, select:disabled, [aria-disabled="true"] { cursor: not-allowed; 
 
 /* — buttons — */
 .btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   cursor: pointer; text-decoration: none;
   font-family: var(--font-body); font-weight: 600;
-  font-size: 14px; line-height: 1.2; color: var(--ink);
+  font-size: 14px; line-height: 1.2;
   background: transparent; border: 1px solid var(--divider);
   padding: var(--space-2-5) var(--space-6);
   border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
   transition: all var(--duration-fast) var(--ease-in-out);
 }
-.btn svg { display: block; }
+.btn svg { display: block; flex-shrink: 0; }
 .btn:active { transform: scale(0.98); }
-.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--stamp); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
 .btn:disabled:active { transform: none; }
-/* Three-size system: base .btn is "medium"; opt into small/large. */
-.btn-sm { padding: var(--space-2) var(--space-4); font-size: 13px; }
+
+.btn-sm { padding: var(--space-2) var(--space-4); font-size: 12px; }
 .btn-lg { padding: var(--space-3-5) var(--space-8); font-size: 15px; }
-.btn-primary { background: var(--stamp); color: #fff; border-color: var(--stamp); }
-.btn-primary:hover { background: color-mix(in srgb, var(--stamp) 85%, black); }
-.btn-primary:active { background: color-mix(in srgb, var(--stamp) 70%, black); }
+
+/* Light Theme Button Specifications */
+.btn-primary { background: #000C1A; color: #FFFFFF; border-color: #000C1A; }
+.btn-primary:hover { background: #DDBB55; color: #000C1A; border-color: #DDBB55; }
+.btn-primary:active { background: color-mix(in srgb, #DDBB55 85%, black); }
+
+.btn-outline { background: transparent; color: #000C1A; border-color: #000C1A; }
+.btn-outline:hover { background: rgba(221, 187, 85, 0.15); color: #000C1A; border-color: #DDBB55; }
+.btn-outline:active { background: rgba(221, 187, 85, 0.3); }
+
+.btn-secondary { background: #FFFFFF; color: #000C1A; border-color: rgba(0, 12, 26, 0.18); }
+.btn-secondary:hover { background: rgba(221, 187, 85, 0.15); border-color: #DDBB55; color: #000C1A; }
+
+.btn-ghost { color: #000C1A; border-color: transparent; box-shadow: none; padding-inline: var(--space-2); }
+.btn-ghost:hover { background: rgba(221, 187, 85, 0.15); color: #000C1A; }
+
 .btn-danger { background: var(--brick); color: #fff; border-color: var(--brick); }
-.btn-danger:hover { background: color-mix(in srgb, var(--brick) 85%, black); }
-.btn-danger:active { background: color-mix(in srgb, var(--brick) 70%, black); }
-.btn-secondary { border-color: var(--divider); background: var(--paper-card); }
-.btn-secondary:hover { background: var(--stamp-soft); }
-.btn-secondary:active { background: color-mix(in srgb, var(--stamp-soft) 60%, var(--divider)); }
-.btn-ghost { color: var(--stamp); border-color: transparent; padding-inline: var(--space-1); }
-.btn-ghost:hover { background: var(--stamp-soft); }
-.btn-ghost:active { background: color-mix(in srgb, var(--stamp) 22%, transparent); }
-/* 44x44 meets WCAG 2.5.5's minimum touch target — NYRON's own
-   accessibility audit flags icon-only buttons at 36px as "borderline". */
-.btn-icon { width: 44px; height: 44px; padding: 0; }
+
+/* Dark Theme Button Overrides — Minimal & Clean */
+:root[data-theme="dark"] .btn-primary { background: #FFFFFF; color: #000C1A; border-color: #FFFFFF; }
+:root[data-theme="dark"] .btn-primary:hover { background: #DDBB55; color: #000C1A; border-color: #DDBB55; }
+:root[data-theme="dark"] .btn-primary:active { background: color-mix(in srgb, #DDBB55 85%, black); }
+
+:root[data-theme="dark"] .btn-outline { background: transparent; color: #FFFFFF; border-color: rgba(255, 255, 255, 0.25); }
+:root[data-theme="dark"] .btn-outline:hover { background: rgba(221, 187, 85, 0.15); color: #DDBB55; border-color: #DDBB55; }
+
+:root[data-theme="dark"] .btn-secondary { background: #051427; color: #FFFFFF; border-color: rgba(255, 255, 255, 0.15); }
+:root[data-theme="dark"] .btn-secondary:hover { background: rgba(221, 187, 85, 0.15); border-color: #DDBB55; color: #DDBB55; }
+
+:root[data-theme="dark"] .btn-ghost { color: #FFFFFF; }
+:root[data-theme="dark"] .btn-ghost:hover { background: rgba(255, 255, 255, 0.1); color: #FFFFFF; }
+/* 44x44 meets WCAG 2.5.5 touch target minimum */
+.btn-icon { width: 44px; height: 44px; padding: 0; border-radius: var(--radius-full); }
 .btn-block { width: 100%; margin-top: var(--space-2); }
 
 /* — theme toggle — */
@@ -234,19 +242,50 @@ button:disabled, select:disabled, [aria-disabled="true"] { cursor: not-allowed; 
   position: relative;
   display: inline-flex; align-items: center;
   width: 56px; height: 32px;
-  border: none; padding: 0;
+  border: 1px solid var(--divider-soft); padding: 0;
   border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--ink) 15%, var(--paper-card));
-  transition: background-color var(--duration-fast) var(--ease-in-out);
+  background: rgba(0, 12, 26, 0.08);
+  transition: all var(--duration-fast) var(--ease-in-out);
 }
 .theme-toggle-knob {
-  position: absolute; top: 4px; left: 4px;
+  position: absolute; top: 3px; left: 3px;
   width: 24px; height: 24px;
   display: flex; align-items: center; justify-content: center;
   border-radius: var(--radius-full);
-  background: var(--paper-card);
+  background: #000C1A;
+  color: #DDBB55;
   box-shadow: var(--shadow-sm);
-  transition: transform var(--duration-fast) var(--ease-in-out);
+  transition: transform var(--duration-fast) var(--ease-in-out), background-color var(--duration-fast) var(--ease-in-out);
+}
+
+:root[data-theme="dark"] .theme-toggle {
+  background: #051427;
+  border-color: rgba(221, 187, 85, 0.3);
+}
+
+:root[data-theme="dark"] .theme-toggle-knob {
+  background: #DDBB55;
+  color: #000C1A;
+}
+
+/* Hero Section Micro-animations */
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(1.25); }
+}
+.animate-live-pulse {
+  animation: livePulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes floatCard {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-7px); }
+}
+.animate-float-slow {
+  animation: floatCard 4.5s ease-in-out infinite;
+}
+.animate-float-delayed {
+  animation: floatCard 5s ease-in-out 1.8s infinite;
 }
 
 /* — forms — */
@@ -255,20 +294,18 @@ button:disabled, select:disabled, [aria-disabled="true"] { cursor: not-allowed; 
   color: var(--muted);
 }
 .input {
-  width: 100%; min-height: 36px; padding: 6px 10px; font: inherit;
-  font-size: 14px; color: var(--ink); caret-color: var(--stamp);
+  width: 100%; min-height: 40px; padding: 8px 12px; font: inherit;
+  font-size: 14px; color: var(--ink); caret-color: #DDBB55;
   background: var(--paper-card);
-  border: 1px solid var(--divider-soft); border-radius: var(--radius-xl);
+  border: 1px solid var(--divider-soft); border-radius: 12px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.input:hover { border-color: color-mix(in srgb, var(--ink) 45%, transparent); }
-/* :focus, not :focus-visible — NYRON's rule for form inputs specifically:
-   users need to see which field is active regardless of mouse or
-   keyboard, unlike buttons/links where a click already shows the user
-   what they activated. A box-shadow ring (not outline) so it follows
-   the input's own border-radius instead of drawing a square halo. */
+.input:hover { border-color: rgba(221, 187, 85, 0.4); }
 .input:focus {
-  border-color: var(--stamp);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--stamp) 35%, transparent);
+  border-color: #DDBB55;
+  box-shadow: 0 0 0 3px rgba(221, 187, 85, 0.15);
+  outline: none;
 }
 .input-adorn-left { padding-left: 32px; }
 .input-adorn-right { padding-right: 32px; }

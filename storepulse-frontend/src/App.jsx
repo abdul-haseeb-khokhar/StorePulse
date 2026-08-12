@@ -16,6 +16,7 @@ import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import RequireAuth from "./components/auth/RequireAuth";
+import RequireGuest from "./components/auth/RequireGuest";
 import RequireAdminAuth from "./components/auth/RequireAdminAuth";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminAcceptInvite from "./pages/admin/AdminAcceptInvite";
@@ -30,16 +31,20 @@ export default function App() {
     <ThemeProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Landing />} />
           <Route path="/docs" element={<Docs />} />
 
-          {/* Auth */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+          {/* Guest-only: an active session skips straight to the dashboard.
+              Landing is here too — its CTAs and pricing are for prospects,
+              not signed-in users (that content is moving into the app nav). */}
+          <Route element={<RequireGuest />}>
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+          </Route>
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/confirm-email-change" element={<ConfirmEmailChange />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
 
           <Route element={<RequireAuth />}>
             <Route path="/dashboard" element={<Dashboard />} />
