@@ -10,6 +10,8 @@ import { drawerSpring, useReducedMotion } from "../../lib/motion";
  * HomeHeader — Dedicated Header for Landing Page (`/`).
  * Center: Story, Platform, Integration, Pricing, FAQ, Docs.
  * Right: Log In & Sign Up buttons (desktop & mobile drawer).
+ * Only ever rendered for guests — `/` is behind RequireGuest (see App.jsx),
+ * so there's no signed-in case to branch on here.
  */
 export default function HomeHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);

@@ -115,6 +115,7 @@ export default function Signup() {
             onChange={(e) => setPassword(e.target.value)}
             onFocus={() => setIsPasswordFocused(true)}
             error={fieldErrors.password}
+            maxLength={50}
             rightAction={
               <button
                 type="button"

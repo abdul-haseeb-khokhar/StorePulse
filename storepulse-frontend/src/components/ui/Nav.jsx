@@ -1,94 +1,10 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  ChevronDown,
-  ArrowUpRight,
-  Menu,
-  X,
-  Activity,
-  MousePointerClick,
-  Layers,
-  Zap,
-  ShoppingBag,
-  Code,
-  Users,
-  BookOpen,
-  FileCode,
-  Sparkles,
-} from "lucide-react";
+import { Menu, X } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import Button from "./Button";
 import { drawerSpring, useReducedMotion } from "../../lib/motion";
-
-const PRODUCT_MENU_ITEMS = [
-  {
-    title: "Traffic Analytics",
-    desc: "Daily visitors, pageviews, and trend detection.",
-    icon: <Activity className="h-4 w-4 text-[var(--stamp)]" />,
-    to: "/docs#analytics",
-  },
-  {
-    title: "Product Click Tracking",
-    desc: "See what shoppers click, touch, and ignore.",
-    icon: <MousePointerClick className="h-4 w-4 text-[var(--stamp)]" />,
-    to: "/docs#click-tracking",
-  },
-  {
-    title: "Multi-Site Hub",
-    desc: "Manage multiple storefronts in one dashboard.",
-    icon: <Layers className="h-4 w-4 text-[var(--stamp)]" />,
-    to: "/docs#multi-site",
-  },
-  {
-    title: "Real-Time Ingestion",
-    desc: "Sub-second event stream buffering.",
-    icon: <Zap className="h-4 w-4 text-[var(--gold)]" />,
-    to: "/docs#real-time",
-  },
-];
-
-const SOLUTIONS_MENU_ITEMS = [
-  {
-    title: "For Shopify Stores",
-    desc: "Seamless Liquid tag integration in under 5 minutes.",
-    icon: <ShoppingBag className="h-4 w-4 text-[var(--stamp)]" />,
-    to: "/docs#shopify",
-  },
-  {
-    title: "For Custom Storefronts",
-    desc: "Vite, Next.js, and React support.",
-    icon: <Code className="h-4 w-4 text-[var(--stamp)]" />,
-    to: "/docs#custom",
-  },
-  {
-    title: "For Agencies & Managers",
-    desc: "Multi-tenant client analytics and access.",
-    icon: <Users className="h-4 w-4 text-[var(--stamp)]" />,
-    to: "/docs#agencies",
-  },
-];
-
-const RESOURCES_MENU_ITEMS = [
-  {
-    title: "Documentation",
-    desc: "Installation guides and quickstart tutorials.",
-    icon: <BookOpen className="h-4 w-4 text-[var(--stamp)]" />,
-    to: "/docs",
-  },
-  {
-    title: "API Reference",
-    desc: "REST endpoints and tracking script specs.",
-    icon: <FileCode className="h-4 w-4 text-[var(--stamp)]" />,
-    to: "/docs#api",
-  },
-  {
-    title: "Changelog",
-    desc: "Latest release notes and UI updates.",
-    icon: <Sparkles className="h-4 w-4 text-[var(--gold)]" />,
-    to: "/docs#changelog",
-  },
-];
 
 /**
  * Nav — Header component modeled after top enterprise navigation bars
@@ -96,9 +12,7 @@ const RESOURCES_MENU_ITEMS = [
  * pill actions, theme toggle, and NYRON Design System standards.
  */
 export default function Nav({ links = null, actions = null }) {
-  const [activeDropdown, setActiveDropdown] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [mobileExpanded, setMobileExpanded] = useState({ product: false, solutions: false, resources: false });
 
   const navRef = useRef(null);
   const menuButtonRef = useRef(null);
@@ -107,22 +21,10 @@ export default function Nav({ links = null, actions = null }) {
   const reduceMotion = useReducedMotion();
   const drawerId = useId();
 
-  // Close dropdown on click outside
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (navRef.current && !navRef.current.contains(e.target)) {
-        setActiveDropdown(null);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   // Keyboard accessibility
   useEffect(() => {
     function handleKeyDown(e) {
       if (e.key === "Escape") {
-        setActiveDropdown(null);
         setMobileOpen(false);
       }
     }
@@ -143,14 +45,6 @@ export default function Nav({ links = null, actions = null }) {
       menuBtn?.focus();
     };
   }, [mobileOpen]);
-
-  const toggleDropdown = (name) => {
-    setActiveDropdown((prev) => (prev === name ? null : name));
-  };
-
-  const toggleMobileAccordion = (name) => {
-    setMobileExpanded((prev) => ({ ...prev, [name]: !prev[name] }));
-  };
 
   return (
     <>
