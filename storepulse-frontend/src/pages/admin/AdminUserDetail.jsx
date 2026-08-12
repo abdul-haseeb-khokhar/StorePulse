@@ -140,24 +140,26 @@ export default function AdminUserDetail() {
                   No sites yet.
                 </p>
               ) : (
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Domain</th>
-                      <th>Created</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {user.sites.map((site) => (
-                      <tr key={site.id}>
-                        <td>{site.name}</td>
-                        <td>{site.domain}</td>
-                        <td>{new Date(site.createdAt).toLocaleDateString()}</td>
+                <div className="table-wrap">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Domain</th>
+                        <th>Created</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {user.sites.map((site) => (
+                        <tr key={site.id}>
+                          <td>{site.name}</td>
+                          <td>{site.domain}</td>
+                          <td>{new Date(site.createdAt).toLocaleDateString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </Card>
           </>

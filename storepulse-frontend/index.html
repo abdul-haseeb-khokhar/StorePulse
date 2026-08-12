@@ -5,6 +5,25 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Store Pulse</title>
+    <script>
+      // Sets [data-theme] before first paint so dark-mode users don't see
+      // a flash of the light theme while React mounts. ThemeProvider
+      // (src/context/ThemeContext.jsx) runs the same getPreferredTheme()
+      // logic on mount — this just wins the race against paint; the key
+      // and fallback order must stay in sync with that file.
+      (function () {
+        try {
+          var stored = localStorage.getItem("storepulse_theme");
+          var theme =
+            stored === "light" || stored === "dark"
+              ? stored
+              : window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light";
+          document.documentElement.setAttribute("data-theme", theme);
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

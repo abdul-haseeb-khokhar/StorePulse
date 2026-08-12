@@ -41,11 +41,15 @@ export default function TrafficChart({ data }) {
             <Tooltip
               cursor={{ fill: palette.cursor }}
               contentStyle={{
-                borderRadius: 0,
+                // Numeric literals, not var(...) — recharts renders this
+                // tooltip outside the app's DOM subtree via a portal, so
+                // it can't resolve CSS custom properties. Kept in sync by
+                // hand with --radius-xl / --font-body in index.css.
+                borderRadius: 12,
                 border: `1px solid ${palette.tooltipBorder}`,
                 background: "var(--paper-card)",
                 color: "var(--ink)",
-                fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+                fontFamily: "Sora, system-ui, sans-serif",
                 fontSize: 12,
               }}
             />

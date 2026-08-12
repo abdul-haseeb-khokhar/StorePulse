@@ -1,5 +1,6 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Settings } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
@@ -8,6 +9,7 @@ import Tag from "../components/ui/Tag";
 import Skeleton from "../components/ui/Skeleton";
 import api, { getApiErrorMessage } from "../lib/api";
 import { queryKeys } from "../lib/queryKeys";
+import { containerStagger, itemFadeUp, useReducedMotion } from "../lib/motion";
 
 function formatNumber(value) {
   return new Intl.NumberFormat().format(value || 0);
@@ -63,6 +65,7 @@ function SiteCardSkeleton() {
 }
 
 export default function SitesList() {
+  const reduceMotion = useReducedMotion();
   const sitesQuery = useQuery({
     queryKey: queryKeys.sites.all,
     queryFn: async () => {
@@ -141,14 +144,21 @@ export default function SitesList() {
             </Link>
           </Card>
         ) : (
-          <div
+          <motion.div
+            // Mount-triggered rather than whileInView: this grid is the
+            // page's primary content, not below-the-fold marketing copy.
+            initial={reduceMotion ? false : "hidden"}
+            animate={reduceMotion ? false : "visible"}
+            variants={reduceMotion ? undefined : containerStagger}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
             style={{ gap: "var(--space-3)" }}
           >
             {sites.map((site) => (
-              <SiteCard key={site.id} site={site} />
+              <motion.div key={site.id} variants={reduceMotion ? undefined : itemFadeUp}>
+                <SiteCard site={site} />
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
       </main>
     </AppLayout>

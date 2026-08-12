@@ -32,4 +32,14 @@ const listSitesSchema = z.object({
     })
 });
 
-module.exports = {updateUserStatusSchema, userIdParamSchema, listUsersSchema, listSitesSchema};
+const setUserPlanSchema = z.object({
+    params: z.object({
+        id: z.string().uuid('Invalid user ID')
+    }),
+    body: z.object({
+        plan: z.enum(['Free', 'Pro', 'Business']),
+        currentPeriodEnd: z.coerce.date().optional()
+    })
+});
+
+module.exports = {updateUserStatusSchema, userIdParamSchema, listUsersSchema, listSitesSchema, setUserPlanSchema};

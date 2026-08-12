@@ -1,4 +1,4 @@
-const {updateUserStatusService, listUsersService, getUserDetailService, listSitesService, getPlatformStats} = require('./admin.service');
+const {updateUserStatusService, listUsersService, getUserDetailService, listSitesService, getPlatformStats, setUserPlanService} = require('./admin.service');
 
 async function updateUserStatusController(req, res, next) {
     try{
@@ -57,4 +57,18 @@ async function getPlatformStatsController(req, res, next) {
     }
 }
 
-module.exports = {updateUserStatusController, listUsersController, getUserDetailController, listSitesController, getPlatformStatsController}
+async function setUserPlanController(req, res, next) {
+    try{
+        const {plan, currentPeriodEnd} = req.body;
+        const userId = req.params.id;
+        const adminId = req.admin.id;
+
+        const result = await setUserPlanService({userId, plan, currentPeriodEnd, adminId});
+
+        res.status(200).json(result);
+    }catch(error){
+        next(error);
+    }
+}
+
+module.exports = {updateUserStatusController, listUsersController, getUserDetailController, listSitesController, getPlatformStatsController, setUserPlanController}

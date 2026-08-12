@@ -21,7 +21,7 @@ function HeaderSkeleton() {
 
 function StatCardSkeleton() {
   return (
-    <Card elevation="sm" torn>
+    <Card elevation="sm">
       <Skeleton width={70} height={10} />
       <Skeleton width={90} height={32} style={{ marginBlock: 4 }} />
       <Skeleton width={120} height={12} />

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Settings } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
@@ -12,6 +13,7 @@ import TrafficChart from "../components/dashboard/TrafficChart";
 import DashboardSkeleton from "../components/dashboard/DashboardSkeleton";
 import api, { getApiErrorMessage } from "../lib/api";
 import { queryKeys } from "../lib/queryKeys";
+import { containerStagger, itemFadeUp, useReducedMotion } from "../lib/motion";
 
 const rangeLabels = {
   "7d": "7 days",
@@ -71,6 +73,7 @@ function formatRelativeTime(msAgo) {
 }
 
 export default function Dashboard() {
+  const reduceMotion = useReducedMotion();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedSiteId, setSelectedSiteId] = useState(searchParams.get("site") || "");
   const [range, setRange] = useState(searchParams.get("range") || "30d");
@@ -300,14 +303,19 @@ export default function Dashboard() {
               <DashboardSkeleton />
             ) : (
               <>
-                <div
+                <motion.div
+                  initial={reduceMotion ? false : "hidden"}
+                  animate={reduceMotion ? false : "visible"}
+                  variants={reduceMotion ? undefined : containerStagger}
                   className="grid grid-cols-1 sm:grid-cols-3"
                   style={{ gap: "var(--space-3)", marginBottom: "var(--space-4)" }}
                 >
                   {stats.map((stat) => (
-                    <StatCard key={stat.label} {...stat} rangeLabel={rangeLabel} />
+                    <motion.div key={stat.label} variants={reduceMotion ? undefined : itemFadeUp}>
+                      <StatCard {...stat} rangeLabel={rangeLabel} />
+                    </motion.div>
                   ))}
-                </div>
+                </motion.div>
 
                 <div style={{ marginBottom: "var(--space-4)" }}>
                   <TrafficChart data={traffic} />
@@ -319,30 +327,32 @@ export default function Dashboard() {
                     <div className="card-title" style={{ marginBottom: "var(--space-3)" }}>
                       Top clicked products
                     </div>
-                    <table className="table">
-                      <thead>
-                        <tr>
-                          <th>Product</th>
-                          <th>Clicks</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {topProducts.length === 0 ? (
+                    <div className="table-wrap">
+                      <table className="table">
+                        <thead>
                           <tr>
-                            <td colSpan={2} style={{ opacity: 0.6 }}>
-                              No data available yet.
-                            </td>
+                            <th>Product</th>
+                            <th>Clicks</th>
                           </tr>
-                        ) : (
-                          topProducts.map((product) => (
-                            <tr key={product.productId}>
-                              <td>{product.productName || product.productId}</td>
-                              <td>{formatNumber(product.clicks)}</td>
+                        </thead>
+                        <tbody>
+                          {topProducts.length === 0 ? (
+                            <tr>
+                              <td colSpan={2} style={{ opacity: 0.6 }}>
+                                No data available yet.
+                              </td>
                             </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
+                          ) : (
+                            topProducts.map((product) => (
+                              <tr key={product.productId}>
+                                <td>{product.productName || product.productId}</td>
+                                <td>{formatNumber(product.clicks)}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </Card>
 
                   <Card>
@@ -350,30 +360,32 @@ export default function Dashboard() {
                     <div className="card-title" style={{ marginBottom: "var(--space-3)" }}>
                       Top referrers
                     </div>
-                    <table className="table">
-                      <thead>
-                        <tr>
-                          <th>Referrer</th>
-                          <th>Visits</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {topReferrers.length === 0 ? (
+                    <div className="table-wrap">
+                      <table className="table">
+                        <thead>
                           <tr>
-                            <td colSpan={2} style={{ opacity: 0.6 }}>
-                              No data available yet.
-                            </td>
+                            <th>Referrer</th>
+                            <th>Visits</th>
                           </tr>
-                        ) : (
-                          topReferrers.map((referrer, index) => (
-                            <tr key={`${referrer.referrers}-${index}`}>
-                              <td>{referrer.referrers || "Direct"}</td>
-                              <td>{formatNumber(referrer.visitors)}</td>
+                        </thead>
+                        <tbody>
+                          {topReferrers.length === 0 ? (
+                            <tr>
+                              <td colSpan={2} style={{ opacity: 0.6 }}>
+                                No data available yet.
+                              </td>
                             </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
+                          ) : (
+                            topReferrers.map((referrer, index) => (
+                              <tr key={`${referrer.referrers}-${index}`}>
+                                <td>{referrer.referrers || "Direct"}</td>
+                                <td>{formatNumber(referrer.visitors)}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </Card>
                 </div>
               </>

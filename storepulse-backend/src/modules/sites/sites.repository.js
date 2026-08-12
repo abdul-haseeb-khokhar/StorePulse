@@ -26,6 +26,15 @@ async function updateApiKey(id, newApiKey) {
     })
 }
 
+async function findUserPlan(userId) {
+    const subscription = await prisma.subscription.findUnique({
+        where: {userId},
+        select: {plan: true}
+    });
+
+    return subscription?.plan || 'Free';
+}
+
 module.exports = {
-    createSite, findSiteById, findSitesByUserId, updateApiKey
+    createSite, findSiteById, findSitesByUserId, updateApiKey, findUserPlan
 }

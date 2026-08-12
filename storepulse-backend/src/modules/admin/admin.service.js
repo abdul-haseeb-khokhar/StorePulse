@@ -1,4 +1,4 @@
-const {updateUserStatus, listUsers, findUserByIdWithSites, listSites, getPlatformStats, createAdminLog} = require('./admin.repository');
+const {updateUserStatus, listUsers, findUserByIdWithSites, listSites, getPlatformStats, createAdminLog, upsertUserSubscription} = require('./admin.repository');
 const {findUserById} = require('../auth/auth.repository')
 const AppError = require('../../utils/AppError');
 
@@ -56,4 +56,17 @@ async function listSitesService({page, limit, search}) {
     return {sites, total, page, limit, totalPages: Math.ceil(total / limit)};
 }
 
-module.exports = {updateUserStatusService, listUsersService, getUserDetailService, listSitesService, getPlatformStats}
+async function setUserPlanService({userId, plan, currentPeriodEnd, adminId}) {
+    const user = await findUserById(userId);
+    if(!user) {
+        throw new AppError('User not found', 404);
+    }
+
+    const subscription = await upsertUserSubscription({userId, plan, status: 'Active', currentPeriodEnd});
+
+    await createAdminLog({adminId, action: `plan:${plan}`, targetedUserId: userId});
+
+    return {subscription, message: `User plan set to ${plan}`};
+}
+
+module.exports = {updateUserStatusService, listUsersService, getUserDetailService, listSitesService, getPlatformStats, setUserPlanService}

@@ -5,9 +5,18 @@ const variantClass = {
   danger: "btn-danger",
 };
 
+// Base .btn in index.css is the "medium" size; sm/lg opt into the other
+// two tiers of the button-size scale.
+const sizeClass = {
+  sm: "btn-sm",
+  md: "",
+  lg: "btn-lg",
+};
+
 export default function Button({
   children,
   variant = "primary",
+  size = "md",
   block = false,
   type = "button",
   disabled = false,
@@ -20,7 +29,7 @@ export default function Button({
     <button
       type={type}
       disabled={disabled || loading}
-      className={`btn ${variantClass[variant]} ${block ? "btn-block" : ""} ${className}`}
+      className={`btn ${variantClass[variant]} ${sizeClass[size]} ${block ? "btn-block" : ""} ${className}`}
       {...props}
     >
       {loading ? (

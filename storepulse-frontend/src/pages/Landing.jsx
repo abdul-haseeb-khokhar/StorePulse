@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import Nav from "../components/ui/Nav";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Tag from "../components/ui/Tag";
 import HeroAnimation from "../components/ui/HeroAnimation";
 import SiteFooter from "../components/ui/SiteFooter";
+import { containerStagger, itemFadeUp, useReducedMotion } from "../lib/motion";
 
 const FEATURES = [
   {
@@ -25,6 +27,14 @@ const FEATURES = [
 ];
 
 export default function Landing() {
+  const reduceMotion = useReducedMotion();
+  // whileInView-based reveals are skipped entirely when the user prefers
+  // reduced motion — passing no motion props at all renders each
+  // motion.div in its settled state immediately, same as a plain div
+  // (see src/lib/motion.js).
+  const reveal = (variants) =>
+    reduceMotion ? {} : { variants, initial: "hidden", whileInView: "visible", viewport: { once: true, margin: "-60px" } };
+
   return (
     <div className="min-h-screen">
       <Nav
@@ -59,7 +69,8 @@ export default function Landing() {
         </div>
       </div>
 
-      <div
+      <motion.div
+        {...reveal(itemFadeUp)}
         className="mx-auto"
         style={{
           maxWidth: 1040,
@@ -79,24 +90,27 @@ export default function Landing() {
           site — what gets clicked, what gets ignored, and where sales opportunities
           are slipping away — so decisions are based on real behavior, not guesswork.
         </p>
-      </div>
+      </motion.div>
 
-      <div className="mx-auto" style={{ maxWidth: 1040, padding: "var(--space-6) var(--space-4) 0" }}>
+      <motion.div {...reveal(itemFadeUp)} className="mx-auto" style={{ maxWidth: 1040, padding: "var(--space-6) var(--space-4) 0" }}>
         <h2 style={{ margin: 0 }}>This is what StorePulse provides</h2>
-      </div>
+      </motion.div>
 
-      <div
+      <motion.div
+        {...reveal(containerStagger)}
         className="mx-auto grid grid-cols-1 sm:grid-cols-3"
         style={{ maxWidth: 1040, padding: "var(--space-3) var(--space-4) var(--space-8)", gap: "var(--space-3)" }}
       >
         {FEATURES.map((feature) => (
-          <Card key={feature.kicker}>
-            <div className="card-kicker">{feature.kicker}</div>
-            <div className="card-title">{feature.title}</div>
-            <p className="card-body">{feature.body}</p>
-          </Card>
+          <motion.div key={feature.kicker} variants={reduceMotion ? undefined : itemFadeUp}>
+            <Card>
+              <div className="card-kicker">{feature.kicker}</div>
+              <div className="card-title">{feature.title}</div>
+              <p className="card-body">{feature.body}</p>
+            </Card>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       <SiteFooter />
     </div>
