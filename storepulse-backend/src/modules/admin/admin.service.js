@@ -7,7 +7,7 @@ const {findSitesByUserId} = require('../sites/sites.repository');
 const {invalidateCachedSite} = require('../ingest/ingest.cache');
 const {upsertUserSubscription, findSubscriptionByUserId} = require('../subscription/subscription.repository');
 const {syncExpiredSubscription, recordSubscriptionHistory, getSubscriptionHistoryService} = require('../subscription/subscription.service');
-const {listRequests, findRequestById, updateRequestStatus} = require('../paymentRequest/paymentRequest.repository');
+const {listRequests, findRequestById, claimRequestForReview} = require('../paymentRequest/paymentRequest.repository');
 const {sendPlanChangedEmail, sendAccountStatusChangedEmail, sendPaymentRequestReviewedEmail} = require('../email/email.service');
 const {periodEndFromCycle, resolveEffectivePlan, PLAN_LIMITS} = require('../../config/plans');
 const AppError = require('../../utils/AppError');
@@ -181,11 +181,14 @@ async function reviewPaymentRequestService({requestId, status, note, adminId}) {
     if (!request) {
         throw new AppError('Payment request not found', 404);
     }
-    if (request.status !== 'Pending') {
-        throw new AppError(`This request has already been ${request.status.toLowerCase()}`, 400);
-    }
 
-    const updated = await updateRequestStatus(requestId, {status, reviewedBy: adminId, reviewNote: note});
+    // Atomic claim, not check-then-act: closes the race where two admins
+    // review the same request at nearly the same instant.
+    const updated = await claimRequestForReview(requestId, {status, reviewedBy: adminId, reviewNote: note});
+    if (!updated) {
+        const latest = await findRequestById(requestId);
+        throw new AppError(`This request has already been ${latest.status.toLowerCase()}`, 400);
+    }
 
     let planResult = null;
     if (status === 'Approved') {

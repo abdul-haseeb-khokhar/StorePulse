@@ -31,7 +31,7 @@ export function buildPaymentNoticeUrl({ planName, cycle, amount, email }) {
   const message =
     `Hi, I've sent a bank transfer for the ${planName} plan (${cycle}), ` +
     `${formatPKR(amount)}. My StorePulse account email is ${email}. ` +
-    `Please activate my plan once you've verified the transfer.`;
+    `I'm attaching my transaction receipt — please verify and activate my plan.`;
 
   return `https://wa.me/${CONTACT_WHATSAPP}?text=${encodeURIComponent(message)}`;
 }

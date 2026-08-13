@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Eye, EyeOff, Lock, Pencil } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
@@ -7,23 +7,11 @@ import Card from "../components/ui/Card";
 import Field from "../components/ui/Field";
 import Button from "../components/ui/Button";
 import Dialog from "../components/ui/Dialog";
-import Tag from "../components/ui/Tag";
 import PasswordRequirements from "../components/ui/PasswordRequirements";
 import Skeleton from "../components/ui/Skeleton";
 import api, { getApiErrorMessage, getFieldErrors } from "../lib/api";
 import { queryKeys } from "../lib/queryKeys";
 import { clearSession, getToken, saveSession } from "../lib/auth";
-import { formatDaysRemaining, formatHistoryReason } from "../lib/plan";
-
-const PLAN_TAG_VARIANT = {
-  Free: "neutral",
-  Pro: "accent",
-  Business: "positive",
-};
-
-function formatNumber(value) {
-  return new Intl.NumberFormat().format(value || 0);
-}
 
 function ProfileSkeleton() {
   return (
@@ -86,23 +74,6 @@ export default function Settings() {
   const error = meQuery.isError
     ? getApiErrorMessage(meQuery.error, "Could not load account settings.")
     : null;
-
-  const usageQuery = useQuery({
-    queryKey: queryKeys.sites.usage,
-    queryFn: async () => {
-      const { data } = await api.get("/sites/usage");
-      return data;
-    },
-  });
-  const historyQuery = useQuery({
-    queryKey: queryKeys.billing.history({ page: 1 }),
-    queryFn: async () => {
-      const { data } = await api.get("/billing/history");
-      return data;
-    },
-  });
-  const currentPlan = user?.subscription?.plan || "Free";
-  const currentPeriodEnd = user?.subscription?.currentPeriodEnd;
 
   // Seed the editable field once on first arrival only — a background
   // revalidation of ["me"] (e.g. after the name mutation below) must not
@@ -486,112 +457,6 @@ export default function Settings() {
               </Card>
             )}
 
-            <Card elevation="md" style={{ marginBottom: "var(--space-3)" }}>
-              <div className="card-kicker">Plan</div>
-              <div
-                className="flex items-center"
-                style={{ gap: "var(--space-2)", marginBottom: "var(--space-3)" }}
-              >
-                <div className="card-title" style={{ margin: 0 }}>
-                  {currentPlan} plan
-                </div>
-                <Tag variant={PLAN_TAG_VARIANT[currentPlan] || "neutral"}>
-                  {user?.subscription?.status || "Active"}
-                </Tag>
-              </div>
-              {currentPeriodEnd && (
-                <p className="card-body" style={{ marginBottom: "var(--space-3)" }}>
-                  {formatDaysRemaining(currentPeriodEnd)}
-                </p>
-              )}
-
-              {usageQuery.isPending ? (
-                <Skeleton height={50} style={{ marginBottom: "var(--space-3)" }} />
-              ) : usageQuery.isError ? null : usageQuery.data.sites.length === 0 ? (
-                <p className="card-body" style={{ opacity: 0.6, marginBottom: "var(--space-3)" }}>
-                  Add a site to start tracking usage.
-                </p>
-              ) : (
-                <div className="grid" style={{ gap: "var(--space-3)", marginBottom: "var(--space-3)" }}>
-                  {usageQuery.data.sites.map((site) => {
-                    const limit = usageQuery.data.maxMonthlyEvents;
-                    // null means unlimited (see sites.service.js's getUsageSummary —
-                    // JSON has no Infinity, so "no limit" has to be an explicit null).
-                    const pct = limit === null ? null : Math.min(100, (site.eventsThisMonth / limit) * 100);
-                    return (
-                      <div key={site.siteId}>
-                        <div className="flex items-center justify-between text-sm">
-                          <span>{site.name}</span>
-                          <span className="text-muted">
-                            {formatNumber(site.eventsThisMonth)} / {limit === null ? "Unlimited" : formatNumber(limit)} events this month
-                          </span>
-                        </div>
-                        {pct !== null && (
-                          <div
-                            style={{
-                              height: 4,
-                              borderRadius: 999,
-                              background: "var(--divider-soft)",
-                              marginTop: 4,
-                              overflow: "hidden",
-                            }}
-                          >
-                            <div
-                              style={{
-                                height: "100%",
-                                width: `${pct}%`,
-                                background: pct >= 100 ? "var(--brick)" : "var(--stamp)",
-                              }}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              <Link to="/billing">
-                <Button variant="secondary">Manage billing</Button>
-              </Link>
-            </Card>
-
-            <Card style={{ marginBottom: "var(--space-3)" }}>
-              <div className="card-kicker">Billing history</div>
-              <div className="card-title" style={{ marginBottom: "var(--space-3)" }}>
-                Past changes
-              </div>
-              {historyQuery.isPending ? (
-                <Skeleton height={70} />
-              ) : historyQuery.isError ? null : historyQuery.data.entries.length === 0 ? (
-                <p className="card-body" style={{ opacity: 0.6 }}>
-                  No billing history yet.
-                </p>
-              ) : (
-                <div className="table-wrap">
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Date</th>
-                        <th>Plan</th>
-                        <th>Cycle</th>
-                        <th>What happened</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {historyQuery.data.entries.map((entry) => (
-                        <tr key={entry.id}>
-                          <td>{new Date(entry.createdAt).toLocaleDateString()}</td>
-                          <td>{entry.plan}</td>
-                          <td>{entry.billingCycle || "—"}</td>
-                          <td>{formatHistoryReason(entry.reason)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </Card>
           </>
         )}
 

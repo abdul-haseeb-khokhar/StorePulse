@@ -15,6 +15,10 @@ import SitesList from "./pages/SitesList";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import Billing from "./pages/Billing";
+import BillingPlan from "./pages/BillingPlan";
+import BillingUsage from "./pages/BillingUsage";
+import BillingHistory from "./pages/BillingHistory";
+import BillingUpgrade from "./pages/BillingUpgrade";
 import BillingPay from "./pages/BillingPay";
 import NotFound from "./pages/NotFound";
 import RequireAuth from "./components/auth/RequireAuth";
@@ -58,6 +62,10 @@ export default function App() {
             <Route path="/sites/:siteId/settings" element={<SiteSettings />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/billing" element={<Billing />} />
+            <Route path="/billing/plan" element={<BillingPlan />} />
+            <Route path="/billing/usage" element={<BillingUsage />} />
+            <Route path="/billing/history" element={<BillingHistory />} />
+            <Route path="/billing/upgrade" element={<BillingUpgrade />} />
             <Route path="/billing/pay/:plan" element={<BillingPay />} />
           </Route>
 

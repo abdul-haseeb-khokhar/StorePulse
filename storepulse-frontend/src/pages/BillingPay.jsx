@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Mail, MessageCircle, Phone, CheckCircle2, Clock } from "lucide-react";
+import { Mail, MessageCircle, CheckCircle2, Clock } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
 import Field from "../components/ui/Field";
@@ -11,7 +11,7 @@ import Skeleton from "../components/ui/Skeleton";
 import api, { getApiErrorMessage } from "../lib/api";
 import { queryKeys } from "../lib/queryKeys";
 import { PLANS } from "../lib/landingData";
-import { CONTACT_GMAIL_URL, CONTACT_WHATSAPP, CONTACT_PHONE } from "../lib/contact";
+import { CONTACT_GMAIL_URL, CONTACT_WHATSAPP } from "../lib/contact";
 import { BANK_NAME, BANK_ACCOUNT_TITLE, BANK_ACCOUNT_NUMBER, BANK_IBAN, formatPKR, totalForCycle, buildPaymentNoticeUrl } from "../lib/billing";
 
 const CYCLE_OPTIONS = [
@@ -46,6 +46,11 @@ export default function BillingPay() {
       return data.requests.find((r) => r.status === "Pending") || null;
     },
     enabled: Boolean(plan) && plan?.planId !== "Free",
+    // Overrides the app-wide default (queryClient.js disables this) — see
+    // the same note in Billing.jsx: a pending request changes via an admin
+    // in a different session, so refocusing this tab is the one free
+    // signal that it might be worth checking again.
+    refetchOnWindowFocus: true,
   });
 
   const submitMutation = useMutation({
@@ -68,7 +73,13 @@ export default function BillingPay() {
   const email = meQuery.data?.email;
   const amount = totalForCycle(plan, cycle);
   const pendingRequest = pendingRequestQuery.data;
-  const submitted = submitMutation.isSuccess || Boolean(pendingRequest);
+  // A pending request blocks new submissions no matter which plan it's
+  // for (the backend only allows one at a time) — but the banner must
+  // name the plan that's *actually* pending, not whichever plan page the
+  // user happens to be looking at right now.
+  const pendingRequestForThisPlan = pendingRequest?.plan === planId;
+  const pendingRequestForOtherPlan = Boolean(pendingRequest) && !pendingRequestForThisPlan;
+  const submitted = submitMutation.isSuccess || pendingRequestForThisPlan;
 
   function handleSubmit() {
     setSubmitError(null);
@@ -81,7 +92,7 @@ export default function BillingPay() {
         className="mx-auto"
         style={{ maxWidth: 560, padding: "var(--space-6) var(--space-4) var(--space-8)" }}
       >
-        <Link to="/billing" className="text-sm" style={{ marginBottom: "var(--space-3)", display: "inline-block" }}>
+        <Link to="/billing/upgrade" className="text-sm" style={{ marginBottom: "var(--space-3)", display: "inline-block" }}>
           ← Back to plans
         </Link>
         <h1 style={{ marginBottom: "var(--space-4)" }}>{plan.name} plan</h1>
@@ -113,10 +124,6 @@ export default function BillingPay() {
               <a href={`https://wa.me/${CONTACT_WHATSAPP}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm" style={{ gap: 6 }}>
                 <MessageCircle className="h-4 w-4 text-muted" />
                 WhatsApp
-              </a>
-              <a href={`tel:+${CONTACT_PHONE}`} className="flex items-center text-sm" style={{ gap: 6 }}>
-                <Phone className="h-4 w-4 text-muted" />
-                Call
               </a>
             </div>
           </Card>
@@ -166,21 +173,37 @@ export default function BillingPay() {
                 Let us know
               </div>
 
-              {submitted ? (
+              {pendingRequestForOtherPlan ? (
                 <div
                   className="flex items-start"
                   style={{ gap: "var(--space-2)", marginBottom: "var(--space-3)" }}
                 >
                   <Clock className="h-4 w-4" style={{ color: "var(--stamp)", marginTop: 2 }} />
                   <p className="card-body" style={{ margin: 0 }}>
-                    Request submitted — we'll activate your {plan.name} plan once we've verified
-                    the transfer. No need to submit it again.
+                    You already have a pending request for the <strong>{pendingRequest.plan}</strong>{" "}
+                    plan ({pendingRequest.billingCycle}). Wait for that to be reviewed before
+                    requesting {plan.name} —{" "}
+                    <Link to="/billing">check its status on the Billing page</Link>.
+                  </p>
+                </div>
+              ) : submitted ? (
+                <div
+                  className="flex items-start"
+                  style={{ gap: "var(--space-2)", marginBottom: "var(--space-3)" }}
+                >
+                  <Clock className="h-4 w-4" style={{ color: "var(--stamp)", marginTop: 2 }} />
+                  <p className="card-body" style={{ margin: 0 }}>
+                    Request submitted — please also share your transaction receipt with us via
+                    WhatsApp or email (links below) so we can match it faster. We'll activate your{" "}
+                    {plan.name} plan within 24 hours of verifying the transfer. No need to submit
+                    this form again.
                   </p>
                 </div>
               ) : (
                 <>
                   <p className="card-body" style={{ marginBottom: "var(--space-3)" }}>
-                    We'll activate your {plan.name} plan once we've verified it.
+                    Share your transaction receipt with us via WhatsApp or email (links below) —
+                    we'll activate your {plan.name} plan within 24 hours of verifying it.
                   </p>
                   <Field
                     id="paymentNote"
@@ -209,7 +232,7 @@ export default function BillingPay() {
               )}
 
               <p className="card-body" style={{ marginTop: "var(--space-3)" }}>
-                Or reach us directly:
+                Share your receipt:
               </p>
               <div className="flex items-center" style={{ gap: "var(--space-4)" }}>
                 <a
@@ -225,10 +248,6 @@ export default function BillingPay() {
                 <a href={CONTACT_GMAIL_URL} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm" style={{ gap: 6 }}>
                   <Mail className="h-4 w-4 text-muted" />
                   Email
-                </a>
-                <a href={`tel:+${CONTACT_PHONE}`} className="flex items-center text-sm" style={{ gap: 6 }}>
-                  <Phone className="h-4 w-4 text-muted" />
-                  Call
                 </a>
               </div>
             </Card>

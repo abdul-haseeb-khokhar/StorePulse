@@ -8,5 +8,3 @@ export const CONTACT_GMAIL_URL = `https://mail.google.com/mail/?view=cm&fs=1&to=
 
 export const CONTACT_WHATSAPP = import.meta.env.VITE_CONTACT_WHATSAPP;
 export const CONTACT_WHATSAPP_DISPLAY = import.meta.env.VITE_CONTACT_WHATSAPP_DISPLAY;
-export const CONTACT_PHONE = import.meta.env.VITE_CONTACT_PHONE;
-export const CONTACT_PHONE_DISPLAY = import.meta.env.VITE_CONTACT_PHONE_DISPLAY;

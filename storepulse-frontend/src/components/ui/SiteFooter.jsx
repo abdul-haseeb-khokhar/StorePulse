@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
-import { Mail, Phone } from "lucide-react";
+import { Mail } from "lucide-react";
 import {
   CONTACT_GMAIL_URL,
   CONTACT_WHATSAPP,
-  CONTACT_PHONE,
 } from "../../lib/contact";
 
 const NAV_ITEMS = [
@@ -61,7 +60,7 @@ export default function SiteFooter({ navItems = null }) {
             </p>
           </div>
 
-          {/* Circular Contact Icon Buttons (Email, Authentic WhatsApp SVG, Phone) */}
+          {/* Circular Contact Icon Buttons (Email, Authentic WhatsApp SVG) */}
           <div className="flex items-center space-x-3">
             <a
               href={CONTACT_GMAIL_URL}
@@ -83,15 +82,6 @@ export default function SiteFooter({ navItems = null }) {
               title="WhatsApp"
             >
               <WhatsAppIcon className="h-4 w-4" />
-            </a>
-
-            <a
-              href={`tel:+${CONTACT_PHONE}`}
-              className="p-2.5 rounded-full border border-[var(--divider-soft)] bg-[var(--paper-card)] text-[var(--ink)] hover:border-[#DDBB55] hover:text-[#DDBB55] transition-colors cursor-pointer"
-              aria-label="Call Us"
-              title="Call Us"
-            >
-              <Phone className="h-4 w-4" />
             </a>
           </div>
 

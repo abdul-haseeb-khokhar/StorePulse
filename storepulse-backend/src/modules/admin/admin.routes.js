@@ -5,6 +5,7 @@ const {
     listOverLimitUsersController, listAdminLogsController, getUserBillingHistoryController,
 } = require('./admin.controller');
 const protectAdmin = require('../../middleware/protectAdmin');
+const requireSuperAdmin = require('../../middleware/requireSuperAdmin');
 const validate = require('../../middleware/validate');
 const {
     updateUserStatusSchema, userIdParamSchema, listUsersSchema, listSitesSchema, setUserPlanSchema,
@@ -31,6 +32,6 @@ router.get('/sites', validate(listSitesSchema), listSitesController);
 router.get('/payment-requests', validate(listPaymentRequestsSchema), listPaymentRequestsController);
 router.patch('/payment-requests/:id', validate(reviewPaymentRequestSchema), reviewPaymentRequestController);
 
-router.get('/logs', validate(listAdminLogsSchema), listAdminLogsController);
+router.get('/logs', requireSuperAdmin, validate(listAdminLogsSchema), listAdminLogsController);
 
 module.exports = router;

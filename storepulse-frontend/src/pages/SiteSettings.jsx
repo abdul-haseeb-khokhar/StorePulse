@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Mail, MessageCircle, Phone } from "lucide-react";
+import { Mail, MessageCircle } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
 import Field from "../components/ui/Field";
@@ -11,7 +11,7 @@ import CodeBlock from "../components/ui/CodeBlock";
 import Skeleton from "../components/ui/Skeleton";
 import api, { API_BASE_URL, getApiErrorMessage } from "../lib/api";
 import { queryKeys } from "../lib/queryKeys";
-import { CONTACT_GMAIL_URL, CONTACT_WHATSAPP, CONTACT_PHONE } from "../lib/contact";
+import { CONTACT_GMAIL_URL, CONTACT_WHATSAPP } from "../lib/contact";
 
 function SiteSettingsSkeleton() {
   return (
@@ -162,10 +162,6 @@ export default function SiteSettings() {
                 >
                   <MessageCircle className="h-4 w-4 text-muted" />
                   WhatsApp
-                </a>
-                <a href={`tel:+${CONTACT_PHONE}`} className="flex items-center text-sm" style={{ gap: 6 }}>
-                  <Phone className="h-4 w-4 text-muted" />
-                  Call
                 </a>
               </div>
             </Card>

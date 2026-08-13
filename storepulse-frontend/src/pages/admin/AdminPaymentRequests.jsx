@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AlertTriangle } from "lucide-react";
 import AdminLayout from "../../layouts/AdminLayout";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
@@ -12,6 +13,20 @@ import Skeleton from "../../components/ui/Skeleton";
 import adminApi from "../../lib/adminApi";
 import { getApiErrorMessage } from "../../lib/api";
 import { queryKeys } from "../../lib/queryKeys";
+import { formatDaysRemaining } from "../../lib/plan";
+
+// Approving a request overwrites the user's subscription immediately, with
+// no proration or refund (see subscription.service.js) — so approving a
+// switch away from a paid plan that still has time left silently discards
+// whatever the user already paid for it. Surfaced here (table + review
+// dialog) so an admin can catch that before confirming, not after.
+function unusedPaidTime(request) {
+  const sub = request.user.subscription;
+  if (!sub || sub.plan === "Free" || sub.plan === request.plan || !sub.currentPeriodEnd) {
+    return null;
+  }
+  return new Date(sub.currentPeriodEnd) > new Date() ? sub : null;
+}
 
 const STATUS_FILTER_OPTIONS = [
   { value: "Pending", label: "Pending" },
@@ -78,7 +93,10 @@ export default function AdminPaymentRequests() {
         className="mx-auto"
         style={{ maxWidth: 1040, padding: "var(--space-6) var(--space-4) var(--space-8)" }}
       >
-        <div className="flex items-baseline justify-between" style={{ marginBottom: "var(--space-4)" }}>
+        <div
+          className="flex flex-wrap items-baseline justify-between"
+          style={{ marginBottom: "var(--space-4)", gap: "var(--space-3)" }}
+        >
           <h1 style={{ margin: 0 }}>Payment requests</h1>
           <Seg
             name="status-filter"
@@ -119,17 +137,28 @@ export default function AdminPaymentRequests() {
                   </tr>
                 </thead>
                 <tbody>
-                  {requests.map((request) => (
+                  {requests.map((request) => {
+                    const unused = unusedPaidTime(request);
+                    return (
                     <tr key={request.id}>
                       <td>
                         <Link to={`/admin/users/${request.user.id}`}>{request.user.fullName}</Link>
                         <div className="text-xs" style={{ opacity: 0.6 }}>
                           {request.user.email}
                         </div>
+                        {unused && (
+                          <div
+                            className="text-xs flex items-center"
+                            style={{ gap: 4, color: "var(--brick)", marginTop: 2 }}
+                          >
+                            <AlertTriangle className="h-3 w-3" style={{ flexShrink: 0 }} />
+                            Currently {unused.plan} ({formatDaysRemaining(unused.currentPeriodEnd)})
+                          </div>
+                        )}
                       </td>
                       <td>{request.plan}</td>
                       <td>{request.billingCycle}</td>
-                      <td style={{ maxWidth: 200 }}>{request.note || "—"}</td>
+                      <td style={{ maxWidth: 200, overflowWrap: "break-word" }}>{request.note || "—"}</td>
                       <td>{new Date(request.createdAt).toLocaleDateString()}</td>
                       <td>
                         <Tag variant={STATUS_TAG_VARIANT[request.status] || "neutral"}>{request.status}</Tag>
@@ -145,7 +174,8 @@ export default function AdminPaymentRequests() {
                         </td>
                       )}
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -177,6 +207,21 @@ export default function AdminPaymentRequests() {
                 ? `${reviewing.request.user.fullName}'s plan will be set to ${reviewing.request.plan} (${reviewing.request.billingCycle}) immediately.`
                 : `${reviewing.request.user.fullName} will be notified this request wasn't approved. Their plan won't change.`}
             </p>
+          )}
+          {reviewing?.decision === "Approved" && unusedPaidTime(reviewing.request) && (
+            <div
+              className="flex items-start"
+              style={{ gap: "var(--space-2)", marginBottom: "var(--space-3)" }}
+            >
+              <AlertTriangle className="h-4 w-4" style={{ color: "var(--brick)", marginTop: 2, flexShrink: 0 }} />
+              <p className="card-body" style={{ margin: 0, color: "var(--brick)" }}>
+                {reviewing.request.user.fullName} is currently on{" "}
+                {unusedPaidTime(reviewing.request).plan} with{" "}
+                {formatDaysRemaining(unusedPaidTime(reviewing.request).currentPeriodEnd).toLowerCase()}.
+                Approving this overwrites it immediately — the unused time isn't automatically
+                refunded or credited.
+              </p>
+            </div>
           )}
           <Field
             id="review-note"
