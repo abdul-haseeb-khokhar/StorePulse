@@ -11,6 +11,8 @@ export default function AdminLayout({ children }) {
     { to: "/admin", label: "Dashboard", end: true },
     { to: "/admin/users", label: "Users" },
     { to: "/admin/sites", label: "Sites" },
+    { to: "/admin/payment-requests", label: "Payment Requests" },
+    { to: "/admin/logs", label: "Logs" },
   ];
   if (admin?.role === "SUPERADMIN") {
     links.push({ to: "/admin/admins", label: "Admins" });

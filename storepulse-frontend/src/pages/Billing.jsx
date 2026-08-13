@@ -1,20 +1,25 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { Check, ArrowRight } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Check, ArrowRight, Clock } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import Tag from "../components/ui/Tag";
+import Dialog from "../components/ui/Dialog";
 import Skeleton from "../components/ui/Skeleton";
 import api, { getApiErrorMessage } from "../lib/api";
 import { queryKeys } from "../lib/queryKeys";
 import { PLANS } from "../lib/landingData";
 import { formatPKR } from "../lib/billing";
+import { formatDaysRemaining } from "../lib/plan";
 
 export default function Billing() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [annual, setAnnual] = useState(true);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelError, setCancelError] = useState(null);
 
   const meQuery = useQuery({
     queryKey: queryKeys.me,
@@ -24,15 +29,40 @@ export default function Billing() {
     },
   });
 
+  const pendingRequestQuery = useQuery({
+    queryKey: queryKeys.billing.paymentRequests({ status: "Pending" }),
+    queryFn: async () => {
+      const { data } = await api.get("/billing/payment-requests");
+      return data.requests.find((r) => r.status === "Pending") || null;
+    },
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: () => api.post("/billing/cancel"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.me });
+      setCancelOpen(false);
+    },
+    onError: (err) => setCancelError(getApiErrorMessage(err, "Could not cancel your plan.")),
+  });
+
   const loading = meQuery.isPending;
   const error = meQuery.isError
     ? getApiErrorMessage(meQuery.error, "Could not load your account.")
     : null;
-  const currentPlan = meQuery.data?.subscription?.plan || "Free";
+  const subscription = meQuery.data?.subscription;
+  const currentPlan = subscription?.plan || "Free";
+  const pendingCancel = subscription?.pendingPlan === "Free";
+  const pendingRequest = pendingRequestQuery.data;
 
   function choosePlan(plan) {
     const cycle = annual ? "yearly" : "monthly";
     navigate(`/billing/pay/${plan.planId}?cycle=${cycle}`);
+  }
+
+  function openCancel() {
+    setCancelError(null);
+    setCancelOpen(true);
   }
 
   return (
@@ -60,6 +90,33 @@ export default function Billing() {
           </Card>
         ) : (
           <>
+            {pendingRequest && (
+              <Card
+                elevation="sm"
+                style={{ marginBottom: "var(--space-4)", borderColor: "var(--stamp)" }}
+              >
+                <div className="flex items-start" style={{ gap: "var(--space-2)" }}>
+                  <Clock className="h-4 w-4" style={{ color: "var(--stamp)", marginTop: 2 }} />
+                  <p className="card-body" style={{ margin: 0 }}>
+                    Your request for the <strong>{pendingRequest.plan}</strong> plan (
+                    {pendingRequest.billingCycle}) is waiting for review. We'll activate it once
+                    the transfer is confirmed — no need to submit it again.
+                  </p>
+                </div>
+              </Card>
+            )}
+
+            {pendingCancel && subscription?.currentPeriodEnd && (
+              <Card elevation="sm" style={{ marginBottom: "var(--space-4)" }}>
+                <p className="card-body" style={{ margin: 0 }}>
+                  Your plan is set to move to <strong>Free</strong> on{" "}
+                  {new Date(subscription.currentPeriodEnd).toLocaleDateString()} (
+                  {formatDaysRemaining(subscription.currentPeriodEnd)}). You'll keep {currentPlan}{" "}
+                  access until then. Changed your mind? Reach out and we can undo it.
+                </p>
+              </Card>
+            )}
+
             <div className="inline-flex items-center gap-3 p-1 rounded-full bg-[var(--paper-card)] border border-[var(--divider-soft)]" style={{ marginBottom: "var(--space-4)" }}>
               <button
                 onClick={() => setAnnual(false)}
@@ -144,9 +201,25 @@ export default function Billing() {
                     </div>
 
                     {isCurrent ? (
-                      <Button variant="secondary" size="md" className="w-full justify-center" disabled>
-                        Current Plan
-                      </Button>
+                      plan.planId !== "Free" && !pendingCancel ? (
+                        <div className="flex flex-col" style={{ gap: "var(--space-2)" }}>
+                          <Button variant="secondary" size="md" className="w-full justify-center" disabled>
+                            Current Plan
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full justify-center"
+                            onClick={openCancel}
+                          >
+                            Cancel plan
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button variant="secondary" size="md" className="w-full justify-center" disabled>
+                          Current Plan
+                        </Button>
+                      )
                     ) : (
                       <Button
                         variant={plan.popular ? "primary" : "outline"}
@@ -164,6 +237,32 @@ export default function Billing() {
             </div>
           </>
         )}
+
+        <Dialog
+          open={cancelOpen}
+          title="Cancel your plan?"
+          onClose={() => setCancelOpen(false)}
+          actions={
+            <>
+              <Button variant="secondary" onClick={() => setCancelOpen(false)}>
+                Keep my plan
+              </Button>
+              <Button variant="danger" onClick={() => cancelMutation.mutate()} loading={cancelMutation.isPending}>
+                Cancel plan
+              </Button>
+            </>
+          }
+        >
+          <p style={{ marginBottom: "var(--space-2)" }}>
+            You won't lose anything you've already paid for — {currentPlan} access stays active
+            until{" "}
+            {subscription?.currentPeriodEnd
+              ? new Date(subscription.currentPeriodEnd).toLocaleDateString()
+              : "the end of your current period"}
+            . After that, your account moves to Free automatically.
+          </p>
+          {cancelError && <p style={{ color: "var(--brick)" }}>{cancelError}</p>}
+        </Dialog>
       </main>
     </AppLayout>
   );

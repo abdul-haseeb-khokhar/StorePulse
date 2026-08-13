@@ -1,10 +1,24 @@
 const prisma = require('../../config/prisma')
 const {resolveEffectivePlan} = require('../../config/plans')
 
-async function createSite({name, domain, apiKey, userId}) {
-    return prisma.site.create({
-        data: {name, domain, apiKey, userId}
-    })
+// Locks the user's row for the duration of the transaction so two
+// concurrent "add site" requests from the same user can't both read the
+// same under-the-limit count and both insert — the second transaction
+// blocks on the row lock until the first commits, then re-counts and sees
+// the first insert already there. Only this user's row is locked, so it
+// doesn't serialize unrelated users' site creation against each other.
+async function createSiteIfUnderLimit({name, domain, apiKey, userId, maxSites}) {
+    return prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${userId} FOR UPDATE`;
+
+        const existingCount = await tx.site.count({where: {userId}});
+        if (existingCount >= maxSites) {
+            return {site: null, limitExceeded: true};
+        }
+
+        const site = await tx.site.create({data: {name, domain, apiKey, userId}});
+        return {site, limitExceeded: false};
+    });
 }
 
 async function findSitesByUserId(userId) {
@@ -37,5 +51,5 @@ async function findUserPlan(userId) {
 }
 
 module.exports = {
-    createSite, findSiteById, findSitesByUserId, updateApiKey, findUserPlan
+    createSiteIfUnderLimit, findSiteById, findSitesByUserId, updateApiKey, findUserPlan
 }

@@ -26,7 +26,7 @@ export default function FinalCtaBanner() {
         </h2>
         
         <p className="text-sm sm:text-base text-[var(--muted)] max-w-xl leading-relaxed">
-          Join store owners scaling with StorePulse live telemetry. 14-day free trial, no credit card required.
+          Join store owners scaling with StorePulse live telemetry. Free to start, no credit card required.
         </p>
 
         {/* Action Buttons */}

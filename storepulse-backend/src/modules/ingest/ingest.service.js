@@ -25,20 +25,30 @@ async function recordEvent({apiKey, type, pageUrl, referrer, productId, productN
         await setCachedSite(apiKey, site)
     }
 
+    // A banned/deleted account's sites shouldn't keep collecting events (or
+    // consuming their plan's quota) just because the API key is still
+    // technically valid — admin.service.js's status update invalidates the
+    // cache for exactly this reason. Kept deliberately vague to whoever's
+    // holding the key: it doesn't say *why* the site was cut off.
+    if (site.user?.status === 'Banned' || site.user?.status === 'Deleted') {
+        throw new AppError('This site is not currently accepting events.', 403);
+    }
+
     // Page views and product clicks both count against the same monthly
     // quota ("events"), matching what's advertised on the pricing page.
-    // Skipped entirely for unlimited plans — no reason to pay a Redis round
-    // trip enforcing a cap that can never be hit.
+    // Counted for every plan, including unlimited ones — sites.service.js's
+    // getUsageSummary reads this same counter to show "events this month"
+    // on the user's own dashboard, so skipping the increment for Business
+    // would leave that number stuck at 0 even though tracking works fine.
+    // Only the cap check itself is skipped for unlimited plans.
     const plan = resolveEffectivePlan(site.user?.subscription);
     const {maxMonthlyEvents} = PLAN_LIMITS[plan] || PLAN_LIMITS.Free;
-    if (maxMonthlyEvents !== Infinity) {
-        const eventsThisMonth = await incrementMonthlyEventCount(site.id);
-        if (eventsThisMonth > maxMonthlyEvents) {
-            throw new AppError(
-                `Monthly event limit reached for the ${plan} plan. Upgrade to keep tracking.`,
-                402,
-            );
-        }
+    const eventsThisMonth = await incrementMonthlyEventCount(site.id);
+    if (maxMonthlyEvents !== Infinity && eventsThisMonth > maxMonthlyEvents) {
+        throw new AppError(
+            `Monthly event limit reached for the ${plan} plan. Upgrade to keep tracking.`,
+            402,
+        );
     }
 
     await addToBuffer({

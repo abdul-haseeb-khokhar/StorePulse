@@ -9,7 +9,7 @@ const {signToken} = require('../../utils/jwt')
 const AppError = require('../../utils/AppError');
 const { sendVerificationEmail, sendEmailChangeEmail, sendPasswordResetEmail } = require('../email/email.service');
 const { updateUserStatus } = require('../admin/admin.repository');
-const { syncExpiredSubscription } = require('../admin/admin.service');
+const { syncExpiredSubscription } = require('../subscription/subscription.service');
 
 const VERIFICATION_EXPIRY_MS = 24*60*60*1000;
 const EMAIL_CHANGE_EXPIRY_MS = 60*60*1000;

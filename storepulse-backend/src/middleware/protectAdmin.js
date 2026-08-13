@@ -13,6 +13,16 @@ async function protectAdmin(req, res, next) {
 
         const decoded = verifyToken(token);
 
+        // A validly-signed token with the wrong shape — a regular user
+        // token presented here, say — decodes fine but has no adminId.
+        // Passing that straight to findAdminById(undefined) reaches Prisma
+        // as `where: {id: undefined}`, which throws a PrismaClientValidationError
+        // (not an AppError) and falls through to a raw 500. Same session
+        // problem as a missing/expired token, so it gets the same 401.
+        if (!decoded.adminId) {
+            throw new AppError("Invalid or expired session. Please login again.", 401);
+        }
+
         const admin = await findAdminById(decoded.adminId);
 
         if(!admin) {

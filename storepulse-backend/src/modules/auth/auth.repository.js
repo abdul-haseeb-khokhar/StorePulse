@@ -19,7 +19,9 @@ async function findUserByIdWithSubscription(id) {
         where: {id},
         select: {
             id: true, fullName: true, email: true,
-            subscription: {select: {plan: true, status: true, currentPeriodEnd: true}},
+            subscription: {
+                select: {plan: true, status: true, currentPeriodEnd: true, pendingPlan: true, billingCycle: true},
+            },
         },
     })
 }

@@ -12,3 +12,19 @@ export function formatDaysRemaining(periodEnd) {
   const daysRemaining = Math.ceil(msRemaining / (24 * 60 * 60 * 1000));
   return `${daysRemaining} day${daysRemaining === 1 ? "" : "s"} remaining`;
 }
+
+// SubscriptionHistory.reason (subscription.service.js) is a stable code,
+// not display text — kept that way so it's greppable/stringly-typed the
+// same way everywhere it's written, and translated to a human label only
+// here, at the one place both the user's own Settings page and the admin
+// user-detail page render it.
+const HISTORY_REASON_LABELS = {
+  "admin:plan-change": "Updated by admin",
+  "system:period-expired": "Plan expired",
+  "system:scheduled-cancel-applied": "Moved to Free (cancellation took effect)",
+  "user:cancel-requested": "Cancellation requested",
+};
+
+export function formatHistoryReason(reason) {
+  return HISTORY_REASON_LABELS[reason] || reason;
+}

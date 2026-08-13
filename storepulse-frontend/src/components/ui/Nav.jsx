@@ -3,15 +3,20 @@ import { Link, NavLink } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
-import Button from "./Button";
 import { drawerSpring, useReducedMotion } from "../../lib/motion";
 
 /**
  * Nav — Header component modeled after top enterprise navigation bars
  * (SEMRUSH style layout) integrated with StorePulse's RBG SVG logos,
  * pill actions, theme toggle, and NYRON Design System standards.
+ *
+ * Both call sites (AuthLayout, AdminLayout) always pass `links` and
+ * `actions` explicitly — this used to also carry a generic marketing-nav
+ * fallback for when either was omitted, but the landing page has its own
+ * dedicated HomeHeader now, so that path was unreachable. Removed rather
+ * than kept "just in case" — `links`/`actions` are required.
  */
-export default function Nav({ links = null, actions = null }) {
+export default function Nav({ links, actions }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navRef = useRef(null);
@@ -78,72 +83,18 @@ export default function Nav({ links = null, actions = null }) {
           {/* Center Navigation Links (Flex-1 + justify-center for perfect centering!) */}
           <div className="hidden lg:flex items-center justify-center flex-1">
             <nav className="flex items-center gap-1 xl:gap-2">
-              {links && actions !== null ? (
-                links.map((link) => (
-                  <NavLink key={link.to} to={link.to} end={link.end} className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] flex items-center gap-1.5 transition-colors">
-                    {link.icon}
-                    <span>{link.label}</span>
-                  </NavLink>
-                ))
-              ) : !links ? (
-                <>
-                  <a href="/#story" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
-                    Overview
-                  </a>
-                  <a href="/#platform" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
-                    Capabilities
-                  </a>
-                  <a href="/#integration" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
-                    Integration
-                  </a>
-                  <a href="/#pricing" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
-                    Pricing
-                  </a>
-                  <a href="/#faq" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
-                    FAQ
-                  </a>
-                  <Link to="/docs" className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] transition-colors">
-                    Docs
-                  </Link>
-                </>
-              ) : null}
+              {links.map((link) => (
+                <NavLink key={link.to} to={link.to} end={link.end} className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] flex items-center gap-1.5 transition-colors">
+                  {link.icon}
+                  <span>{link.label}</span>
+                </NavLink>
+              ))}
             </nav>
           </div>
 
-          {/* Right Action / Navigation Slot */}
+          {/* Right Action Slot */}
           <div className="hidden lg:flex items-center gap-3 shrink-0">
-            {actions === null ? (
-              links && (
-                <nav className="flex items-center gap-1 xl:gap-2">
-                  {links.map((link) => (
-                    <NavLink
-                      key={link.to}
-                      to={link.to}
-                      end={link.end}
-                      className="nav-link px-3 py-2 text-xs sm:text-sm font-medium text-[var(--ink)] hover:text-[#DDBB55] flex items-center gap-1.5 transition-colors"
-                    >
-                      {link.icon}
-                      <span>{link.label}</span>
-                    </NavLink>
-                  ))}
-                </nav>
-              )
-            ) : actions ? (
-              actions
-            ) : (
-              <>
-                <Link to="/login">
-                  <Button variant="outline" size="sm">
-                    Log In
-                  </Button>
-                </Link>
-                <Link to="/signup">
-                  <Button variant="primary" size="sm">
-                    Sign Up
-                  </Button>
-                </Link>
-              </>
-            )}
+            {actions}
           </div>
 
           {/* Mobile Control Slot (Inline Theme Toggle on XS + Hamburger Menu) */}
@@ -219,88 +170,24 @@ export default function Nav({ links = null, actions = null }) {
 
               {/* Drawer Links */}
               <div className="flex flex-col gap-2 py-4">
-                {links ? (
-                  links.map((link) => (
-                    <NavLink
-                      key={link.to}
-                      to={link.to}
-                      end={link.end}
-                      onClick={() => setMobileOpen(false)}
-                      className="px-3 py-2.5 text-sm font-semibold text-[var(--ink)] hover:text-[var(--stamp)] flex items-center gap-2 rounded-xl hover:bg-[var(--stamp-soft)]/50"
-                    >
-                      {link.icon}
-                      <span>{link.label}</span>
-                    </NavLink>
-                  ))
-                ) : (
-                  <>
-                    <a
-                      href="/#story"
-                      onClick={() => setMobileOpen(false)}
-                      className="px-3 py-2.5 text-sm font-semibold text-[var(--ink)] hover:text-[#DDBB55] rounded-xl hover:bg-[var(--paper-card)]"
-                    >
-                      Overview
-                    </a>
-                    <a
-                      href="/#platform"
-                      onClick={() => setMobileOpen(false)}
-                      className="px-3 py-2.5 text-sm font-semibold text-[var(--ink)] hover:text-[#DDBB55] rounded-xl hover:bg-[var(--paper-card)]"
-                    >
-                      Capabilities
-                    </a>
-                    <a
-                      href="/#integration"
-                      onClick={() => setMobileOpen(false)}
-                      className="px-3 py-2.5 text-sm font-semibold text-[var(--ink)] hover:text-[#DDBB55] rounded-xl hover:bg-[var(--paper-card)]"
-                    >
-                      Integration
-                    </a>
-                    <a
-                      href="/#pricing"
-                      onClick={() => setMobileOpen(false)}
-                      className="px-3 py-2.5 text-sm font-semibold text-[var(--ink)] hover:text-[#DDBB55] rounded-xl hover:bg-[var(--paper-card)]"
-                    >
-                      Pricing
-                    </a>
-                    <a
-                      href="/#faq"
-                      onClick={() => setMobileOpen(false)}
-                      className="px-3 py-2.5 text-sm font-semibold text-[var(--ink)] hover:text-[#DDBB55] rounded-xl hover:bg-[var(--paper-card)]"
-                    >
-                      FAQ
-                    </a>
-                    <Link
-                      to="/docs"
-                      onClick={() => setMobileOpen(false)}
-                      className="px-3 py-2.5 text-sm font-semibold text-[var(--ink)] hover:text-[#DDBB55] rounded-xl hover:bg-[var(--paper-card)]"
-                    >
-                      Docs
-                    </Link>
-                  </>
-                )}
+                {links.map((link) => (
+                  <NavLink
+                    key={link.to}
+                    to={link.to}
+                    end={link.end}
+                    onClick={() => setMobileOpen(false)}
+                    className="px-3 py-2.5 text-sm font-semibold text-[var(--ink)] hover:text-[var(--stamp)] flex items-center gap-2 rounded-xl hover:bg-[var(--stamp-soft)]/50"
+                  >
+                    {link.icon}
+                    <span>{link.label}</span>
+                  </NavLink>
+                ))}
               </div>
 
               {/* Drawer Bottom Actions */}
-              {actions !== null && (
-                <div className="mt-auto pt-4 border-t border-[var(--divider)] flex flex-col gap-3">
-                  {actions ? (
-                    <div onClick={() => setMobileOpen(false)}>{actions}</div>
-                  ) : (
-                    <>
-                      <Link to="/login" onClick={() => setMobileOpen(false)}>
-                        <Button variant="outline" block>
-                          Log In
-                        </Button>
-                      </Link>
-                      <Link to="/signup" onClick={() => setMobileOpen(false)}>
-                        <Button variant="primary" block>
-                          Sign Up
-                        </Button>
-                      </Link>
-                    </>
-                  )}
-                </div>
-              )}
+              <div className="mt-auto pt-4 border-t border-[var(--divider)] flex flex-col gap-3">
+                <div onClick={() => setMobileOpen(false)}>{actions}</div>
+              </div>
             </motion.div>
           </>
         )}
@@ -308,4 +195,3 @@ export default function Nav({ links = null, actions = null }) {
     </>
   );
 }
-

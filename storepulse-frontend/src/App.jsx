@@ -27,6 +27,8 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminUserDetail from "./pages/admin/AdminUserDetail";
 import AdminSites from "./pages/admin/AdminSites";
 import AdminAdmins from "./pages/admin/AdminAdmins";
+import AdminPaymentRequests from "./pages/admin/AdminPaymentRequests";
+import AdminLogs from "./pages/admin/AdminLogs";
 
 export default function App() {
   return (
@@ -68,6 +70,8 @@ export default function App() {
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/users/:id" element={<AdminUserDetail />} />
             <Route path="/admin/sites" element={<AdminSites />} />
+            <Route path="/admin/payment-requests" element={<AdminPaymentRequests />} />
+            <Route path="/admin/logs" element={<AdminLogs />} />
             <Route path="/admin/admins" element={<AdminAdmins />} />
           </Route>
 

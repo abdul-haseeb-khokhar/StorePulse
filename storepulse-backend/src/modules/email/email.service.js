@@ -1,5 +1,8 @@
 const {sendEmail} = require('./email.provider');
-const {verificationEmailTemplate, emailChangeTemplate, passwordResetTemplate, adminInviteTemplate} = require('./email.template');
+const {
+    verificationEmailTemplate, emailChangeTemplate, passwordResetTemplate, adminInviteTemplate,
+    planChangedTemplate, accountStatusChangedTemplate, paymentRequestReviewedTemplate,
+} = require('./email.template');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
@@ -35,4 +38,28 @@ async function sendAdminInviteEmail({email, rawToken}) {
     return sendEmail({to: email, subject, html, text});
 }
 
-module.exports = {sendVerificationEmail, sendEmailChangeEmail, sendPasswordResetEmail, sendAdminInviteEmail};
+async function sendPlanChangedEmail({fullName, email, plan, billingCycle, currentPeriodEnd}) {
+    const billingUrl = `${FRONTEND_URL}/billing`;
+    const {subject, html, text} = planChangedTemplate({fullName, plan, billingCycle, currentPeriodEnd, billingUrl});
+
+    return sendEmail({to: email, subject, html, text});
+}
+
+async function sendAccountStatusChangedEmail({fullName, email, status}) {
+    const settingsUrl = `${FRONTEND_URL}/settings`;
+    const {subject, html, text} = accountStatusChangedTemplate({fullName, status, settingsUrl});
+
+    return sendEmail({to: email, subject, html, text});
+}
+
+async function sendPaymentRequestReviewedEmail({fullName, email, status, plan, reviewNote}) {
+    const billingUrl = `${FRONTEND_URL}/billing`;
+    const {subject, html, text} = paymentRequestReviewedTemplate({fullName, status, plan, reviewNote, billingUrl});
+
+    return sendEmail({to: email, subject, html, text});
+}
+
+module.exports = {
+    sendVerificationEmail, sendEmailChangeEmail, sendPasswordResetEmail, sendAdminInviteEmail,
+    sendPlanChangedEmail, sendAccountStatusChangedEmail, sendPaymentRequestReviewedEmail,
+};

@@ -1,9 +1,28 @@
-const {updateUserStatus, listUsers, findUserByIdWithSites, listSites, getPlatformStats, createAdminLog, upsertUserSubscription, findSubscriptionByUserId} = require('./admin.repository');
+const {
+    updateUserStatus, listUsers, findUserByIdWithSites, listSites, getPlatformStats, createAdminLog,
+    listUsersWithSiteCounts, listAdminLogs,
+} = require('./admin.repository');
 const {findUserById} = require('../auth/auth.repository')
 const {findSitesByUserId} = require('../sites/sites.repository');
 const {invalidateCachedSite} = require('../ingest/ingest.cache');
-const {periodEndFromCycle} = require('../../config/plans');
+const {upsertUserSubscription, findSubscriptionByUserId} = require('../subscription/subscription.repository');
+const {syncExpiredSubscription, recordSubscriptionHistory, getSubscriptionHistoryService} = require('../subscription/subscription.service');
+const {listRequests, findRequestById, updateRequestStatus} = require('../paymentRequest/paymentRequest.repository');
+const {sendPlanChangedEmail, sendAccountStatusChangedEmail, sendPaymentRequestReviewedEmail} = require('../email/email.service');
+const {periodEndFromCycle, resolveEffectivePlan, PLAN_LIMITS} = require('../../config/plans');
 const AppError = require('../../utils/AppError');
+
+// Best-effort — by the time this runs, the admin action it's reporting on
+// has already fully succeeded and been written to the DB, so a Resend
+// outage or a bad address should never surface as a failure of the action
+// itself. Logged, not rethrown.
+async function notifyBestEffort(sendFn, args) {
+    try {
+        await sendFn(args);
+    } catch (error) {
+        console.error('Notification email failed:', error.message);
+    }
+}
 
 async function updateUserStatusService(userId, status, adminId) {
     const user = await findUserById(userId)
@@ -33,7 +52,22 @@ async function updateUserStatusService(userId, status, adminId) {
         throw new AppError("Changing to same status is not allowed", 400);
     }
 
+    // Ingest caches each site's owner status for up to 30 minutes (see
+    // ingest.cache.js's CACHE_TTL_SECONDS) — without invalidating here, a
+    // ban wouldn't cut off ingestion until that cache aged out, and a
+    // reactivation would stay blocked just as long. Same reasoning as the
+    // plan-change invalidation in setUserPlanService below.
+    const sites = await findSitesByUserId(userId);
+    await Promise.all(sites.map((site) => invalidateCachedSite(site.apiKey)));
+
     await createAdminLog({adminId, action: `status:${status}`, targetedUserId: userId});
+
+    // user.email (fetched before the update) rather than
+    // result.updatedUser.email — for a Deleted transition that field is
+    // already the anonymized @storepulse.invalid address, which isn't
+    // where the actual person can be reached.
+    await notifyBestEffort(sendAccountStatusChangedEmail, {fullName: user.fullName, email: user.email, status});
+
     return result;
 }
 
@@ -41,7 +75,17 @@ async function listUsersService({page, limit, search, status}) {
     const skip = (page - 1) * limit;
     const {users, total} = await listUsers({skip, take: limit, search, status});
 
-    return {users, total, page, limit, totalPages: Math.ceil(total / limit)};
+    // Read-only, like ingest/site-limit enforcement — a lapsed subscription
+    // shows as Free here without writing anything back. Unlike a single
+    // user's own page (getUserDetailService), a list of up to `limit` rows
+    // isn't worth a write per row just to display the same downgrade the
+    // next real view of that user would persist anyway.
+    const usersWithPlan = users.map(({subscription, ...user}) => ({
+        ...user,
+        plan: resolveEffectivePlan(subscription),
+    }));
+
+    return {users: usersWithPlan, total, page, limit, totalPages: Math.ceil(total / limit)};
 }
 
 async function getUserDetailService(userId) {
@@ -54,28 +98,6 @@ async function getUserDetailService(userId) {
     return {...user, subscription};
 }
 
-// resolveEffectivePlan (config/plans.js) is read-time only — it tells
-// enforcement (site creation, ingest quota) to treat a lapsed subscription
-// as Free without ever touching the row itself, so the DB can say "Pro"
-// indefinitely after the period ends. This is the one place that turns
-// that into a real, persisted fact: called wherever a subscription is
-// about to be shown to someone (this user's own /auth/me, the admin
-// panel), it writes the downgrade back the first time either of them
-// looks, instead of leaving every reader to quietly disagree with what's
-// actually being enforced.
-//
-// Takes the subscription already fetched by the caller rather than
-// re-querying — avoids a second DB round trip on every single call just
-// to check a field the caller already has in hand.
-async function syncExpiredSubscription(userId, subscription) {
-    if (!subscription || subscription.plan === 'Free') return subscription;
-
-    const isExpired = subscription.currentPeriodEnd && new Date(subscription.currentPeriodEnd) < new Date();
-    if (!isExpired) return subscription;
-
-    return upsertUserSubscription({userId, plan: 'Free', status: 'Active', currentPeriodEnd: null});
-}
-
 async function listSitesService({page, limit, search}) {
     const skip = (page - 1) * limit;
     const {sites, total} = await listSites({skip, take: limit, search});
@@ -83,7 +105,7 @@ async function listSitesService({page, limit, search}) {
     return {sites, total, page, limit, totalPages: Math.ceil(total / limit)};
 }
 
-async function setUserPlanService({userId, plan, billingCycle, adminId}) {
+async function setUserPlanService({userId, plan, billingCycle, status, adminId}) {
     const user = await findUserById(userId);
     if(!user) {
         throw new AppError('User not found', 404);
@@ -91,23 +113,39 @@ async function setUserPlanService({userId, plan, billingCycle, adminId}) {
 
     const existingSubscription = await findSubscriptionByUserId(userId);
     const currentPlan = existingSubscription?.plan || 'Free';
+    const currentStatus = existingSubscription?.status || 'Active';
+    const nextStatus = status || 'Active';
 
     // Free has no period to renew, so re-picking it while already on Free
-    // can never actually change anything — a true no-op, skipped before any
-    // write, cache invalidation, or admin-log entry happens. Pro/Business
-    // are deliberately NOT short-circuited the same way: resubmitting the
-    // same plan there is how an admin renews it (pushes currentPeriodEnd
-    // out another cycle), which is a real change even though `plan` itself
+    // (with nothing else about it changing either) can never actually
+    // change anything — a true no-op, skipped before any write, cache
+    // invalidation, or admin-log entry happens. Pro/Business are
+    // deliberately NOT short-circuited the same way: resubmitting the same
+    // plan there is how an admin renews it (pushes currentPeriodEnd out
+    // another cycle), which is a real change even though `plan` itself
     // doesn't move.
-    if (plan === 'Free' && currentPlan === 'Free') {
+    const isNoOpFreeReselect = plan === 'Free' && currentPlan === 'Free'
+        && nextStatus === currentStatus && !existingSubscription?.pendingPlan;
+    if (isNoOpFreeReselect) {
         return {subscription: existingSubscription, message: 'User is already on the Free plan'};
     }
 
-    // Free doesn't run out, so it has no period to track. Paid tiers get
-    // one computed from the chosen cycle — never a hand-picked date.
+    // Free doesn't run out, so it has no period to track and no cycle to
+    // remember. Paid tiers get a period computed from the chosen cycle —
+    // never a hand-picked date — and the cycle itself is now persisted
+    // (previously used once here and thrown away).
     const currentPeriodEnd = plan === 'Free' ? null : periodEndFromCycle(billingCycle);
+    const persistedBillingCycle = plan === 'Free' ? null : billingCycle;
 
-    const subscription = await upsertUserSubscription({userId, plan, status: 'Active', currentPeriodEnd});
+    // An admin setting a plan directly is a real, immediate decision —
+    // it overrides (clears) any pending self-service cancel the user may
+    // have queued up, same as it overrides everything else about the
+    // previous subscription state. pendingPlan defaults to null in
+    // upsertUserSubscription, so simply not passing it here is enough.
+    const subscription = await upsertUserSubscription({
+        userId, plan, status: nextStatus, currentPeriodEnd, billingCycle: persistedBillingCycle,
+    });
+    await recordSubscriptionHistory(userId, subscription, {changedBy: adminId, reason: 'admin:plan-change'});
 
     // Ingest caches each site's owner-plan for up to 30 minutes (see
     // ingest.cache.js's CACHE_TTL_SECONDS) — without invalidating here, a
@@ -117,7 +155,93 @@ async function setUserPlanService({userId, plan, billingCycle, adminId}) {
 
     await createAdminLog({adminId, action: `plan:${plan}`, targetedUserId: userId});
 
+    await notifyBestEffort(sendPlanChangedEmail, {
+        fullName: user.fullName, email: user.email, plan,
+        billingCycle: persistedBillingCycle, currentPeriodEnd,
+    });
+
     return {subscription, message: `User plan set to ${plan}`};
 }
 
-module.exports = {updateUserStatusService, listUsersService, getUserDetailService, listSitesService, getPlatformStats, setUserPlanService, syncExpiredSubscription}
+async function listPaymentRequestsService({page, limit, status}) {
+    const skip = (page - 1) * limit;
+    const {requests, total} = await listRequests({skip, take: limit, status});
+
+    return {requests, total, page, limit, totalPages: Math.ceil(total / limit) || 1};
+}
+
+// Approving reuses setUserPlanService rather than upserting the
+// subscription directly here — there should be exactly one place that
+// actually turns "a plan should change" into a written Subscription row,
+// so a payment-request approval and an admin manually setting a plan stay
+// governed by the same no-op guard, cache invalidation, history entry, and
+// admin log.
+async function reviewPaymentRequestService({requestId, status, note, adminId}) {
+    const request = await findRequestById(requestId);
+    if (!request) {
+        throw new AppError('Payment request not found', 404);
+    }
+    if (request.status !== 'Pending') {
+        throw new AppError(`This request has already been ${request.status.toLowerCase()}`, 400);
+    }
+
+    const updated = await updateRequestStatus(requestId, {status, reviewedBy: adminId, reviewNote: note});
+
+    let planResult = null;
+    if (status === 'Approved') {
+        planResult = await setUserPlanService({
+            userId: request.userId, plan: request.plan, billingCycle: request.billingCycle, adminId,
+        });
+    }
+
+    await createAdminLog({
+        adminId, action: `payment-request:${status.toLowerCase()}`, targetedUserId: request.userId,
+    });
+
+    await notifyBestEffort(sendPaymentRequestReviewedEmail, {
+        fullName: request.user.fullName, email: request.user.email, status, plan: request.plan, reviewNote: note,
+    });
+
+    return {
+        request: updated,
+        subscription: planResult?.subscription ?? null,
+        message: `Payment request ${status.toLowerCase()}.`,
+    };
+}
+
+async function listOverLimitUsersService() {
+    const users = await listUsersWithSiteCounts();
+
+    return users
+        .map((u) => ({
+            id: u.id, fullName: u.fullName, email: u.email,
+            plan: resolveEffectivePlan(u.subscription),
+            siteCount: u._count.sites,
+        }))
+        .filter((u) => u.siteCount > PLAN_LIMITS[u.plan].maxSites);
+}
+
+// Thin pass-through to the same history service the user's own billing
+// page uses — an admin viewing one user's history and that user viewing
+// their own should never be able to disagree about what it says.
+async function getUserBillingHistoryService(userId, {page, limit}) {
+    const user = await findUserById(userId);
+    if (!user) {
+        throw new AppError('User not found', 404);
+    }
+
+    return getSubscriptionHistoryService(userId, {page, limit});
+}
+
+async function listAdminLogsService({page, limit}) {
+    const skip = (page - 1) * limit;
+    const {logs, total} = await listAdminLogs({skip, take: limit});
+
+    return {logs, total, page, limit, totalPages: Math.ceil(total / limit) || 1};
+}
+
+module.exports = {
+    updateUserStatusService, listUsersService, getUserDetailService, listSitesService, getPlatformStats,
+    setUserPlanService, listPaymentRequestsService, reviewPaymentRequestService,
+    listOverLimitUsersService, listAdminLogsService, getUserBillingHistoryService,
+}

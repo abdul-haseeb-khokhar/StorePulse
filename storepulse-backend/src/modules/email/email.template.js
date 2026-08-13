@@ -15,6 +15,15 @@ const STAMP = '#2f4b7c';
 const DIVIDER = '#dcd9cf';
 const MUTED = '#726f66';
 
+// fullName is user-controlled (2-50 chars, no character-class restriction —
+// see registerSchema in auth.validator.js) and lands straight in bodyText
+// below, which baseLayout embeds into the HTML email unescaped otherwise.
+// Only used for the html variant; the plain-text version doesn't need it.
+const HTML_ESCAPES = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'};
+function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (char) => HTML_ESCAPES[char]);
+}
+
 function baseLayout({ kicker, heading, bodyText, buttonText, buttonUrl, footerNote }) {
     return `
     <div style="font-family: ${FONT_BODY}; background-color: ${PAPER}; padding: 40px 20px;">
@@ -37,7 +46,7 @@ function baseLayout({ kicker, heading, bodyText, buttonText, buttonUrl, footerNo
 function verificationEmailTemplate({fullName, verifyUrl}) {
     const kicker = 'Get started';
     const heading = 'Verify your email';
-    const bodyText = `Hi ${fullName}, thanks for signing up for StorePulse. Please confirm your email address to activate your account`;
+    const bodyText = `Hi ${escapeHtml(fullName)}, thanks for signing up for StorePulse. Please confirm your email address to activate your account`;
     const html = baseLayout({
         kicker,
         heading,
@@ -54,7 +63,7 @@ function verificationEmailTemplate({fullName, verifyUrl}) {
 function emailChangeTemplate({ fullName, confirmUrl}) {
     const kicker = 'Account';
     const heading = 'Confirm your new email';
-    const bodyText = `Hi ${fullName}, we recieved a request to change the email address on your StorePulse account. Confirm this new address to complete the change.`;
+    const bodyText = `Hi ${escapeHtml(fullName)}, we recieved a request to change the email address on your StorePulse account. Confirm this new address to complete the change.`;
     const html = baseLayout({
         kicker,
         heading,
@@ -71,7 +80,7 @@ function emailChangeTemplate({ fullName, confirmUrl}) {
 function passwordResetTemplate({fullName, resetUrl}) {
     const kicker = 'Account';
     const heading = 'Reset your password';
-    const bodyText = `Hi ${fullName}, we received a request to reset the password on your StorePulse account. Choose a new password to continue.`;
+    const bodyText = `Hi ${escapeHtml(fullName)}, we received a request to reset the password on your StorePulse account. Choose a new password to continue.`;
     const html = baseLayout({
         kicker,
         heading,
@@ -102,4 +111,85 @@ function adminInviteTemplate({acceptUrl}) {
     return {subject: 'You\'ve been invited to StorePulse admin', html, text};
 }
 
-module.exports = { verificationEmailTemplate, emailChangeTemplate, passwordResetTemplate, adminInviteTemplate}
+// The lightweight half of gap #12 from the subscription scoping pass —
+// there's no in-app notification center yet, so this reuses the email
+// infrastructure that already works rather than building a throwaway
+// stand-in for whatever that center ends up looking like.
+function planChangedTemplate({fullName, plan, billingCycle, currentPeriodEnd, billingUrl}) {
+    const kicker = 'Account';
+    const heading = 'Your plan has changed';
+    const cycleNote = billingCycle ? ` (billed ${billingCycle})` : '';
+    const periodNote = currentPeriodEnd
+        ? ` Your current period runs through ${new Date(currentPeriodEnd).toLocaleDateString()}.`
+        : '';
+    const bodyText = `Hi ${escapeHtml(fullName)}, your StorePulse plan is now <strong>${plan}</strong>${cycleNote}.${periodNote}`;
+    const html = baseLayout({
+        kicker,
+        heading,
+        bodyText,
+        buttonText: 'View billing',
+        buttonUrl: billingUrl,
+        footerNote: "If this wasn't expected, reach out and we'll help sort it out.",
+    });
+    const text = `Hi ${fullName},\n\nYour StorePulse plan is now ${plan}${cycleNote}.${periodNote}\n\nView your billing: ${billingUrl}`;
+
+    return {subject: `Your StorePulse plan is now ${plan}`, html, text};
+}
+
+const ACCOUNT_STATUS_COPY = {
+    Active: 'Your account is active again — you can log in and pick up where you left off.',
+    Banned: "Your account has been suspended by an administrator. If you believe this is a mistake, reach out to support.",
+    Deleted: "Your account has been deleted. If you didn't request this, contact support right away.",
+};
+
+function accountStatusChangedTemplate({fullName, status, settingsUrl}) {
+    const kicker = 'Account';
+    const heading = `Your account is now ${status}`;
+    const statusNote = ACCOUNT_STATUS_COPY[status] || `Your account status changed to ${status}.`;
+    const bodyText = `Hi ${escapeHtml(fullName)}, ${statusNote}`;
+    const html = baseLayout({
+        kicker,
+        heading,
+        bodyText,
+        buttonText: 'Go to StorePulse',
+        buttonUrl: settingsUrl,
+        footerNote: 'Questions about this change? Just reply to this email.',
+    });
+    const text = `Hi ${fullName},\n\n${statusNote}\n\n${settingsUrl}`;
+
+    return {subject: `Your StorePulse account is now ${status}`, html, text};
+}
+
+function paymentRequestReviewedTemplate({fullName, status, plan, reviewNote, billingUrl}) {
+    const kicker = 'Billing';
+    const isApproved = status === 'Approved';
+    const heading = isApproved ? 'Your payment was verified' : 'Your payment request needs another look';
+    const outcomeNote = isApproved
+        ? `Your ${plan} plan is now active.`
+        : "We couldn't verify this payment yet.";
+    const noteLine = reviewNote ? ` ${escapeHtml(reviewNote)}` : '';
+    const bodyText = `Hi ${escapeHtml(fullName)}, ${outcomeNote}${noteLine}`;
+    const html = baseLayout({
+        kicker,
+        heading,
+        bodyText,
+        buttonText: 'View billing',
+        buttonUrl: billingUrl,
+        footerNote: isApproved
+            ? 'Thanks for your business!'
+            : "You're welcome to submit a new payment request once you've sorted this out.",
+    });
+    const rawNoteLine = reviewNote ? ` ${reviewNote}` : '';
+    const text = `Hi ${fullName},\n\n${outcomeNote}${rawNoteLine}\n\nView your billing: ${billingUrl}`;
+
+    return {
+        subject: isApproved ? `Your StorePulse ${plan} plan is active` : 'Your StorePulse payment request was rejected',
+        html,
+        text,
+    };
+}
+
+module.exports = {
+    verificationEmailTemplate, emailChangeTemplate, passwordResetTemplate, adminInviteTemplate,
+    planChangedTemplate, accountStatusChangedTemplate, paymentRequestReviewedTemplate,
+}

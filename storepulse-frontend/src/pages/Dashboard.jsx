@@ -376,7 +376,7 @@ export default function Dashboard() {
                             topReferrers.map((referrer, index) => (
                               <tr key={`${referrer.referrers}-${index}`}>
                                 <td>{referrer.referrers || "Direct"}</td>
-                                <td>{formatNumber(referrer.visitors)}</td>
+                                <td>{formatNumber(referrer.pageViews)}</td>
                               </tr>
                             ))
                           )}

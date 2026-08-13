@@ -13,7 +13,7 @@ import Skeleton from "../components/ui/Skeleton";
 import api, { getApiErrorMessage, getFieldErrors } from "../lib/api";
 import { queryKeys } from "../lib/queryKeys";
 import { clearSession, getToken, saveSession } from "../lib/auth";
-import { formatDaysRemaining } from "../lib/plan";
+import { formatDaysRemaining, formatHistoryReason } from "../lib/plan";
 
 const PLAN_TAG_VARIANT = {
   Free: "neutral",
@@ -91,6 +91,13 @@ export default function Settings() {
     queryKey: queryKeys.sites.usage,
     queryFn: async () => {
       const { data } = await api.get("/sites/usage");
+      return data;
+    },
+  });
+  const historyQuery = useQuery({
+    queryKey: queryKeys.billing.history({ page: 1 }),
+    queryFn: async () => {
+      const { data } = await api.get("/billing/history");
       return data;
     },
   });
@@ -547,6 +554,43 @@ export default function Settings() {
               <Link to="/billing">
                 <Button variant="secondary">Manage billing</Button>
               </Link>
+            </Card>
+
+            <Card style={{ marginBottom: "var(--space-3)" }}>
+              <div className="card-kicker">Billing history</div>
+              <div className="card-title" style={{ marginBottom: "var(--space-3)" }}>
+                Past changes
+              </div>
+              {historyQuery.isPending ? (
+                <Skeleton height={70} />
+              ) : historyQuery.isError ? null : historyQuery.data.entries.length === 0 ? (
+                <p className="card-body" style={{ opacity: 0.6 }}>
+                  No billing history yet.
+                </p>
+              ) : (
+                <div className="table-wrap">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Plan</th>
+                        <th>Cycle</th>
+                        <th>What happened</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {historyQuery.data.entries.map((entry) => (
+                        <tr key={entry.id}>
+                          <td>{new Date(entry.createdAt).toLocaleDateString()}</td>
+                          <td>{entry.plan}</td>
+                          <td>{entry.billingCycle || "—"}</td>
+                          <td>{formatHistoryReason(entry.reason)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </Card>
           </>
         )}

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { Mail, MessageCircle, Phone, CheckCircle2 } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Mail, MessageCircle, Phone, CheckCircle2, Clock } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
 import Field from "../components/ui/Field";
@@ -22,9 +22,12 @@ const CYCLE_OPTIONS = [
 export default function BillingPay() {
   const { plan: planId } = useParams();
   const [searchParams] = useSearchParams();
+  const queryClient = useQueryClient();
   const [cycle, setCycle] = useState(
     searchParams.get("cycle") === "yearly" ? "yearly" : "monthly",
   );
+  const [note, setNote] = useState("");
+  const [submitError, setSubmitError] = useState(null);
 
   const plan = PLANS.find((p) => p.planId === planId);
 
@@ -34,6 +37,24 @@ export default function BillingPay() {
       const { data } = await api.get("/auth/me");
       return data.user;
     },
+  });
+
+  const pendingRequestQuery = useQuery({
+    queryKey: queryKeys.billing.paymentRequests({ status: "Pending" }),
+    queryFn: async () => {
+      const { data } = await api.get("/billing/payment-requests");
+      return data.requests.find((r) => r.status === "Pending") || null;
+    },
+    enabled: Boolean(plan) && plan?.planId !== "Free",
+  });
+
+  const submitMutation = useMutation({
+    mutationFn: () => api.post("/billing/payment-requests", { plan: planId, billingCycle: cycle, note: note.trim() || undefined }),
+    onSuccess: ({ data }) => {
+      queryClient.setQueryData(queryKeys.billing.paymentRequests({ status: "Pending" }), data.request);
+      queryClient.invalidateQueries({ queryKey: queryKeys.billing.paymentRequests({ status: "Pending" }) });
+    },
+    onError: (err) => setSubmitError(getApiErrorMessage(err, "Could not submit your payment request.")),
   });
 
   if (!plan) {
@@ -46,6 +67,13 @@ export default function BillingPay() {
     : null;
   const email = meQuery.data?.email;
   const amount = totalForCycle(plan, cycle);
+  const pendingRequest = pendingRequestQuery.data;
+  const submitted = submitMutation.isSuccess || Boolean(pendingRequest);
+
+  function handleSubmit() {
+    setSubmitError(null);
+    submitMutation.mutate();
+  }
 
   return (
     <AppLayout>
@@ -137,23 +165,63 @@ export default function BillingPay() {
               <div className="card-title" style={{ marginBottom: "var(--space-3)" }}>
                 Let us know
               </div>
-              <p className="card-body" style={{ marginBottom: "var(--space-3)" }}>
-                We'll activate your {plan.name} plan once we've verified it.
-              </p>
-              <a
-                href={buildPaymentNoticeUrl({ planName: plan.name, cycle, amount, email })}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full"
-              >
-                <Button variant="primary" block icon={<CheckCircle2 className="h-4 w-4" />}>
-                  I've sent the payment
-                </Button>
-              </a>
+
+              {submitted ? (
+                <div
+                  className="flex items-start"
+                  style={{ gap: "var(--space-2)", marginBottom: "var(--space-3)" }}
+                >
+                  <Clock className="h-4 w-4" style={{ color: "var(--stamp)", marginTop: 2 }} />
+                  <p className="card-body" style={{ margin: 0 }}>
+                    Request submitted — we'll activate your {plan.name} plan once we've verified
+                    the transfer. No need to submit it again.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <p className="card-body" style={{ marginBottom: "var(--space-3)" }}>
+                    We'll activate your {plan.name} plan once we've verified it.
+                  </p>
+                  <Field
+                    id="paymentNote"
+                    label="Transfer reference"
+                    optional
+                    placeholder="e.g. bank name + last 4 digits, or transaction ID"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    style={{ marginBottom: "var(--space-3)" }}
+                  />
+                  {submitError && (
+                    <p className="text-sm" style={{ color: "var(--brick)", marginBottom: "var(--space-3)" }}>
+                      {submitError}
+                    </p>
+                  )}
+                  <Button
+                    variant="primary"
+                    block
+                    icon={<CheckCircle2 className="h-4 w-4" />}
+                    onClick={handleSubmit}
+                    loading={submitMutation.isPending}
+                  >
+                    I've sent the payment
+                  </Button>
+                </>
+              )}
+
               <p className="card-body" style={{ marginTop: "var(--space-3)" }}>
-                Or reach us another way:
+                Or reach us directly:
               </p>
               <div className="flex items-center" style={{ gap: "var(--space-4)" }}>
+                <a
+                  href={buildPaymentNoticeUrl({ planName: plan.name, cycle, amount, email })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center text-sm"
+                  style={{ gap: 6 }}
+                >
+                  <MessageCircle className="h-4 w-4 text-muted" />
+                  WhatsApp
+                </a>
                 <a href={CONTACT_GMAIL_URL} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm" style={{ gap: 6 }}>
                   <Mail className="h-4 w-4 text-muted" />
                   Email

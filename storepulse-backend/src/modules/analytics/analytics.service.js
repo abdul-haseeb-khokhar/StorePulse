@@ -13,7 +13,7 @@ async function getTrafficOverview({ siteId, userId, startDate, endDate }) {
     const resultsByDate = new Map();
     rawResults.forEach((row) => {
         resultsByDate.set(formateDateKey(row.date), {
-            visitors: Number(row.visitors),
+            pageViews: Number(row.pageViews),
             clicks: Number(row.clicks)
         });
     });
@@ -24,7 +24,7 @@ async function getTrafficOverview({ siteId, userId, startDate, endDate }) {
         const dayData = resultsByDate.get(date);
         return {
             date,
-            visitors: dayData ? dayData.visitors : 0,
+            pageViews: dayData ? dayData.pageViews : 0,
             clicks: dayData ? dayData.clicks : 0
         }
     })
@@ -104,7 +104,10 @@ async function getTopReferrersService(siteId, userId,{startDate, endDate, limit}
 
     return rows.map (r => ({
         referrers: r.referrer,
-        visitors: r._count.referrer
+        // Page views from this referrer, not deduplicated visitors — same
+        // distinction as getTrafficOverview's pageViews above. Named to
+        // match rather than reuse "visitors" for a number that isn't one.
+        pageViews: r._count.referrer
     }))
 }
 module.exports = {

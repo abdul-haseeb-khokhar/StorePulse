@@ -24,7 +24,7 @@ export default function Field({
   return (
     <div className={`field flex flex-col gap-1.5 ${className}`}>
       {label && (
-        <label htmlFor={id} className="font-sora text-xs font-semibold color-[var(--ink)] flex items-center justify-between">
+        <label htmlFor={id} className="font-sora text-xs font-semibold text-[var(--ink)] flex items-center justify-between">
           <span>
             {label}
             {required && <span className="text-[var(--brick)] ml-0.5">*</span>}

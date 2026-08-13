@@ -6,6 +6,7 @@ const sitesRoutes = require('./modules/sites/sites.routes');
 const authRoutes  = require('./modules/auth/auth.routes');
 const ingestRoutes = require('./modules/ingest/ingest.routes');
 const analyticsRoutes = require('./modules/analytics/analytics.routes');
+const billingRoutes = require('./modules/billing/billing.routes');
 const adminRoutes = require('./modules/admin/admin.routes');
 const adminAuthRoutes = require('./modules/adminAuth/adminAuth.routes');
 
@@ -33,6 +34,7 @@ app.use('/api/auth', dashboardCors , authRoutes);
 app.use('/api/sites', dashboardCors , sitesRoutes)
 app.use('/api/events', ingestCors , ingestRoutes)
 app.use('/api/analytics', dashboardCors , analyticsRoutes);
+app.use('/api/billing', dashboardCors , billingRoutes);
 app.use('/api/admin/auth', dashboardCors, adminAuthRoutes);
 app.use('/api/admin', dashboardCors, adminRoutes);
 

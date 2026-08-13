@@ -1,4 +1,4 @@
-const {createSite, findSiteById, findSitesByUserId, updateApiKey, findUserPlan} = require('./sites.repository')
+const {createSiteIfUnderLimit, findSiteById, findSitesByUserId, updateApiKey, findUserPlan} = require('./sites.repository')
 const {generateApiKey} = require('../../utils/apiKey')
 const AppError = require('../../utils/AppError')
 const {invalidateCachedSite} = require('../ingest/ingest.cache')
@@ -9,14 +9,15 @@ async function addSite({name, domain, userId}) {
     const plan = await findUserPlan(userId);
     const {maxSites} = PLAN_LIMITS[plan] || PLAN_LIMITS.Free;
 
-    const existingSites = await findSitesByUserId(userId);
-    if (existingSites.length >= maxSites) {
-        throw new AppError(`Your ${plan} plan allows up to ${maxSites} site(s). Upgrade to add more.`, 403);
-    }
-
     const apiKey = generateApiKey();
 
-    const site = await createSite({name, domain, apiKey, userId})
+    // Count-then-create happens inside one row-locked transaction (see
+    // sites.repository.js) so two concurrent requests can't both slip in
+    // under the limit.
+    const {site, limitExceeded} = await createSiteIfUnderLimit({name, domain, apiKey, userId, maxSites});
+    if (limitExceeded) {
+        throw new AppError(`Your ${plan} plan allows up to ${maxSites} site(s). Upgrade to add more.`, 403);
+    }
 
     return site;
 }

@@ -12,7 +12,7 @@ import Seg from "../../components/ui/Seg";
 import adminApi from "../../lib/adminApi";
 import { getApiErrorMessage } from "../../lib/api";
 import { queryKeys } from "../../lib/queryKeys";
-import { formatDaysRemaining } from "../../lib/plan";
+import { formatDaysRemaining, formatHistoryReason } from "../../lib/plan";
 
 const STATUS_TAG_VARIANT = {
   Active: "positive",
@@ -62,6 +62,14 @@ export default function AdminUserDetail() {
     queryFn: async () => {
       const { data } = await adminApi.get(`/admin/users/${id}`);
       return data.user;
+    },
+  });
+
+  const historyQuery = useQuery({
+    queryKey: queryKeys.admin.users.history(id, { page: 1 }),
+    queryFn: async () => {
+      const { data } = await adminApi.get(`/admin/users/${id}/history`);
+      return data;
     },
   });
 
@@ -210,6 +218,13 @@ export default function AdminUserDetail() {
                   {formatDaysRemaining(user.subscription.currentPeriodEnd)}
                 </p>
               )}
+              {user.subscription?.pendingPlan && (
+                <p className="card-body" style={{ marginBottom: "var(--space-3)", color: "var(--stamp)" }}>
+                  Scheduled to move to {user.subscription.pendingPlan} on{" "}
+                  {new Date(user.subscription.currentPeriodEnd).toLocaleDateString()} (self-service
+                  cancel). Picking a plan below overrides this.
+                </p>
+              )}
 
               <Seg
                 name="plan"
@@ -250,6 +265,43 @@ export default function AdminUserDetail() {
               >
                 Update plan
               </Button>
+            </Card>
+
+            <Card style={{ marginBottom: "var(--space-3)" }}>
+              <div className="card-kicker">Billing history</div>
+              <div className="card-title" style={{ marginBottom: "var(--space-3)" }}>
+                Past changes
+              </div>
+              {historyQuery.isPending ? (
+                <Skeleton height={70} />
+              ) : historyQuery.isError ? null : historyQuery.data.entries.length === 0 ? (
+                <p className="card-body" style={{ opacity: 0.6 }}>
+                  No billing history yet.
+                </p>
+              ) : (
+                <div className="table-wrap">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Plan</th>
+                        <th>Cycle</th>
+                        <th>What happened</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {historyQuery.data.entries.map((entry) => (
+                        <tr key={entry.id}>
+                          <td>{new Date(entry.createdAt).toLocaleDateString()}</td>
+                          <td>{entry.plan}</td>
+                          <td>{entry.billingCycle || "—"}</td>
+                          <td>{formatHistoryReason(entry.reason)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </Card>
 
             <Card>

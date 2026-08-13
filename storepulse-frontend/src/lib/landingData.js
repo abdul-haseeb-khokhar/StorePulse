@@ -47,7 +47,7 @@ export const PLANS = [
       "Live friction & drop-off alerts",
       "Priority email support",
     ],
-    buttonText: "Start 14-Day Free Trial",
+    buttonText: "Get Started",
     buttonVariant: "primary",
   },
   {
@@ -84,8 +84,8 @@ export const FAQS = [
     answer: "Under 2 minutes. You simply paste one line of script into your storefront's theme header. StorePulse automatically begins tracking pageviews and visitor telemetry immediately.",
   },
   {
-    question: "Is a credit card required for the 14-day free trial?",
-    answer: "No credit card is required to sign up or start tracking. You get full access to live telemetry and analytics for 14 days without any commitment.",
+    question: "Is a credit card required to sign up?",
+    answer: "No credit card is required to sign up or start tracking. The Free plan is genuinely free, and you can upgrade to Pro or Business whenever you're ready.",
   },
   {
     question: "Can I track multiple ecommerce stores under one account?",
