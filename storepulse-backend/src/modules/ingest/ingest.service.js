@@ -34,6 +34,19 @@ async function recordEvent({apiKey, type, pageUrl, referrer, productId, productN
         throw new AppError('This site is not currently accepting events.', 403);
     }
 
+    const plan = resolveEffectivePlan(site.user?.subscription);
+    const {maxSites, maxMonthlyEvents} = PLAN_LIMITS[plan] || PLAN_LIMITS.Free;
+
+    // Sites are never deleted or reordered — one added while on a higher
+    // plan keeps existing after a downgrade, but stops accepting events
+    // once its fixed creation-rank (see ingest.repository.js) no longer
+    // fits the current plan's maxSites. Same vague message as the
+    // banned/deleted check above: whoever's holding the key doesn't need
+    // to know *why* a site was cut off, just that it was.
+    if (maxSites !== Infinity && site.rank > maxSites) {
+        throw new AppError('This site is not currently accepting events.', 403);
+    }
+
     // Page views and product clicks both count against the same monthly
     // quota ("events"), matching what's advertised on the pricing page.
     // Counted for every plan, including unlimited ones — sites.service.js's
@@ -41,8 +54,6 @@ async function recordEvent({apiKey, type, pageUrl, referrer, productId, productN
     // on the user's own dashboard, so skipping the increment for Business
     // would leave that number stuck at 0 even though tracking works fine.
     // Only the cap check itself is skipped for unlimited plans.
-    const plan = resolveEffectivePlan(site.user?.subscription);
-    const {maxMonthlyEvents} = PLAN_LIMITS[plan] || PLAN_LIMITS.Free;
     const eventsThisMonth = await incrementMonthlyEventCount(site.id);
     if (maxMonthlyEvents !== Infinity && eventsThisMonth > maxMonthlyEvents) {
         throw new AppError(

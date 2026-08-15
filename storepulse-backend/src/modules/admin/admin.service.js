@@ -7,7 +7,9 @@ const {findSitesByUserId} = require('../sites/sites.repository');
 const {invalidateCachedSite} = require('../ingest/ingest.cache');
 const {upsertUserSubscription, findSubscriptionByUserId} = require('../subscription/subscription.repository');
 const {syncExpiredSubscription, recordSubscriptionHistory, getSubscriptionHistoryService} = require('../subscription/subscription.service');
-const {listRequests, findRequestById, claimRequestForReview} = require('../paymentRequest/paymentRequest.repository');
+const {
+    listRequests, findRequestById, claimRequestForReview, findPendingRequestByUserId, updateRequestStatus,
+} = require('../paymentRequest/paymentRequest.repository');
 const {sendPlanChangedEmail, sendAccountStatusChangedEmail, sendPaymentRequestReviewedEmail} = require('../email/email.service');
 const {periodEndFromCycle, resolveEffectivePlan, PLAN_LIMITS} = require('../../config/plans');
 const AppError = require('../../utils/AppError');
@@ -126,6 +128,18 @@ async function setUserPlanService({userId, plan, billingCycle, status, adminId})
     // doesn't move.
     const isNoOpFreeReselect = plan === 'Free' && currentPlan === 'Free'
         && nextStatus === currentStatus && !existingSubscription?.pendingPlan;
+
+    // Run before the no-op short-circuit below, not after the plan write —
+    // a direct "set plan" call is the admin's real word on this user's
+    // subscription even when nothing about the plan itself changes (e.g.
+    // re-confirming Free is effectively denying a pending upgrade request),
+    // so both paths need this, not just the one that goes on to write a
+    // new subscription. Running it this early — before any of the writes
+    // below, not after them — also shrinks the window where a user could
+    // slip in an unrelated new request between an admin's approval action
+    // and this scan picking it up instead of the one actually being acted on.
+    await supersedePendingRequest({userId, adminId, user});
+
     if (isNoOpFreeReselect) {
         return {subscription: existingSubscription, message: 'User is already on the Free plan'};
     }
@@ -161,6 +175,33 @@ async function setUserPlanService({userId, plan, billingCycle, status, adminId})
     });
 
     return {subscription, message: `User plan set to ${plan}`};
+}
+
+// A direct plan change makes any request this user has waiting for review
+// moot — left alone, approving it later would silently re-run
+// setUserPlanService and push currentPeriodEnd out another cycle for a
+// request that no longer reflects what's actually being decided. This is
+// queue cleanup, not the operation itself, so — same reasoning as
+// notifyBestEffort below — a failure here is logged and swallowed rather
+// than thrown: the plan change it's called from has typically already
+// committed by the time this runs, and a stale pending request left behind
+// on a rare failure is the same state as before this existed at all, not a
+// new problem.
+async function supersedePendingRequest({userId, adminId, user}) {
+    try {
+        const supersededRequest = await findPendingRequestByUserId(userId);
+        if (!supersededRequest) return;
+
+        const reviewNote = 'Superseded by a direct plan change from an admin.';
+        await updateRequestStatus(supersededRequest.id, {status: 'Rejected', reviewedBy: adminId, reviewNote});
+        await createAdminLog({adminId, action: 'payment-request:auto-rejected', targetedUserId: userId});
+        await notifyBestEffort(sendPaymentRequestReviewedEmail, {
+            fullName: user.fullName, email: user.email, status: 'Rejected',
+            plan: supersededRequest.plan, reviewNote,
+        });
+    } catch (error) {
+        console.error('Failed to auto-resolve superseded payment request:', error.message);
+    }
 }
 
 async function listPaymentRequestsService({page, limit, status}) {

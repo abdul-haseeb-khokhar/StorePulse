@@ -22,8 +22,7 @@ export const PLANS = [
       "Up to 10,000 monthly events",
       "1 Ecommerce storefront",
       "Real-time visitor telemetry",
-      "7-day data retention",
-      "Basic product click tracking",
+      "Product click tracking",
     ],
     buttonText: "Start Free",
     buttonVariant: "outline",
@@ -41,10 +40,8 @@ export const PLANS = [
     features: [
       "Up to 100,000 monthly events",
       "Up to 5 Ecommerce storefronts",
-      "Real-time visitor telemetry & heatmaps",
-      "90-day data retention",
-      "Advanced product click attribution",
-      "Live friction & drop-off alerts",
+      "Real-time visitor telemetry",
+      "Product click tracking",
       "Priority email support",
     ],
     buttonText: "Get Started",
@@ -63,10 +60,9 @@ export const PLANS = [
     features: [
       "Unlimited monthly events",
       "Unlimited storefronts",
-      "365-day data retention",
-      "Custom event webhooks & API access",
+      "Real-time visitor telemetry",
+      "Product click tracking",
       "Dedicated account manager",
-      "100% Cookieless GDPR compliance mode",
       "24/7 Priority support SLA",
     ],
     buttonText: "Contact Sales",
@@ -77,7 +73,7 @@ export const PLANS = [
 export const FAQS = [
   {
     question: "Does the StorePulse script slow down my storefront?",
-    answer: "No. StorePulse uses a ultra-lightweight script (< 5KB) that loads asynchronously without blocking DOM parsing, page render time, or Core Web Vitals.",
+    answer: "No. StorePulse uses an ultra-lightweight script (< 5KB).",
   },
   {
     question: "How long does integration take on Shopify or WooCommerce?",

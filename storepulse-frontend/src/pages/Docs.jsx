@@ -192,10 +192,10 @@ export default function Docs() {
                   3. How Page View Tracking Works
                 </h2>
                 <p className="mb-3">
-                  Once installed, the script automatically tracks page views when a page loads. It captures the current URL, referrer, and an anonymous visitor ID stored in <code className="text-[#DDBB55] font-mono">localStorage</code>.
+                  Once installed, the script automatically tracks one page view when the script itself loads. It captures the current URL, referrer, and an anonymous visitor ID stored in <code className="text-[#DDBB55] font-mono">localStorage</code>.
                 </p>
                 <p>
-                  For Single Page Applications (SPAs) like React or Next.js, the script listens to URL pushState changes and reports virtual pageviews automatically.
+                  The script does not listen for client-side route changes. On a Single Page Application (React, Next.js, etc.), only the initial page load is tracked — navigating between routes without a full page reload will not send another page view.
                 </p>
               </section>
 
@@ -247,7 +247,7 @@ export default function Docs() {
                   Open your browser’s Developer Tools and look at the Network tab. Filter by <code className="text-[#DDBB55] font-mono">events</code> to see live HTTP POST payloads being sent to StorePulse.
                 </p>
                 <p>
-                  You will see an immediate entry in your StorePulse real-time dashboard feed.
+                  Events are buffered for up to 10 seconds before they're written and reflected on your StorePulse dashboard. The dashboard shows a "Data as of" timestamp so you can tell how fresh the numbers are.
                 </p>
               </section>
 

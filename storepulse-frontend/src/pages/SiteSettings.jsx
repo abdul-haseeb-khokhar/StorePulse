@@ -107,6 +107,13 @@ export default function SiteSettings() {
               <div className="card-title" style={{ marginBottom: "var(--space-3)" }}>
                 {site.name}
               </div>
+              {site.active === false && (
+                <p className="card-body" style={{ marginBottom: "var(--space-3)", color: "var(--brick)" }}>
+                  This site isn&apos;t included in your current plan — tracking and analytics are
+                  paused, but nothing here has been deleted. <Link to="/billing/upgrade">Upgrade</Link>{" "}
+                  to reactivate it.
+                </p>
+              )}
               <div className="grid" style={{ gap: "var(--space-3)" }}>
                 <Field id="st-name" label="Site name" value={site.name} readOnly />
                 <Field id="st-domain" label="Domain" value={site.domain} readOnly />

@@ -4,13 +4,14 @@ import { motion } from "framer-motion";
 import { Check, Copy, Code2, ArrowRight } from "lucide-react";
 import CodeBlock from "./CodeBlock";
 import { Eyebrow } from "./Tag";
+import { API_BASE_URL } from "../../lib/api";
 import { containerStagger, itemFadeUp, useReducedMotion } from "../../lib/motion";
 
 const SNIPPETS = [
   {
     id: "html",
     label: "HTML / Universal",
-    code: `<!-- Add to <head> of your storefront -->\n<script src="https://storepulse-backend.onrender.com/track.js"\n  data-site-key="sp_live_84da57d3461067b6aff00beb1fed7c3f"></script>`,
+    code: `<!-- Add to <head> of your storefront -->\n<script src="${API_BASE_URL}/track.js"\n  data-site-key="sp_live_84da57d3461067b6aff00beb1fed7c3f"></script>`,
   },
   {
     id: "product",
@@ -20,7 +21,7 @@ const SNIPPETS = [
   {
     id: "react",
     label: "React / Next.js",
-    code: `// Add to App.js or Next.js _document.js\n<script\n  src="https://storepulse-backend.onrender.com/track.js"\n  data-site-key="sp_live_84da57d3461067b6aff00beb1fed7c3f"\n  async\n/>`,
+    code: `// Add to App.js or Next.js _document.js\n<script\n  src="${API_BASE_URL}/track.js"\n  data-site-key="sp_live_84da57d3461067b6aff00beb1fed7c3f"\n  async\n/>`,
   },
 ];
 

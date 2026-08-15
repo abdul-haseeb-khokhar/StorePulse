@@ -311,7 +311,12 @@ button:disabled, select:disabled, [aria-disabled="true"] { cursor: not-allowed; 
 .input-adorn-right { padding-right: 32px; }
 textarea.input { min-height: 90px; resize: vertical; }
 
-.seg { display: inline-flex; overflow: hidden; border: 1px solid var(--divider); border-radius: var(--radius-xl); }
+/* align-self: flex-start so a Seg placed directly in a flex-column parent
+   (e.g. Card, which stretches children to full width by default) still
+   sizes to its own content instead of stretching to fill the row — a
+   segmented control should never grow past its options regardless of what
+   it's dropped into. */
+.seg { display: inline-flex; align-self: flex-start; overflow: hidden; border: 1px solid var(--divider); border-radius: var(--radius-xl); }
 .seg-opt { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; font-size: 13px; font-weight: 500; cursor: pointer; }
 .seg-opt input { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
 .seg-opt + .seg-opt { border-left: 1px solid var(--divider); }

@@ -3,10 +3,22 @@ const { getDailyTraffic, countPageViews, countProductClicks, countUniqueVisitors
 )
 const { getSiteById } = require('../sites/sites.service')
 const {formateDateKey, buildDateRange, resolveDateBoundary} = require('../../utils/dateRange')
+const AppError = require('../../utils/AppError')
+
+// Ownership alone isn't enough to read a site's analytics — a site that
+// exists but no longer fits the owner's plan (see sites.service.js's
+// isSiteActive) shouldn't leak real numbers to the dashboard just because
+// the frontend chose not to ask. Rejecting here, not just in the UI, is
+// what makes this actual enforcement rather than a cosmetic fog.
+function assertSiteActive(site) {
+    if (!site.active) {
+        throw new AppError("This site isn't included in your current plan. Upgrade to see its data.", 403);
+    }
+}
 
 // This function manages the traffic on the site on daily basis
 async function getTrafficOverview({ siteId, userId, startDate, endDate }) {
-    await getSiteById({ siteId, userId });
+    assertSiteActive(await getSiteById({ siteId, userId }));
 
     const rawResults = await getDailyTraffic({ siteId, startDate, endDate });
 
@@ -48,7 +60,7 @@ function calculatePercentChange(current, previous){
 }
 
 async function getSummary({siteId, userId, startDate, endDate}) {
-    await getSiteById({siteId, userId});
+    assertSiteActive(await getSiteById({siteId, userId}));
 
     const {previousStartDate, previousEndDate} = getPreviousPeriod(startDate, endDate);
 
@@ -84,7 +96,7 @@ async function getSummary({siteId, userId, startDate, endDate}) {
 }
 
 async function getTopProducts(siteId, userId,{startDate, endDate, limit}) {
-    await getSiteById({siteId, userId});
+    assertSiteActive(await getSiteById({siteId, userId}));
 
     const range = resolveDateBoundary(startDate, endDate);
     const rows = await getTopClickedProducts({siteId, ...range, limit});
@@ -97,7 +109,7 @@ async function getTopProducts(siteId, userId,{startDate, endDate, limit}) {
 }
 
 async function getTopReferrersService(siteId, userId,{startDate, endDate, limit}) {
-    await getSiteById({siteId, userId});
+    assertSiteActive(await getSiteById({siteId, userId}));
     
     const range = resolveDateBoundary(startDate, endDate);
     const rows = await getTopReferrers({siteId, ...range, limit});

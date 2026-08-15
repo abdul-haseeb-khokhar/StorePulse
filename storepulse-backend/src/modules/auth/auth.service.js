@@ -29,7 +29,15 @@ async function signUp(fullName, email, password) {
     const expiry = new Date(Date.now() + VERIFICATION_EXPIRY_MS);
 
     await setVerificationToken(user.id, hashedToken, expiry);
-    await sendVerificationEmail({fullName: user.fullName, email: user.email, rawToken});
+    // Best-effort: the account row is already committed by this point, so a
+    // Resend outage/bad address shouldn't turn a successful signup into a
+    // 500 the client has no way to recover from. The user can still get a
+    // fresh link via POST /auth/resend-verification either way.
+    try {
+        await sendVerificationEmail({fullName: user.fullName, email: user.email, rawToken});
+    } catch (error) {
+        console.error('Failed to send verification email:', error.message);
+    }
 
     return{
         message: 'Account created. Please check your email to verify your account.'

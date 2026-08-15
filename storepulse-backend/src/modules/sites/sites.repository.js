@@ -50,6 +50,27 @@ async function findUserPlan(userId) {
     return resolveEffectivePlan(subscription);
 }
 
+// A site's rank (1st created, 2nd, ...) among its owner's sites — fixed
+// forever once it exists, since sites are never deleted or reordered. The
+// single, shared source for that rank: every caller across every module
+// (sites, ingest) goes through this instead of writing its own count query,
+// so "what counts as this site's rank" can only ever be defined once.
+// Tie-broken by id (lexicographic, arbitrary but stable) so two sites
+// created in the same millisecond still resolve to a strict order instead
+// of tying for the same rank — same tie-break annotateActiveSites uses for
+// its in-memory ranking, so the two never disagree on a tie.
+async function countSitesCreatedUpTo(userId, createdAt, siteId) {
+    return prisma.site.count({
+        where: {
+            userId,
+            OR: [
+                {createdAt: {lt: createdAt}},
+                {createdAt, id: {lte: siteId}},
+            ],
+        },
+    });
+}
+
 module.exports = {
-    createSiteIfUnderLimit, findSiteById, findSitesByUserId, updateApiKey, findUserPlan
+    createSiteIfUnderLimit, findSiteById, findSitesByUserId, updateApiKey, findUserPlan, countSitesCreatedUpTo
 }
