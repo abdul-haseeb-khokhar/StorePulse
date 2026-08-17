@@ -111,6 +111,14 @@ async function listUsersWithSiteCounts() {
     });
 }
 
+// Backs the pending-count badge on the admin nav's "Payment Requests" link
+// — a plain count, not a stored/dismissable notification, so it always
+// reflects exactly what's still waiting for review right now and needs no
+// read/unread state to track.
+async function countPendingPaymentRequests() {
+    return prisma.paymentRequest.count({where: {status: 'Pending'}});
+}
+
 async function createAdminLog({adminId, action, targetedUserId}) {
     return prisma.adminLog.create({
         data: {adminId, action, targetedUserId}
@@ -151,5 +159,5 @@ async function listAdminLogs({skip, take}) {
 
 module.exports = {
     updateUserStatus, listUsers, findUserByIdWithSites, listSites, getPlatformStats, createAdminLog,
-    listUsersWithSiteCounts, listAdminLogs,
+    listUsersWithSiteCounts, listAdminLogs, countPendingPaymentRequests,
 }

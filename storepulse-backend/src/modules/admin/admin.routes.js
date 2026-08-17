@@ -3,6 +3,7 @@ const {
     updateUserStatusController, listUsersController, getUserDetailController, listSitesController,
     getPlatformStatsController, setUserPlanController, listPaymentRequestsController, reviewPaymentRequestController,
     listOverLimitUsersController, listAdminLogsController, getUserBillingHistoryController,
+    getPendingPaymentRequestCountController,
 } = require('./admin.controller');
 const protectAdmin = require('../../middleware/protectAdmin');
 const requireSuperAdmin = require('../../middleware/requireSuperAdmin');
@@ -29,6 +30,11 @@ router.get('/users/:id/history', validate(userBillingHistorySchema), getUserBill
 
 router.get('/sites', validate(listSitesSchema), listSitesController);
 
+// Must come before /payment-requests — same reasoning as /users/over-limit
+// above: a literal path never actually collides with a plain GET / on the
+// same router, but keeping the more specific route first matches that
+// convention rather than relying on the distinction not mattering here.
+router.get('/payment-requests/pending-count', getPendingPaymentRequestCountController);
 router.get('/payment-requests', validate(listPaymentRequestsSchema), listPaymentRequestsController);
 router.patch('/payment-requests/:id', validate(reviewPaymentRequestSchema), reviewPaymentRequestController);
 

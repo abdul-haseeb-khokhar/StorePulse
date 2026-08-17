@@ -5,11 +5,16 @@ import { Menu, X } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import Button from "./Button";
 import { drawerSpring, useReducedMotion } from "../../lib/motion";
+import { isAuthenticated } from "../../lib/auth";
 
 /**
  * DocsHeader — Dedicated Header for Documentation Page (`/docs`).
- * Center: Overview & Docs centered in the middle of the screen.
- * Right: Log In & Sign Up buttons (desktop & mobile drawer).
+ * `/docs` is reachable both by signed-out visitors (from the landing page)
+ * and signed-in users (from AppHeader's nav) — RequireGuest would bounce a
+ * signed-in user straight back to /dashboard if they followed "Overview" or
+ * "Log In", so both are swapped for a "Dashboard" link/button instead.
+ * Signed-out: Overview & Docs centered, Log In & Sign Up on the right.
+ * Signed-in: Dashboard & Docs centered, single Dashboard button on the right.
  */
 export default function DocsHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -19,6 +24,8 @@ export default function DocsHeader() {
   const closeButtonRef = useRef(null);
   const drawerId = useId();
   const reduceMotion = useReducedMotion();
+  const loggedIn = isAuthenticated();
+  const homeTo = loggedIn ? "/dashboard" : "/";
 
   useEffect(() => {
     if (mobileOpen) {
@@ -33,7 +40,7 @@ export default function DocsHeader() {
   }, [mobileOpen]);
 
   const links = [
-    { to: "/", label: "Overview", end: true },
+    { to: homeTo, label: loggedIn ? "Dashboard" : "Overview", end: true },
     { to: "/docs", label: "Docs" },
   ];
 
@@ -47,7 +54,7 @@ export default function DocsHeader() {
           
           {/* Left Cluster: Logo + Vertical Divider + Theme Toggle */}
           <div className="flex items-center gap-3 shrink-0">
-            <Link to="/" className="flex items-center gap-2 shrink-0" aria-label="StorePulse Homepage">
+            <Link to={homeTo} className="flex items-center gap-2 shrink-0" aria-label="StorePulse Homepage">
               <img
                 src="/STOREPULSE-LOGOS/RBG-LOGO/rbglogo2.png"
                 alt="StorePulse"
@@ -83,18 +90,28 @@ export default function DocsHeader() {
             </nav>
           </div>
 
-          {/* Right Action Slot (Log In & Sign Up) */}
+          {/* Right Action Slot — Dashboard button when signed in, Log In & Sign Up otherwise */}
           <div className="hidden lg:flex items-center gap-3 shrink-0">
-            <Link to="/login">
-              <Button variant="outline" size="sm">
-                Log In
-              </Button>
-            </Link>
-            <Link to="/signup">
-              <Button variant="primary" size="sm">
-                Sign Up
-              </Button>
-            </Link>
+            {loggedIn ? (
+              <Link to="/dashboard">
+                <Button variant="primary" size="sm">
+                  Go to Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="outline" size="sm">
+                    Log In
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button variant="primary" size="sm">
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Control Slot */}
@@ -144,7 +161,7 @@ export default function DocsHeader() {
               transition={reduceMotion ? { duration: 0 } : drawerSpring}
             >
               <div className="flex items-center justify-between pb-4 border-b border-[var(--divider)]">
-                <Link to="/" onClick={() => setMobileOpen(false)}>
+                <Link to={homeTo} onClick={() => setMobileOpen(false)}>
                   <img
                     src="/STOREPULSE-LOGOS/RBG-LOGO/rbglogo2.png"
                     alt="StorePulse"
@@ -182,16 +199,26 @@ export default function DocsHeader() {
               </div>
 
               <div className="mt-auto pt-4 border-t border-[var(--divider)] flex flex-col gap-3">
-                <Link to="/login" onClick={() => setMobileOpen(false)}>
-                  <Button variant="outline" block>
-                    Log In
-                  </Button>
-                </Link>
-                <Link to="/signup" onClick={() => setMobileOpen(false)}>
-                  <Button variant="primary" block>
-                    Sign Up
-                  </Button>
-                </Link>
+                {loggedIn ? (
+                  <Link to="/dashboard" onClick={() => setMobileOpen(false)}>
+                    <Button variant="primary" block>
+                      Go to Dashboard
+                    </Button>
+                  </Link>
+                ) : (
+                  <>
+                    <Link to="/login" onClick={() => setMobileOpen(false)}>
+                      <Button variant="outline" block>
+                        Log In
+                      </Button>
+                    </Link>
+                    <Link to="/signup" onClick={() => setMobileOpen(false)}>
+                      <Button variant="primary" block>
+                        Sign Up
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </motion.div>
           </>

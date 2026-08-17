@@ -6,6 +6,7 @@ import Button from "./Button";
 import Card from "./Card";
 import { Eyebrow } from "./Tag";
 import { PLANS } from "../../lib/landingData";
+import { formatPKR } from "../../lib/billing";
 import { containerStagger, itemFadeUp, useReducedMotion } from "../../lib/motion";
 
 export default function PricingSection() {
@@ -62,7 +63,7 @@ export default function PricingSection() {
         className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch pt-2"
       >
         {PLANS.map((plan) => {
-          const price = annual ? plan.annualPrice : plan.monthlyPrice;
+          const price = annual ? plan.annualPricePKR : plan.monthlyPricePKR;
           return (
             <motion.div key={plan.id} variants={reduceMotion ? undefined : itemFadeUp}>
               <Card
@@ -90,9 +91,9 @@ export default function PricingSection() {
 
                     <div className="pt-2 flex items-baseline gap-1">
                       <span className="text-4xl font-extrabold text-[var(--ink)] font-sora">
-                        ${price}
+                        {formatPKR(price)}
                       </span>
-                      <span className="text-xs text-[var(--muted)]">/month</span>
+                      {price > 0 && <span className="text-xs text-[var(--muted)]">/month</span>}
                       {annual && price > 0 && (
                         <span className="text-[10px] text-[var(--muted)] ml-1 font-medium">
                           (billed annually)

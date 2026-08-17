@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useId } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu, X, User, CreditCard, LayoutDashboard, Globe } from "lucide-react";
+import { Menu, X, User, CreditCard, LayoutDashboard, Globe, FileText } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { drawerSpring, useReducedMotion } from "../../lib/motion";
 
@@ -35,6 +35,7 @@ export default function AppHeader() {
     { to: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
     { to: "/sites", label: "Sites", icon: <Globe className="h-4 w-4" /> },
     { to: "/billing", label: "Billing", icon: <CreditCard className="h-4 w-4" /> },
+    { to: "/docs", label: "Docs", icon: <FileText className="h-4 w-4" /> },
     { to: "/settings", label: "Profile", icon: <User className="h-4 w-4" /> },
   ];
 

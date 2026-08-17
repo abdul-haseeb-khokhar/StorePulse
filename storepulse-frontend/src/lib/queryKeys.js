@@ -28,6 +28,7 @@ export const queryKeys = {
     },
     admins: ["admin", "admins"],
     paymentRequests: (params) => ["admin", "payment-requests", params],
+    paymentRequestsPendingCount: ["admin", "payment-requests", "pending-count"],
     logs: (params) => ["admin", "logs", params],
   },
 };

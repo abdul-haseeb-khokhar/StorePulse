@@ -1,6 +1,6 @@
 const {
     updateUserStatus, listUsers, findUserByIdWithSites, listSites, getPlatformStats, createAdminLog,
-    listUsersWithSiteCounts, listAdminLogs,
+    listUsersWithSiteCounts, listAdminLogs, countPendingPaymentRequests,
 } = require('./admin.repository');
 const {findUserById} = require('../auth/auth.repository')
 const {findSitesByUserId} = require('../sites/sites.repository');
@@ -284,8 +284,14 @@ async function listAdminLogsService({page, limit}) {
     return {logs, total, page, limit, totalPages: Math.ceil(total / limit) || 1};
 }
 
+async function getPendingPaymentRequestCountService() {
+    const count = await countPendingPaymentRequests();
+    return {count};
+}
+
 module.exports = {
     updateUserStatusService, listUsersService, getUserDetailService, listSitesService, getPlatformStats,
     setUserPlanService, listPaymentRequestsService, reviewPaymentRequestService,
     listOverLimitUsersService, listAdminLogsService, getUserBillingHistoryService,
+    getPendingPaymentRequestCountService,
 }

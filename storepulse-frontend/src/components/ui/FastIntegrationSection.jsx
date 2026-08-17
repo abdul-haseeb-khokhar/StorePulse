@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Check, Copy, Code2, ArrowRight } from "lucide-react";
+import { Code2, ArrowRight } from "lucide-react";
 import CodeBlock from "./CodeBlock";
 import { Eyebrow } from "./Tag";
 import { API_BASE_URL } from "../../lib/api";
@@ -27,20 +27,12 @@ const SNIPPETS = [
 
 export default function FastIntegrationSection() {
   const [activeTab, setActiveTab] = useState("html");
-  const [copied, setCopied] = useState(false);
   const reduceMotion = useReducedMotion();
 
   const reveal = (variants) =>
     reduceMotion ? {} : { variants, initial: "hidden", whileInView: "visible", viewport: { once: true, margin: "-60px" } };
 
   const currentSnippet = SNIPPETS.find((s) => s.id === activeTab);
-
-  const handleCopy = () => {
-    if (!currentSnippet) return;
-    navigator.clipboard.writeText(currentSnippet.code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   return (
     <section id="integration" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-16 flex flex-col gap-8">
@@ -60,45 +52,22 @@ export default function FastIntegrationSection() {
       <motion.div {...reveal(containerStagger)} className="max-w-4xl w-full mx-auto">
         <div className="rounded-2xl border border-[var(--divider-soft)] bg-[var(--paper-card)] shadow-sm overflow-hidden">
           
-          {/* Header Bar with Tabs & Copy Button */}
-          <div className="px-3 sm:px-4 py-2.5 bg-[var(--paper)] border-b border-[var(--divider-soft)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
-              <Code2 className="h-4 w-4 text-[#DDBB55] shrink-0 mr-1 hidden sm:block" />
-              {SNIPPETS.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
-                    activeTab === tab.id
-                      ? "bg-[#DDBB55]/15 text-[#DDBB55] border border-[#DDBB55]/30 font-semibold shadow-xs"
-                      : "text-[var(--muted)] hover:text-[var(--ink)]"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={handleCopy}
-              className={`inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer shrink-0 ${
-                copied
-                  ? "bg-[#DDBB55]/15 text-[#DDBB55] border-[#DDBB55]/40 font-semibold"
-                  : "bg-[var(--paper-card)] text-[var(--ink)] border-[var(--divider-soft)] hover:border-[#DDBB55]/50"
-              }`}
-            >
-              {copied ? (
-                <>
-                  <Check className="h-3.5 w-3.5 text-[#DDBB55]" />
-                  <span>Copied!</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="h-3.5 w-3.5 text-[var(--muted)]" />
-                  <span>Copy script</span>
-                </>
-              )}
-            </button>
+          {/* Header Bar with Tabs */}
+          <div className="px-3 sm:px-4 py-2.5 bg-[var(--paper)] border-b border-[var(--divider-soft)] flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+            <Code2 className="h-4 w-4 text-[#DDBB55] shrink-0 mr-1 hidden sm:block" />
+            {SNIPPETS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
+                  activeTab === tab.id
+                    ? "bg-[#DDBB55]/15 text-[#DDBB55] border border-[#DDBB55]/30 font-semibold shadow-xs"
+                    : "text-[var(--muted)] hover:text-[var(--ink)]"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
 
           {/* Snippet Code Area */}

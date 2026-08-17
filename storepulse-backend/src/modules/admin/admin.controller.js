@@ -2,6 +2,7 @@ const {
     updateUserStatusService, listUsersService, getUserDetailService, listSitesService, getPlatformStats,
     setUserPlanService, listPaymentRequestsService, reviewPaymentRequestService,
     listOverLimitUsersService, listAdminLogsService, getUserBillingHistoryService,
+    getPendingPaymentRequestCountService,
 } = require('./admin.service');
 
 async function updateUserStatusController(req, res, next) {
@@ -133,8 +134,19 @@ async function getUserBillingHistoryController(req, res, next) {
     }
 }
 
+async function getPendingPaymentRequestCountController(req, res, next) {
+    try {
+        const result = await getPendingPaymentRequestCountService();
+
+        res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports = {
     updateUserStatusController, listUsersController, getUserDetailController, listSitesController,
     getPlatformStatsController, setUserPlanController, listPaymentRequestsController, reviewPaymentRequestController,
     listOverLimitUsersController, listAdminLogsController, getUserBillingHistoryController,
+    getPendingPaymentRequestCountController,
 }
