@@ -1,13 +1,24 @@
 import { useState, useRef, useEffect, useId } from "react";
 import { Link, NavLink } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu, X, User, CreditCard, LayoutDashboard, Globe, FileText } from "lucide-react";
+import { Menu, X, User, CreditCard, LayoutDashboard, Globe, FileText, Bell } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import NavBadge from "./NavBadge";
 import { drawerSpring, useReducedMotion } from "../../lib/motion";
+import api from "../../lib/api";
+import { queryKeys } from "../../lib/queryKeys";
+
+// Same reasoning as AdminLayout's pending-count poll: this is "how many are
+// unread right now," not a real-time feed, so a periodic refetch is enough.
+// Also refreshed on demand — NotificationsList.jsx's mark-read mutations
+// invalidate this same query key, so reading a notification updates the
+// badge immediately rather than waiting out the interval.
+const UNREAD_COUNT_POLL_MS = 30_000;
 
 /**
  * AppHeader — Dedicated Header for Authenticated Screens (`AppLayout.jsx`).
- * Right: Dashboard, Sites, Billing, Profile.
+ * Right: Dashboard, Sites, Billing, Notifications, Docs, Profile.
  * NO Log In or Sign Up buttons anywhere (neither desktop nor mobile drawer).
  */
 export default function AppHeader() {
@@ -31,10 +42,21 @@ export default function AppHeader() {
     };
   }, [mobileOpen]);
 
+  const unreadCountQuery = useQuery({
+    queryKey: queryKeys.notifications.list({ page: 1, limit: 1 }),
+    queryFn: async () => {
+      const { data } = await api.get("/notifications", { params: { page: 1, limit: 1 } });
+      return data;
+    },
+    refetchInterval: UNREAD_COUNT_POLL_MS,
+  });
+  const unreadCount = unreadCountQuery.data?.unreadCount > 0 ? unreadCountQuery.data.unreadCount : undefined;
+
   const links = [
     { to: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
     { to: "/sites", label: "Sites", icon: <Globe className="h-4 w-4" /> },
     { to: "/billing", label: "Billing", icon: <CreditCard className="h-4 w-4" /> },
+    { to: "/notifications", label: "Notifications", icon: <Bell className="h-4 w-4" />, badge: unreadCount },
     { to: "/docs", label: "Docs", icon: <FileText className="h-4 w-4" /> },
     { to: "/settings", label: "Profile", icon: <User className="h-4 w-4" /> },
   ];
@@ -81,6 +103,7 @@ export default function AppHeader() {
                 >
                   {link.icon}
                   <span>{link.label}</span>
+                  <NavBadge count={link.badge} label="unread" />
                 </NavLink>
               ))}
             </nav>
@@ -163,10 +186,11 @@ export default function AppHeader() {
                     to={link.to}
                     end={link.end}
                     onClick={() => setMobileOpen(false)}
-                    className="px-3 py-2.5 text-sm font-semibold text-[var(--ink)] hover:text-[#DDBB55] flex items-center gap-2 rounded-xl hover:bg-[var(--paper-card)]"
+                    className="relative px-3 py-2.5 text-sm font-semibold text-[var(--ink)] hover:text-[#DDBB55] flex items-center gap-2 rounded-xl hover:bg-[var(--paper-card)]"
                   >
                     {link.icon}
                     <span>{link.label}</span>
+                    <NavBadge count={link.badge} label="unread" />
                   </NavLink>
                 ))}
               </div>

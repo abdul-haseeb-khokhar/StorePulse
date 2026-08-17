@@ -13,6 +13,7 @@ import SiteSetup from "./pages/SiteSetup";
 import SiteSettings from "./pages/SiteSettings";
 import SitesList from "./pages/SitesList";
 import Dashboard from "./pages/Dashboard";
+import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
 import Billing from "./pages/Billing";
 import BillingPlan from "./pages/BillingPlan";
@@ -60,6 +61,7 @@ export default function App() {
             <Route path="/sites/new" element={<AddSite />} />
             <Route path="/sites/:siteId/setup" element={<SiteSetup />} />
             <Route path="/sites/:siteId/settings" element={<SiteSettings />} />
+            <Route path="/notifications" element={<Notifications />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/billing" element={<Billing />} />
             <Route path="/billing/plan" element={<BillingPlan />} />

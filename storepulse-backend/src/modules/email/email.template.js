@@ -189,7 +189,67 @@ function paymentRequestReviewedTemplate({fullName, status, plan, reviewNote, bil
     };
 }
 
+// Row 6 of the notification scoping pass — syncExpiredSubscription
+// (subscription.service.js) applies this downgrade lazily, on whatever
+// request happens to notice the period has ended, with nothing telling the
+// user it happened. `wasScheduled` distinguishes the two reasons it can
+// fire (see recordSubscriptionHistory's reason strings there): a plan that
+// simply lapsed vs. a self-service cancel finally landing — the user asked
+// for the second one, so the copy confirms it rather than breaking it as news.
+function subscriptionExpiredTemplate({fullName, previousPlan, wasScheduled, billingUrl}) {
+    const kicker = 'Account';
+    const heading = 'Your plan is now Free';
+    const bodyText = wasScheduled
+        ? `Hi ${escapeHtml(fullName)}, as scheduled, your cancellation has taken effect and your account has moved from <strong>${previousPlan}</strong> to the Free plan.`
+        : `Hi ${escapeHtml(fullName)}, your <strong>${previousPlan}</strong> plan's billing period ended without a renewal, so your account has moved to the Free plan.`;
+    const html = baseLayout({
+        kicker,
+        heading,
+        bodyText,
+        buttonText: 'View billing',
+        buttonUrl: billingUrl,
+        footerNote: `Want to get back on ${previousPlan}? You can submit a new payment request anytime from the billing page.`,
+    });
+    const text = `Hi ${fullName},\n\n${wasScheduled
+        ? `As scheduled, your cancellation has taken effect and your account has moved from ${previousPlan} to the Free plan.`
+        : `Your ${previousPlan} plan's billing period ended without a renewal, so your account has moved to the Free plan.`
+    }\n\nView your billing: ${billingUrl}`;
+
+    return {subject: 'Your StorePulse plan is now Free', html, text};
+}
+
+// Row 7 of the notification scoping pass — a plan change (admin-set or a
+// lazy expiry) can lower maxSites below what a user's already-created
+// sites need, silently pushing the newest ones out of the active ranking
+// (see sites.service.js's annotateActiveSites/getNewlyDeactivatedSites).
+// Those sites keep accepting events from their embedded snippet either
+// way — ingest doesn't reject them — they just stop counting, which is a
+// confusing thing to notice only by an analytics dashboard looking wrong.
+function sitesDeactivatedTemplate({fullName, sites, plan, billingUrl}) {
+    const kicker = 'Sites';
+    const heading = sites.length === 1 ? 'One of your sites is now inactive' : `${sites.length} of your sites are now inactive`;
+    const siteList = sites.map((site) => `${escapeHtml(site.name)} (${escapeHtml(site.domain)})`).join(', ');
+    const bodyText = `Hi ${escapeHtml(fullName)}, your ${escapeHtml(plan)} plan's site limit no longer covers: <strong>${siteList}</strong>. They'll keep receiving events, but won't appear in your dashboard until you upgrade or free up a slot.`;
+    const html = baseLayout({
+        kicker,
+        heading,
+        bodyText,
+        buttonText: 'View sites',
+        buttonUrl: billingUrl,
+        footerNote: 'Upgrading your plan reactivates them immediately — no data is lost while a site is inactive.',
+    });
+    const rawSiteList = sites.map((site) => `${site.name} (${site.domain})`).join(', ');
+    const text = `Hi ${fullName},\n\nYour ${plan} plan no longer covers: ${rawSiteList}.\n\nThey'll keep receiving events, but won't appear in your dashboard until you upgrade or free up a slot.\n\n${billingUrl}`;
+
+    return {
+        subject: sites.length === 1 ? 'One of your StorePulse sites is now inactive' : `${sites.length} of your StorePulse sites are now inactive`,
+        html,
+        text,
+    };
+}
+
 module.exports = {
     verificationEmailTemplate, emailChangeTemplate, passwordResetTemplate, adminInviteTemplate,
     planChangedTemplate, accountStatusChangedTemplate, paymentRequestReviewedTemplate,
+    subscriptionExpiredTemplate, sitesDeactivatedTemplate,
 }

@@ -10,7 +10,9 @@ const {syncExpiredSubscription, recordSubscriptionHistory, getSubscriptionHistor
 const {
     listRequests, findRequestById, claimRequestForReview, findPendingRequestByUserId, updateRequestStatus,
 } = require('../paymentRequest/paymentRequest.repository');
-const {sendPlanChangedEmail, sendAccountStatusChangedEmail, sendPaymentRequestReviewedEmail} = require('../email/email.service');
+const {sendPlanChangedEmail, sendAccountStatusChangedEmail, sendPaymentRequestReviewedEmail, sendSitesDeactivatedEmail} = require('../email/email.service');
+const {getNewlyDeactivatedSites} = require('../sites/sites.service');
+const {notifyPlanChanged, notifySitesDeactivated, notifyPaymentRequestReviewed} = require('../notification/notification.service');
 const {periodEndFromCycle, resolveEffectivePlan, PLAN_LIMITS} = require('../../config/plans');
 const AppError = require('../../utils/AppError');
 
@@ -173,6 +175,22 @@ async function setUserPlanService({userId, plan, billingCycle, status, adminId})
         fullName: user.fullName, email: user.email, plan,
         billingCycle: persistedBillingCycle, currentPeriodEnd,
     });
+    // In-app counterpart to the email above — same best-effort treatment,
+    // same call site, just a second channel rather than a replacement.
+    await notifyBestEffort(() => notifyPlanChanged({userId, plan, billingCycle: persistedBillingCycle}));
+
+    // A direct downgrade can push some of this user's already-created sites
+    // out of the active ranking (see sites.service.js's
+    // getNewlyDeactivatedSites) — `sites` above is already the full,
+    // unfiltered list this needs, fetched a moment ago for cache
+    // invalidation, so this costs no extra query.
+    const deactivatedSites = getNewlyDeactivatedSites(sites, currentPlan, plan);
+    if (deactivatedSites.length > 0) {
+        await notifyBestEffort(() => sendSitesDeactivatedEmail({
+            fullName: user.fullName, email: user.email, sites: deactivatedSites, plan,
+        }));
+        await notifyBestEffort(() => notifySitesDeactivated({userId, sites: deactivatedSites, plan}));
+    }
 
     return {subscription, message: `User plan set to ${plan}`};
 }
@@ -199,6 +217,9 @@ async function supersedePendingRequest({userId, adminId, user}) {
             fullName: user.fullName, email: user.email, status: 'Rejected',
             plan: supersededRequest.plan, reviewNote,
         });
+        await notifyBestEffort(() => notifyPaymentRequestReviewed({
+            userId, status: 'Rejected', plan: supersededRequest.plan,
+        }));
     } catch (error) {
         console.error('Failed to auto-resolve superseded payment request:', error.message);
     }
@@ -245,6 +266,7 @@ async function reviewPaymentRequestService({requestId, status, note, adminId}) {
     await notifyBestEffort(sendPaymentRequestReviewedEmail, {
         fullName: request.user.fullName, email: request.user.email, status, plan: request.plan, reviewNote: note,
     });
+    await notifyBestEffort(() => notifyPaymentRequestReviewed({userId: request.userId, status, plan: request.plan}));
 
     return {
         request: updated,

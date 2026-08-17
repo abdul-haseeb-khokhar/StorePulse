@@ -3,6 +3,7 @@ import { Link, NavLink } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import NavBadge from "./NavBadge";
 import { drawerSpring, useReducedMotion } from "../../lib/motion";
 
 /**
@@ -16,23 +17,6 @@ import { drawerSpring, useReducedMotion } from "../../lib/motion";
  * dedicated HomeHeader now, so that path was unreachable. Removed rather
  * than kept "just in case" — `links`/`actions` are required.
  */
-// Small count badge parked at the top-right corner of a nav link (e.g. a
-// pending-count on AdminLayout's "Payment Requests" link). Anchors to the
-// NavLink itself, not just its icon, so it needs a positioned ancestor —
-// .nav-link already is one (see index.css, originally for the underline
-// treatment); the mobile drawer link isn't by default, so `relative` is
-// added there explicitly below.
-function NavBadge({ count }) {
-  if (count == null) return null;
-  return (
-    <span
-      className="absolute -top-1.5 -right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--brick)] px-1 text-[10px] font-semibold leading-none text-white"
-      aria-label={`${count} pending`}
-    >
-      {count > 99 ? "99+" : count}
-    </span>
-  );
-}
 
 export default function Nav({ links, actions }) {
   const [mobileOpen, setMobileOpen] = useState(false);

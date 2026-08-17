@@ -29,6 +29,29 @@ function annotateActiveSites(sites, maxSites) {
     return sites.map((site) => ({...site, active: activeIds.has(site.id)}));
 }
 
+// A plan change that lowers maxSites can silently push some already-created
+// sites out of the active ranking — annotateActiveSites already recomputes
+// that live on every getUserSites() read, so the sites themselves need no
+// write here. This just diffs that same ranking across the old and new
+// plan so the caller (subscription.service.js, admin.service.js) knows
+// exactly which sites just flipped, in order to tell the user about it.
+// Returns [] for a same-or-higher maxSites change — nothing can newly
+// deactivate by gaining room, only by losing it.
+function getNewlyDeactivatedSites(sites, oldPlan, newPlan) {
+    const oldMax = (PLAN_LIMITS[oldPlan] || PLAN_LIMITS.Free).maxSites;
+    const newMax = (PLAN_LIMITS[newPlan] || PLAN_LIMITS.Free).maxSites;
+    if (newMax >= oldMax) return [];
+
+    const wasActiveIds = new Set(
+        annotateActiveSites(sites, oldMax).filter((site) => site.active).map((site) => site.id)
+    );
+    const isStillActiveIds = new Set(
+        annotateActiveSites(sites, newMax).filter((site) => site.active).map((site) => site.id)
+    );
+
+    return sites.filter((site) => wasActiveIds.has(site.id) && !isStillActiveIds.has(site.id));
+}
+
 async function isSiteActive(site, plan) {
     const {maxSites} = PLAN_LIMITS[plan] || PLAN_LIMITS.Free;
     if (maxSites === Infinity) return true;
@@ -120,5 +143,5 @@ async function regenerateApiKey({siteId, userId}) {
 }
 
 module.exports = {
-    addSite, getUserSites, regenerateApiKey, getSiteById, getUsageSummary
+    addSite, getUserSites, regenerateApiKey, getSiteById, getUsageSummary, getNewlyDeactivatedSites,
 }

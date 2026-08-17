@@ -2,6 +2,7 @@ const {sendEmail} = require('./email.provider');
 const {
     verificationEmailTemplate, emailChangeTemplate, passwordResetTemplate, adminInviteTemplate,
     planChangedTemplate, accountStatusChangedTemplate, paymentRequestReviewedTemplate,
+    subscriptionExpiredTemplate, sitesDeactivatedTemplate,
 } = require('./email.template');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
@@ -59,7 +60,22 @@ async function sendPaymentRequestReviewedEmail({fullName, email, status, plan, r
     return sendEmail({to: email, subject, html, text});
 }
 
+async function sendSubscriptionExpiredEmail({fullName, email, previousPlan, wasScheduled}) {
+    const billingUrl = `${FRONTEND_URL}/billing`;
+    const {subject, html, text} = subscriptionExpiredTemplate({fullName, previousPlan, wasScheduled, billingUrl});
+
+    return sendEmail({to: email, subject, html, text});
+}
+
+async function sendSitesDeactivatedEmail({fullName, email, sites, plan}) {
+    const sitesUrl = `${FRONTEND_URL}/sites`;
+    const {subject, html, text} = sitesDeactivatedTemplate({fullName, sites, plan, billingUrl: sitesUrl});
+
+    return sendEmail({to: email, subject, html, text});
+}
+
 module.exports = {
     sendVerificationEmail, sendEmailChangeEmail, sendPasswordResetEmail, sendAdminInviteEmail,
     sendPlanChangedEmail, sendAccountStatusChangedEmail, sendPaymentRequestReviewedEmail,
+    sendSubscriptionExpiredEmail, sendSitesDeactivatedEmail,
 };

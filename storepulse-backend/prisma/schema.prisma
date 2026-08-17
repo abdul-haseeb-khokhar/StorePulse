@@ -36,10 +36,42 @@ model User {
   subscription Subscription?
   paymentRequests PaymentRequest[]
   subscriptionHistory SubscriptionHistory[]
+  notifications Notification[]
 
   @@index([emailVerificationToken])
   @@index([pendingEmailToken])
   @@index([passwordResetToken])
+}
+
+// User-facing only — the one admin-facing case in this app (a new payment
+// request needing review) is already served by a live pending-count query
+// on PaymentRequest (see admin.repository.js's countPendingPaymentRequests)
+// rather than a persisted row here, since there's no "read" state that
+// actually needs tracking for a queue that clears itself the moment it's
+// acted on. This table is for the opposite shape: a one-off fact about
+// something that already happened to a specific user, which they should be
+// able to come back and see later — a live count can't represent that.
+model Notification {
+  id        String           @id @default(uuid())
+  type      NotificationType
+  message   String
+  // Optional route to send the user to when they click it, e.g. "/billing"
+  // or "/sites".
+  link      String?
+  read      Boolean          @default(false)
+  userId    String
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, read, createdAt])
+}
+
+enum NotificationType {
+  PLAN_CHANGED
+  SUBSCRIPTION_EXPIRED
+  SITES_DEACTIVATED
+  PAYMENT_REQUEST_REVIEWED
 }
 
 model Site {

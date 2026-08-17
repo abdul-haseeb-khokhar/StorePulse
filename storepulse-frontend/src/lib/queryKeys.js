@@ -11,6 +11,9 @@ export const queryKeys = {
     topReferrers: (siteId, range) => ["analytics", siteId, "top-referrers", range],
   },
   me: ["me"],
+  notifications: {
+    list: (params) => ["notifications", params],
+  },
   billing: {
     paymentRequests: (params) => ["billing", "payment-requests", params],
     history: (params) => ["billing", "history", params],

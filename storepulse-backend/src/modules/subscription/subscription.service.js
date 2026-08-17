@@ -1,5 +1,23 @@
 const {upsertUserSubscription, createSubscriptionHistory, listSubscriptionHistory, findSubscriptionByUserId} = require('./subscription.repository');
+const {findUserById} = require('../auth/auth.repository');
+const {findSitesByUserId} = require('../sites/sites.repository');
+const {getNewlyDeactivatedSites} = require('../sites/sites.service');
+const {sendSubscriptionExpiredEmail, sendSitesDeactivatedEmail} = require('../email/email.service');
+const {notifySubscriptionExpired, notifySitesDeactivated} = require('../notification/notification.service');
 const AppError = require('../../utils/AppError');
+
+// Same reasoning as admin.service.js's notifyBestEffort / billing.service.js's
+// local copy: by the time either caller below runs, the downgrade this is
+// reporting on has already committed, so a Resend outage shouldn't turn a
+// successful (if unwelcome) plan sync into a request failure. Logged, not
+// rethrown.
+async function notifyBestEffort(fn) {
+    try {
+        await fn();
+    } catch (error) {
+        console.error('Notification email failed:', error.message);
+    }
+}
 
 // One row per real change, alongside whatever wrote it — never the only
 // record of a change (the Subscription row itself is), just the trail.
@@ -44,11 +62,40 @@ async function syncExpiredSubscription(userId, subscription) {
     const isExpired = subscription.currentPeriodEnd && new Date(subscription.currentPeriodEnd) < new Date();
     if (!isExpired) return subscription;
 
+    const previousPlan = subscription.plan;
+    const wasScheduled = Boolean(subscription.pendingPlan);
     const nextPlan = subscription.pendingPlan || 'Free';
     const updated = await upsertUserSubscription({userId, plan: nextPlan, status: 'Active', currentPeriodEnd: null});
     await recordSubscriptionHistory(userId, updated, {
-        reason: subscription.pendingPlan ? 'system:scheduled-cancel-applied' : 'system:period-expired',
+        reason: wasScheduled ? 'system:scheduled-cancel-applied' : 'system:period-expired',
     });
+
+    // Both of these only fire once per real transition — the guard clause
+    // above (`subscription.plan === 'Free'`) means a second call after this
+    // one has already landed finds the subscription already at Free and
+    // returns immediately, without re-entering this block. A user who was
+    // never told their plan lapsed (there's no scheduler here to catch this
+    // proactively — see [[project_storepulse_overview]] for why this is
+    // lazy in the first place) at least finds out the moment anything of
+    // theirs reads their subscription next (their own /auth/me, or an
+    // admin opening their detail page).
+    const user = await findUserById(userId);
+    if (user) {
+        await notifyBestEffort(() => sendSubscriptionExpiredEmail({
+            fullName: user.fullName, email: user.email, previousPlan, wasScheduled,
+        }));
+        await notifyBestEffort(() => notifySubscriptionExpired({userId, previousPlan, wasScheduled}));
+
+        const sites = await findSitesByUserId(userId);
+        const deactivatedSites = getNewlyDeactivatedSites(sites, previousPlan, nextPlan);
+        if (deactivatedSites.length > 0) {
+            await notifyBestEffort(() => sendSitesDeactivatedEmail({
+                fullName: user.fullName, email: user.email, sites: deactivatedSites, plan: nextPlan,
+            }));
+            await notifyBestEffort(() => notifySitesDeactivated({userId, sites: deactivatedSites, plan: nextPlan}));
+        }
+    }
+
     return updated;
 }
 
