@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, AlertTriangle, CheckCircle2, Ban, ExternalLink } from "lucide-react";
 import AuthLayout from "../layouts/AuthLayout";
 import Card from "../components/ui/Card";
 import Field from "../components/ui/Field";
 import Button from "../components/ui/Button";
 import api, { getApiErrorMessage, getFieldErrors } from "../lib/api";
 import { saveSession } from "../lib/auth";
+import { NYRON_CONTACT_URL } from "../lib/contact";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ export default function Login() {
   const [needsVerification, setNeedsVerification] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendSent, setResendSent] = useState(false);
+  const [banned, setBanned] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -28,18 +30,26 @@ export default function Login() {
     setFieldErrors({});
     setNeedsVerification(false);
     setResendSent(false);
+    setBanned(false);
     setLoading(true);
     try {
       const { data } = await api.post("/auth/login", { email, password });
       saveSession(data);
       navigate(redirectTo, { replace: true });
     } catch (err) {
-      if (err.response?.status === 403) {
+      // Both a banned account and an unverified email come back as 403 with
+      // no other distinguishing field except this code — without it, a
+      // banned user would also get the "resend verification link" banner
+      // below, which is wrong: there's no link that will ever let them in.
+      const isBanned = err.response?.data?.code === "ACCOUNT_BANNED";
+      if (isBanned) {
+        setBanned(true);
+      } else if (err.response?.status === 403) {
         setNeedsVerification(true);
       }
       const errors = getFieldErrors(err);
       setFieldErrors(errors);
-      if (Object.keys(errors).length === 0) {
+      if (Object.keys(errors).length === 0 && !isBanned) {
         setError(getApiErrorMessage(err, "Could not log in. Check your email and password."));
       }
     } finally {
@@ -120,6 +130,23 @@ export default function Login() {
             <div className="p-3 rounded-xl bg-[var(--brick-soft)]/20 border border-[var(--brick)]/30 text-xs text-[var(--brick)] flex items-start gap-2">
               <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
               <span>{error}</span>
+            </div>
+          )}
+
+          {/* Banned Account Banner — no resend/activation link, since there's
+              nothing to verify; the only way back in is admin support. */}
+          {banned && (
+            <div className="p-3 rounded-xl bg-[var(--brick-soft)]/20 border border-[var(--brick)]/30 text-xs text-[var(--brick)] flex flex-col gap-2.5">
+              <div className="flex items-start gap-2">
+                <Ban className="h-4 w-4 shrink-0 mt-0.5" />
+                <span>This account has been banned by an admin. Contact us if you think this is a mistake.</span>
+              </div>
+              <div className="pl-6">
+                <a href={NYRON_CONTACT_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-medium hover:underline">
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Contact Us
+                </a>
+              </div>
             </div>
           )}
 

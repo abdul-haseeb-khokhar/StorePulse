@@ -4,14 +4,20 @@ import { motion } from "framer-motion";
 import { Code2, ArrowRight } from "lucide-react";
 import CodeBlock from "./CodeBlock";
 import { Eyebrow } from "./Tag";
-import { API_BASE_URL } from "../../lib/api";
 import { containerStagger, itemFadeUp, useReducedMotion } from "../../lib/motion";
+
+// Deliberately NOT the real API_BASE_URL — this section renders on the
+// public landing page, visible to anyone including logged-out visitors, so
+// the actual backend host has no business appearing here. Signed-in users
+// get their real working snippet (real host + real site key) on their own
+// site's setup/settings page instead.
+const PUBLIC_SNIPPET_ORIGIN = "https://track.storepulse.io";
 
 const SNIPPETS = [
   {
     id: "html",
     label: "HTML / Universal",
-    code: `<!-- Add to <head> of your storefront -->\n<script src="${API_BASE_URL}/track.js"\n  data-site-key="sp_live_84da57d3461067b6aff00beb1fed7c3f"></script>`,
+    code: `<!-- Add to <head> of your storefront -->\n<script src="${PUBLIC_SNIPPET_ORIGIN}/track.js"\n  data-site-key="sp_live_your_site_key_here"></script>`,
   },
   {
     id: "product",
@@ -21,7 +27,7 @@ const SNIPPETS = [
   {
     id: "react",
     label: "React / Next.js",
-    code: `// Add to App.js or Next.js _document.js\n<script\n  src="${API_BASE_URL}/track.js"\n  data-site-key="sp_live_84da57d3461067b6aff00beb1fed7c3f"\n  async\n/>`,
+    code: `// Add to App.js or Next.js _document.js\n<script\n  src="${PUBLIC_SNIPPET_ORIGIN}/track.js"\n  data-site-key="sp_live_your_site_key_here"\n  async\n/>`,
   },
 ];
 

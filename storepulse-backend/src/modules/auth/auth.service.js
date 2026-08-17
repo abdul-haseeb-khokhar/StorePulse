@@ -54,7 +54,7 @@ async function login(email, password) {
     }
     
     if(user.status === 'Banned'){
-        throw new AppError('This user is banned by admin', 403);
+        throw new AppError('This user is banned by admin', 403, 'ACCOUNT_BANNED');
     }
 
     if(!user.isEmailVerified && user.status === 'Inactive') {

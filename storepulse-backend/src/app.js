@@ -53,7 +53,7 @@ app.use((err, req, res, next) => {
     const statusCode = err.statusCode || 500;
     const message = err.statusCode ? err.message : 'Something went wrong on server side'
 
-    res.status(statusCode).json({message})
+    res.status(statusCode).json(err.code ? { message, code: err.code } : { message })
 });
 
 module.exports = app;

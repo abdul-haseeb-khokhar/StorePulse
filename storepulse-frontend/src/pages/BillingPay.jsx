@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Mail, MessageCircle, CheckCircle2, Clock } from "lucide-react";
+import { Mail, MessageCircle, CheckCircle2, Clock, ExternalLink } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
 import Field from "../components/ui/Field";
@@ -11,7 +11,7 @@ import Skeleton from "../components/ui/Skeleton";
 import api, { getApiErrorMessage } from "../lib/api";
 import { queryKeys } from "../lib/queryKeys";
 import { PLANS } from "../lib/landingData";
-import { CONTACT_GMAIL_URL, CONTACT_WHATSAPP } from "../lib/contact";
+import { CONTACT_GMAIL_URL, NYRON_CONTACT_URL } from "../lib/contact";
 import { BANK_NAME, BANK_ACCOUNT_TITLE, BANK_ACCOUNT_NUMBER, BANK_IBAN, formatPKR, totalForCycle, buildPaymentNoticeUrl } from "../lib/billing";
 
 const CYCLE_OPTIONS = [
@@ -117,13 +117,9 @@ export default function BillingPay() {
               Switching to Free doesn't need a payment — contact us and we'll move your account down whenever you're ready.
             </p>
             <div className="flex items-center" style={{ gap: "var(--space-4)" }}>
-              <a href={CONTACT_GMAIL_URL} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm" style={{ gap: 6 }}>
-                <Mail className="h-4 w-4 text-muted" />
-                Email
-              </a>
-              <a href={`https://wa.me/${CONTACT_WHATSAPP}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm" style={{ gap: 6 }}>
-                <MessageCircle className="h-4 w-4 text-muted" />
-                WhatsApp
+              <a href={NYRON_CONTACT_URL} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm" style={{ gap: 6 }}>
+                <ExternalLink className="h-4 w-4 text-muted" />
+                Contact Us
               </a>
             </div>
           </Card>

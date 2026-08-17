@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Mail, MessageCircle } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
@@ -9,7 +9,7 @@ import CodeBlock from "../components/ui/CodeBlock";
 import Skeleton from "../components/ui/Skeleton";
 import api, { API_BASE_URL, getApiErrorMessage } from "../lib/api";
 import { queryKeys } from "../lib/queryKeys";
-import { CONTACT_GMAIL_URL, CONTACT_WHATSAPP } from "../lib/contact";
+import { NYRON_CONTACT_URL } from "../lib/contact";
 
 function SiteSetupSkeleton() {
   return (
@@ -91,24 +91,14 @@ export default function SiteSetup() {
             </p>
             <div className="flex items-center" style={{ gap: "var(--space-4)" }}>
               <a
-                href={CONTACT_GMAIL_URL}
+                href={NYRON_CONTACT_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center text-sm"
                 style={{ gap: 6 }}
               >
-                <Mail className="h-4 w-4 text-muted" />
-                Email
-              </a>
-              <a
-                href={`https://wa.me/${CONTACT_WHATSAPP}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center text-sm"
-                style={{ gap: 6 }}
-              >
-                <MessageCircle className="h-4 w-4 text-muted" />
-                WhatsApp
+                <ExternalLink className="h-4 w-4 text-muted" />
+                Contact Us
               </a>
             </div>
             <p className="card-body">

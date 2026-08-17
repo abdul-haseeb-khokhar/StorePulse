@@ -14,7 +14,11 @@ export const DOC_SECTIONS = [
 export const SCRIPT_SNIPPET = `<script src="${API_BASE_URL}/track.js"
   data-site-key="YOUR_SITE_KEY"></script>`;
 
-export const SITE_KEY_EXAMPLE = `sp_live_84da57d3461067b6aff00beb1fed7c3f`;
+// Fake but shaped exactly like a real key (sp_live_ + 32 hex chars, see
+// apiKey.js on the backend) so this reads as "here's what yours will look
+// like" rather than a literal fill-in-the-blank placeholder — it's not
+// wired to any real account or site.
+export const SITE_KEY_EXAMPLE = `sp_live_3f9a21bc7d84e6f019a4c58b2d7e0f31`;
 
 export const PRODUCT_CARD_SNIPPET = `<div class="product-card"
      data-storepulse-product-id="prod_123"
