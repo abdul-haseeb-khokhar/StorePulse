@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ExternalLink } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
 import Field from "../components/ui/Field";
@@ -9,9 +8,9 @@ import Button from "../components/ui/Button";
 import Dialog from "../components/ui/Dialog";
 import CodeBlock from "../components/ui/CodeBlock";
 import Skeleton from "../components/ui/Skeleton";
+import { ContactLink } from "../components/ui/ContactLink";
 import api, { API_BASE_URL, getApiErrorMessage } from "../lib/api";
 import { queryKeys } from "../lib/queryKeys";
-import { NYRON_CONTACT_URL } from "../lib/contact";
 
 function SiteSettingsSkeleton() {
   return (
@@ -150,16 +149,7 @@ export default function SiteSettings() {
               </p>
               <p className="card-body">Need a hand with integration? Reach us however&apos;s easiest:</p>
               <div className="flex items-center" style={{ gap: "var(--space-4)" }}>
-                <a
-                  href={NYRON_CONTACT_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center text-sm"
-                  style={{ gap: 6 }}
-                >
-                  <ExternalLink className="h-4 w-4 text-muted" />
-                  Contact Us
-                </a>
+                <ContactLink />
               </div>
             </Card>
           </>

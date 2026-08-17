@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, AlertTriangle, CheckCircle2, Ban, ExternalLink } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, AlertTriangle, CheckCircle2, Ban } from "lucide-react";
 import AuthLayout from "../layouts/AuthLayout";
 import Card from "../components/ui/Card";
 import Field from "../components/ui/Field";
 import Button from "../components/ui/Button";
+import { ContactLink } from "../components/ui/ContactLink";
 import api, { getApiErrorMessage, getFieldErrors } from "../lib/api";
 import { saveSession } from "../lib/auth";
-import { NYRON_CONTACT_URL } from "../lib/contact";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -142,10 +142,7 @@ export default function Login() {
                 <span>This account has been banned by an admin. Contact us if you think this is a mistake.</span>
               </div>
               <div className="pl-6">
-                <a href={NYRON_CONTACT_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-medium hover:underline">
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  Contact Us
-                </a>
+                <ContactLink variant="inline" />
               </div>
             </div>
           )}

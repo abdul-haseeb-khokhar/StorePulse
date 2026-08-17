@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
-import { ExternalLink } from "lucide-react";
-import { NYRON_CONTACT_URL } from "../../lib/contact";
+import { ContactLink } from "./ContactLink";
 
 const NAV_ITEMS = [
   { name: "OVERVIEW", href: "/#story" },
@@ -13,7 +12,6 @@ const NAV_ITEMS = [
 
 export default function SiteFooter({ navItems = null }) {
   const itemsToRender = navItems || NAV_ITEMS;
-  const isCustomNav = Boolean(navItems);
 
   return (
     <footer className="relative w-full bg-[var(--paper)] text-[var(--ink)] border-t border-[var(--divider-soft)] pt-8 pb-6 transition-colors duration-200 text-left">
@@ -43,18 +41,12 @@ export default function SiteFooter({ navItems = null }) {
             </p>
           </div>
 
-          {/* Circular Contact Button — routes to our company's contact page */}
+          {/* Contact CTA — routes to our company's contact page. A real
+              labeled button now, not a bare icon-only circle: the old
+              version relied entirely on a hover `title` tooltip, which
+              never fires on touch devices. */}
           <div className="flex items-center space-x-3">
-            <a
-              href={NYRON_CONTACT_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="p-2.5 rounded-full border border-[var(--divider-soft)] bg-[var(--paper-card)] text-[var(--ink)] hover:border-[#DDBB55] hover:text-[#DDBB55] transition-colors cursor-pointer"
-              aria-label="Contact Us"
-              title="Contact Us"
-            >
-              <ExternalLink className="h-4 w-4" />
-            </a>
+            <ContactLink />
           </div>
 
         </div>
@@ -72,18 +64,6 @@ export default function SiteFooter({ navItems = null }) {
                 <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#DDBB55] transition-all duration-200 ease-out group-hover:w-full" />
               </a>
             ))}
-            
-            {!isCustomNav && (
-              <a
-                href={NYRON_CONTACT_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="group relative inline-flex items-center font-sora text-xs font-bold tracking-wider text-[var(--ink)] hover:text-[#DDBB55] transition-colors duration-150 py-0.5 cursor-pointer"
-              >
-                <span>CONTACT</span>
-                <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#DDBB55] transition-all duration-200 ease-out group-hover:w-full" />
-              </a>
-            )}
           </div>
         </div>
 

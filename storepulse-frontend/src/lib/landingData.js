@@ -70,8 +70,8 @@ export const FAQS = [
     answer: "No. StorePulse uses an ultra-lightweight script (< 5KB).",
   },
   {
-    question: "How long does integration take on Shopify or WooCommerce?",
-    answer: "Under 2 minutes. You simply paste one line of script into your storefront's theme header. StorePulse automatically begins tracking pageviews and visitor telemetry immediately.",
+    question: "How long does integration take?",
+    answer: "Pageview tracking starts the moment you paste one script tag into your site's header — most people are live in a couple of minutes. Product-click tracking takes a little more: add two data attributes to your product card markup so StorePulse knows what was clicked. Full steps are in the docs.",
   },
   {
     question: "Is a credit card required to sign up?",

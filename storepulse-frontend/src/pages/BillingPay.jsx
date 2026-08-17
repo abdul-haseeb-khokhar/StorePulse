@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Mail, MessageCircle, CheckCircle2, Clock, ExternalLink } from "lucide-react";
+import { CheckCircle2, Clock } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
 import Field from "../components/ui/Field";
 import Button from "../components/ui/Button";
 import Seg from "../components/ui/Seg";
 import Skeleton from "../components/ui/Skeleton";
+import { ContactLink, ContactChannels } from "../components/ui/ContactLink";
 import api, { getApiErrorMessage } from "../lib/api";
 import { queryKeys } from "../lib/queryKeys";
 import { PLANS } from "../lib/landingData";
-import { CONTACT_GMAIL_URL, NYRON_CONTACT_URL } from "../lib/contact";
 import { BANK_NAME, BANK_ACCOUNT_TITLE, BANK_ACCOUNT_NUMBER, BANK_IBAN, formatPKR, totalForCycle, buildPaymentNoticeUrl } from "../lib/billing";
 
 const CYCLE_OPTIONS = [
@@ -117,10 +117,7 @@ export default function BillingPay() {
               Switching to Free doesn't need a payment — contact us and we'll move your account down whenever you're ready.
             </p>
             <div className="flex items-center" style={{ gap: "var(--space-4)" }}>
-              <a href={NYRON_CONTACT_URL} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm" style={{ gap: 6 }}>
-                <ExternalLink className="h-4 w-4 text-muted" />
-                Contact Us
-              </a>
+              <ContactLink />
             </div>
           </Card>
         ) : (
@@ -230,22 +227,7 @@ export default function BillingPay() {
               <p className="card-body" style={{ marginTop: "var(--space-3)" }}>
                 Share your receipt:
               </p>
-              <div className="flex items-center" style={{ gap: "var(--space-4)" }}>
-                <a
-                  href={buildPaymentNoticeUrl({ planName: plan.name, cycle, amount, email })}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center text-sm"
-                  style={{ gap: 6 }}
-                >
-                  <MessageCircle className="h-4 w-4 text-muted" />
-                  WhatsApp
-                </a>
-                <a href={CONTACT_GMAIL_URL} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm" style={{ gap: 6 }}>
-                  <Mail className="h-4 w-4 text-muted" />
-                  Email
-                </a>
-              </div>
+              <ContactChannels whatsappUrl={buildPaymentNoticeUrl({ planName: plan.name, cycle, amount, email })} />
             </Card>
           </>
         )}

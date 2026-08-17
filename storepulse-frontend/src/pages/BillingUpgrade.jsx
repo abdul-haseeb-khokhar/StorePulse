@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, ArrowRight, Clock, AlertTriangle } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
@@ -30,8 +30,11 @@ function unusedPaidTime(subscription, targetPlanId) {
 
 export default function BillingUpgrade() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [annual, setAnnual] = useState(true);
   const [switchWarning, setSwitchWarning] = useState(null); // { plan, cycle, unused }
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelError, setCancelError] = useState(null);
 
   const meQuery = useQuery({
     queryKey: queryKeys.me,
@@ -61,12 +64,36 @@ export default function BillingUpgrade() {
   const subscription = meQuery.data?.subscription;
   const currentPlan = subscription?.plan || "Free";
   const pendingRequest = pendingRequestQuery.data;
+  // Mirrors BillingPlan.jsx's own check — a cancel already scheduled from
+  // there shouldn't also be offerable from here.
+  const pendingCancel = subscription?.pendingPlan === "Free";
+
+  // Free goes through the real self-service cancel (POST /billing/cancel)
+  // instead of the manual/contact-us pay flow below — that's the one path
+  // that actually keeps the unused paid time this page warns everyone else
+  // about losing, so it gets its own mutation and dialog rather than
+  // reusing switchWarning/confirmSwitch.
+  const cancelMutation = useMutation({
+    mutationFn: () => api.post("/billing/cancel"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.me });
+      setCancelOpen(false);
+    },
+    onError: (err) => setCancelError(getApiErrorMessage(err, "Could not cancel your plan.")),
+  });
 
   function choosePlan(plan) {
+    if (plan.planId === "Free") {
+      setCancelError(null);
+      setCancelOpen(true);
+      return;
+    }
+
     const cycle = annual ? "yearly" : "monthly";
-    // Covers both directions: choosing a different paid plan, and
-    // switching to Free — either one discards unused paid time the same
-    // way, so both go through the same confirmation before navigating.
+    // Switching between two paid plans really does overwrite the
+    // subscription immediately with no proration (setUserPlanService has
+    // no concept of "the old plan's unused time") — so this warning stays
+    // accurate for that case, even though it no longer applies to Free.
     const unused = unusedPaidTime(subscription, plan.planId);
     if (unused) {
       setSwitchWarning({ plan, cycle, unused });
@@ -162,6 +189,10 @@ export default function BillingUpgrade() {
                   Boolean(pendingRequest) &&
                   plan.planId !== "Free" &&
                   plan.planId !== pendingRequest.plan;
+                // A cancel already scheduled from /billing/plan makes this
+                // button redundant — same reasoning as blockedByPendingRequest
+                // above, just for the other queue.
+                const blockedByPendingCancel = plan.planId === "Free" && pendingCancel;
 
                 return (
                   <Card
@@ -225,19 +256,25 @@ export default function BillingUpgrade() {
                         size="md"
                         className="w-full justify-center"
                         onClick={() => choosePlan(plan)}
-                        disabled={blockedByPendingRequest}
+                        disabled={blockedByPendingRequest || blockedByPendingCancel}
                         title={
                           blockedByPendingRequest
                             ? `Wait for your pending ${pendingRequest.plan} request to be reviewed first`
-                            : undefined
+                            : blockedByPendingCancel
+                              ? "Your plan is already set to move to Free — see the Billing page for details"
+                              : undefined
                         }
                       >
                         {blockedByPendingRequest
                           ? "Pending request in progress"
-                          : plan.planId === "Free"
-                            ? "Switch to Free"
-                            : "Choose Plan"}
-                        {!blockedByPendingRequest && <ArrowRight className="h-4 w-4 ml-1" />}
+                          : blockedByPendingCancel
+                            ? "Already scheduled"
+                            : plan.planId === "Free"
+                              ? "Switch to Free"
+                              : "Choose Plan"}
+                        {!blockedByPendingRequest && !blockedByPendingCancel && (
+                          <ArrowRight className="h-4 w-4 ml-1" />
+                        )}
                       </Button>
                     )}
                   </Card>
@@ -273,6 +310,38 @@ export default function BillingUpgrade() {
                 Reach out first if you'd like that handled manually.
               </p>
             </div>
+          )}
+        </Dialog>
+
+        <Dialog
+          open={cancelOpen}
+          title="Switch to Free?"
+          onClose={() => setCancelOpen(false)}
+          actions={
+            <>
+              <Button variant="secondary" onClick={() => setCancelOpen(false)}>
+                Keep my plan
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => cancelMutation.mutate()}
+                loading={cancelMutation.isPending}
+              >
+                Switch to Free
+              </Button>
+            </>
+          }
+        >
+          <p style={{ margin: 0 }}>
+            You won&apos;t lose anything you&apos;ve already paid for — {currentPlan} access stays
+            active until{" "}
+            {subscription?.currentPeriodEnd
+              ? new Date(subscription.currentPeriodEnd).toLocaleDateString()
+              : "the end of your current period"}
+            . After that, your account moves to Free automatically.
+          </p>
+          {cancelError && (
+            <p style={{ color: "var(--brick)", marginTop: "var(--space-2)" }}>{cancelError}</p>
           )}
         </Dialog>
       </main>

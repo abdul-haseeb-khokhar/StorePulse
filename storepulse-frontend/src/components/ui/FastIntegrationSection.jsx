@@ -88,8 +88,6 @@ export default function FastIntegrationSection() {
             <div className="flex items-center gap-3 text-[var(--muted)]">
               <span className="font-semibold text-[var(--ink)]">Works with:</span>
               <div className="flex items-center gap-3">
-                <img src="/shopify.svg" alt="Shopify" title="Shopify" className="h-4.5 w-4.5 object-contain opacity-85 hover:opacity-100 transition-opacity" />
-                <img src="/woocommerce.svg" alt="WooCommerce" title="WooCommerce" className="h-4.5 w-4.5 object-contain opacity-85 hover:opacity-100 transition-opacity" />
                 <img src="/wordpress.svg" alt="WordPress" title="WordPress" className="h-4.5 w-4.5 object-contain opacity-85 hover:opacity-100 transition-opacity" />
                 <img src="/nextjs.svg" alt="Next.js" title="Next.js" className="h-4.5 w-4.5 object-contain opacity-85 hover:opacity-100 transition-opacity text-[var(--ink)]" />
                 <img src="/reactjs.svg" alt="React" title="React" className="h-4.5 w-4.5 object-contain opacity-85 hover:opacity-100 transition-opacity" />
