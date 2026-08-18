@@ -1,3 +1,8 @@
+/**
+ * Axios instance for regular-user API calls (token attach, 401 handling),
+ * plus the shared helpers that turn backend validation errors into
+ * user-facing messages.
+ */
 import axios from "axios";
 import { clearSession, getToken } from "./auth";
 
@@ -110,9 +115,14 @@ function humanizeMessage(field, message) {
   return message;
 }
 
-// Maps the validate middleware's { details: [{ field, message }] } shape
-// into { [fieldName]: friendlyMessage }, for showing errors under each
-// form field rather than a single generic banner.
+/**
+ * Maps the validate middleware's { details: [{ field, message }] } shape
+ * into { [fieldName]: friendlyMessage }, for showing errors under each
+ * form field rather than a single generic banner.
+ *
+ * @param {Error} error An axios error from a failed request.
+ * @returns {Record<string, string>}
+ */
 export function getFieldErrors(error) {
   const details = error.response?.data?.details;
   if (!Array.isArray(details)) return {};
@@ -130,6 +140,14 @@ export function getFieldErrors(error) {
   return fieldErrors;
 }
 
+/**
+ * A single user-facing message for a failed request, for showing as a
+ * generic banner (as opposed to getFieldErrors' per-field mapping).
+ *
+ * @param {Error} error
+ * @param {string} [fallback]
+ * @returns {string}
+ */
 export function getApiErrorMessage(error, fallback = "Something went wrong. Try again.") {
   // No `response` at all means the request never reached the server
   // (backend down, DNS failure, offline) rather than the server rejecting

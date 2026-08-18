@@ -1,3 +1,7 @@
+/**
+ * AdminLogin — admin login form, entirely separate session from the
+ * regular user login.
+ */
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";

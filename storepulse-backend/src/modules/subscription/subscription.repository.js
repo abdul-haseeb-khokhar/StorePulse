@@ -1,3 +1,7 @@
+/**
+ * Prisma queries backing subscriptions: the current Subscription row and
+ * the append-only SubscriptionHistory trail alongside it.
+ */
 const prisma = require('../../config/prisma');
 
 const SUBSCRIPTION_SELECT = {

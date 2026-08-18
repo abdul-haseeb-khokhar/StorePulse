@@ -1,3 +1,7 @@
+/**
+ * AdminDashboard — platform-wide stats overview plus a call-out list of
+ * users currently over their plan's site limit.
+ */
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import AdminLayout from "../../layouts/AdminLayout";

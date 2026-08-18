@@ -1,3 +1,7 @@
+/**
+ * Admin session storage: token/admin-profile persistence in localStorage,
+ * separate from the regular user session in lib/auth.js.
+ */
 import { queryClient } from "./queryClient";
 
 const ADMIN_TOKEN_KEY = "storepulse_admin_token";

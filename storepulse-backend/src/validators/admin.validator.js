@@ -1,3 +1,7 @@
+/**
+ * Zod request schemas for the admin module's routes (user/site management,
+ * plan overrides, payment request review, admin activity log).
+ */
 const {z} = require('zod');
 
 const updateUserStatusSchema = z.object({

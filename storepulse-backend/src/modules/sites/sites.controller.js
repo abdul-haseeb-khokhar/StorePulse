@@ -1,5 +1,10 @@
+/**
+ * HTTP layer for the sites module: adding sites, listing a user's sites,
+ * usage summary, and API key management.
+ */
 const {addSite, getUserSites, regenerateApiKey, getSiteById, getUsageSummary} = require('./sites.service')
 
+/** POST /sites — adds a new site, enforcing the owner's plan site limit. */
 async function addSiteController(req, res, next) {
     try{
         const {name, domain} = req.body;
@@ -13,6 +18,7 @@ async function addSiteController(req, res, next) {
     }
 }
 
+/** GET /sites — the logged-in user's sites, each annotated with whether it's currently active under their plan. */
 async function getUserSitesController(req, res, next) {
     try{
         const userId = req.user.id;
@@ -24,6 +30,7 @@ async function getUserSitesController(req, res, next) {
     }
 }
 
+/** GET /sites/usage — per-site monthly event usage against the plan's quota. */
 async function getUsageSummaryController(req, res, next) {
     try {
         const userId = req.user.id;
@@ -35,6 +42,7 @@ async function getUsageSummaryController(req, res, next) {
     }
 }
 
+/** GET /sites/:siteId */
 async function getSiteByIdController(req, res, next) {
     try {
         const {siteId} = req.params;
@@ -48,6 +56,7 @@ async function getSiteByIdController(req, res, next) {
     }
 }
 
+/** PATCH /sites/:siteId/api-key — revokes the old key and issues a new one. */
 async function regenerateApiKeyController(req, res, next) {
     try {
         const {siteId} = req.params;

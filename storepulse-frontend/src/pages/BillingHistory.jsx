@@ -1,3 +1,8 @@
+/**
+ * BillingHistory — paginated table of every recorded subscription change
+ * (admin plan changes, cancellations, lazy expirations) for the logged-in
+ * user, mirroring the same data an admin sees on the user's detail page.
+ */
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";

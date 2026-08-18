@@ -1,3 +1,8 @@
+/**
+ * Login — regular user login form, with the account-specific outcomes the
+ * backend can return: needs email verification (with a resend action) or
+ * account banned (no self-service recovery, just a contact link).
+ */
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, AlertTriangle, CheckCircle2, Ban } from "lucide-react";
@@ -72,7 +77,7 @@ export default function Login() {
   return (
     <AuthLayout switchTo="/signup" switchLabel="Sign up">
       <Card elevation="md" className="p-6 sm:p-8 rounded-2xl border border-[var(--divider-soft)] bg-[var(--paper-card)] shadow-lg">
-        
+
         {/* Header */}
         <div className="mb-6 flex flex-col gap-1">
           <span className="text-[11px] font-bold uppercase tracking-wider text-[#DDBB55]">

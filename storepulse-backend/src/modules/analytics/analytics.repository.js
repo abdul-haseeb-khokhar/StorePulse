@@ -1,3 +1,8 @@
+/**
+ * Prisma/raw-SQL queries backing the analytics module. Raw SQL is used
+ * where Prisma's query builder can't express what's needed (DISTINCT count,
+ * DATE_TRUNC grouping).
+ */
 const prisma = require('../../config/prisma');
 
 async function countPageViews({siteId, startDate, endDate}) {
@@ -19,6 +24,7 @@ async function countProductClicks({siteId, startDate, endDate}) {
     })
 }
 
+/** Distinct visitor count, which Prisma's query builder has no direct equivalent for. */
 async function countUniqueVisitors({siteId, startDate, endDate}) {
     const result = await prisma.$queryRaw`
     SELECT COUNT(DISTINCT "visitorId")::int AS count
@@ -31,6 +37,7 @@ async function countUniqueVisitors({siteId, startDate, endDate}) {
     return result[0].count;
 }
 
+/** Page views and clicks grouped by UTC day, for the traffic chart. */
 async function getDailyTraffic({siteId, startDate, endDate}){
     return prisma.$queryRaw`
     SELECT

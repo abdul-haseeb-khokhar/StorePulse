@@ -1,3 +1,8 @@
+/**
+ * BillingUpgrade — plan comparison/switcher. Routes a paid-plan choice into
+ * the manual-pay flow (with a warning if it would discard unused paid
+ * time), and routes Free through the real self-service cancel endpoint.
+ */
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

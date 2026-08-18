@@ -1,3 +1,7 @@
+/**
+ * Regular user auth routes. Login is rate-limited by IP and by account,
+ * same pattern as admin login.
+ */
 const express = require('express')
 const {signUpController, loginController, meController, updateNameController, updatePasswordController,
     verifyEmailController, resendVerificationController, requestEmailChangeController, confirmEmailChangeController,

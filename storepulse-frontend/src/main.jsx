@@ -1,3 +1,8 @@
+/**
+ * App entry point: mounts App under React Query's provider, and lazy-loads
+ * the React Query Devtools only in dev builds so they never ship in
+ * production.
+ */
 import { StrictMode, Suspense, lazy } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClientProvider } from '@tanstack/react-query'

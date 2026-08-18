@@ -1,3 +1,8 @@
+/**
+ * ForgotPassword — requests a password-reset email. Shows the same
+ * "check your email" confirmation whether or not the address has an
+ * account, mirroring the backend's anti-enumeration response.
+ */
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Mail, MailCheck } from "lucide-react";

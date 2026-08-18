@@ -1,3 +1,7 @@
+/**
+ * Axios instance for admin-facing API calls, with its own token attach/401
+ * handling — entirely separate from lib/api.js's regular-user instance.
+ */
 import axios from "axios";
 import { API_BASE_URL } from "./api";
 import { clearAdminSession, getAdminToken } from "./adminAuth";

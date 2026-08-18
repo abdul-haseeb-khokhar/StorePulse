@@ -1,11 +1,17 @@
+/**
+ * Business logic for in-app notifications, split into two sides: the reader
+ * (what the bell on AppHeader polls) and the writer (one function per event
+ * type, called from whichever module owns that event).
+ */
 const {createNotification, listByUser, countUnreadByUser, markReadForUser, markAllReadForUser} = require('./notification.repository');
 const AppError = require('../../utils/AppError');
 
-// --- Reader side: what the bell on AppHeader polls. Same
-// {items, total, page, limit, totalPages} shape every other list endpoint
-// in this app uses (billing history, admin users, ...), plus unreadCount
-// alongside the page of results so the frontend doesn't need a second
-// request just to badge the bell.
+/**
+ * Reader side. Same {items, total, page, limit, totalPages} shape every
+ * other list endpoint in this app uses (billing history, admin users, ...),
+ * plus unreadCount alongside the page of results so the frontend doesn't
+ * need a second request just to badge the bell.
+ */
 async function listMyNotifications(userId, {page = 1, limit = 20} = {}) {
     const skip = (page - 1) * limit;
     const [{notifications, total}, unreadCount] = await Promise.all([

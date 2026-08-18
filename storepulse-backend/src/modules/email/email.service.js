@@ -1,3 +1,7 @@
+/**
+ * One function per email the app sends: builds the right URL for the
+ * flow, renders the template, and hands it to email.provider to deliver.
+ */
 const {sendEmail} = require('./email.provider');
 const {
     verificationEmailTemplate, emailChangeTemplate, passwordResetTemplate, adminInviteTemplate,

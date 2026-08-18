@@ -1,3 +1,8 @@
+/**
+ * Signup — account creation form. On success shows a "check your email"
+ * confirmation instead of logging the user in directly, since the account
+ * needs email verification first.
+ */
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff, MailCheck, AlertTriangle } from "lucide-react";

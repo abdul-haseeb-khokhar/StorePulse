@@ -1,3 +1,9 @@
+/**
+ * Dashboard — the main authenticated landing page: per-site analytics
+ * (summary stats, traffic chart, top products/referrers) over a selectable
+ * date range, polled periodically since events arrive outside React
+ * Query's cache entirely.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";

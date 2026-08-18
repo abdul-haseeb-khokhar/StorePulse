@@ -1,3 +1,8 @@
+/**
+ * AdminPaymentRequests — review queue for manual bank-transfer payment
+ * requests: filter by status, and approve/reject with an optional note
+ * (warns first if approving would discard a user's unused paid time).
+ */
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

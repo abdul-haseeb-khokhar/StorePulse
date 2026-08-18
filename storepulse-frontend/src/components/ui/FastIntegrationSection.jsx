@@ -1,3 +1,8 @@
+/**
+ * FastIntegrationSection — landing page's tabbed code-snippet showcase
+ * (HTML / product tagging / React), using a fake public tracking origin
+ * since this renders for logged-out visitors too.
+ */
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -42,7 +47,7 @@ export default function FastIntegrationSection() {
 
   return (
     <section id="integration" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-16 flex flex-col gap-8">
-      
+
       {/* Header */}
       <motion.div {...reveal(itemFadeUp)} className="flex flex-col gap-2 max-w-4xl">
         <Eyebrow>FAST INTEGRATION</Eyebrow>
@@ -57,7 +62,7 @@ export default function FastIntegrationSection() {
       {/* Code Snippet Showcase Card */}
       <motion.div {...reveal(containerStagger)} className="max-w-4xl w-full mx-auto">
         <div className="rounded-2xl border border-[var(--divider-soft)] bg-[var(--paper-card)] shadow-sm overflow-hidden">
-          
+
           {/* Header Bar with Tabs */}
           <div className="px-3 sm:px-4 py-2.5 bg-[var(--paper)] border-b border-[var(--divider-soft)] flex items-center gap-1.5 overflow-x-auto no-scrollbar">
             <Code2 className="h-4 w-4 text-[#DDBB55] shrink-0 mr-1 hidden sm:block" />

@@ -1,3 +1,13 @@
+/**
+ * Generic request-validation middleware factory: runs a Zod schema against
+ * body/query/params, rejects with a 400 on failure, and otherwise replaces
+ * req.body/query/params with the schema's parsed (coerced/defaulted) output.
+ */
+
+/**
+ * @param {import('zod').ZodSchema} schema Schema expecting `{ body, query, params }`.
+ * @returns {import('express').RequestHandler}
+ */
 const validate = (schema) => (req, res, next) => {
     const result = schema.safeParse({
         body: req.body,

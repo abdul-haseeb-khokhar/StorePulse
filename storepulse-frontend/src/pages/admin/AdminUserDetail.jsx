@@ -1,3 +1,8 @@
+/**
+ * AdminUserDetail — full admin view of one user: account status actions
+ * (activate/ban/delete), direct plan override, billing history, and their
+ * connected sites.
+ */
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

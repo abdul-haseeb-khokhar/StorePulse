@@ -1,3 +1,7 @@
+/**
+ * AdminSites — paginated, searchable listing of every site across all
+ * users, with a link to each site's owner.
+ */
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";

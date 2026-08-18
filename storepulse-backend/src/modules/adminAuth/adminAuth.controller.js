@@ -1,5 +1,10 @@
+/**
+ * HTTP layer for admin authentication: inviting admins, accepting an
+ * invite, admin login, and listing admins.
+ */
 const {inviteAdmin, acceptInvite, loginAdmin, listAdminsService} = require('./adminAuth.service');
 
+/** POST /admin/auth/invite — superadmin invites a new admin by email. */
 async function inviteAdminController(req, res, next) {
     try {
         const {email} = req.body;
@@ -11,6 +16,7 @@ async function inviteAdminController(req, res, next) {
     }
 }
 
+/** POST /admin/auth/accept-invite — invited admin sets their name/password and activates. */
 async function acceptInviteController(req, res, next) {
     try {
         const {token, fullName, password} = req.body;
@@ -22,6 +28,7 @@ async function acceptInviteController(req, res, next) {
     }
 }
 
+/** POST /admin/auth/login — admin login, returns a JWT. */
 async function loginAdminController(req, res, next) {
     try {
         const {email, password} = req.body;
@@ -33,6 +40,7 @@ async function loginAdminController(req, res, next) {
     }
 }
 
+/** GET /admin/auth/admins — superadmin-only list of all admin accounts. */
 async function listAdminsController(req, res, next) {
     try {
         const admins = await listAdminsService();

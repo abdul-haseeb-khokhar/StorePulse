@@ -1,3 +1,8 @@
+/**
+ * HTTP layer for the admin module. Each handler just pulls request data,
+ * delegates to admin.service, and shapes the response — all real logic
+ * lives in the service layer.
+ */
 const {
     updateUserStatusService, listUsersService, getUserDetailService, listSitesService, getPlatformStats,
     setUserPlanService, listPaymentRequestsService, reviewPaymentRequestService,
@@ -5,6 +10,7 @@ const {
     getPendingPaymentRequestCountService,
 } = require('./admin.service');
 
+/** PATCH /admin/users/:id/status — activate, ban, or soft-delete a user. */
 async function updateUserStatusController(req, res, next) {
     try{
         const {status} = req.body;
@@ -19,6 +25,7 @@ async function updateUserStatusController(req, res, next) {
     }
 }
 
+/** GET /admin/users — paginated, searchable, filterable user listing. */
 async function listUsersController(req, res, next) {
     try{
         const {page, limit, search, status} = req.query;
@@ -30,6 +37,7 @@ async function listUsersController(req, res, next) {
     }
 }
 
+/** GET /admin/users/:id — a single user's full detail, including sites and subscription. */
 async function getUserDetailController(req, res, next) {
     try{
         const {id} = req.params;
@@ -41,6 +49,7 @@ async function getUserDetailController(req, res, next) {
     }
 }
 
+/** GET /admin/sites — paginated, searchable site listing across all users. */
 async function listSitesController(req, res, next) {
     try{
         const {page, limit, search} = req.query;
@@ -52,6 +61,7 @@ async function listSitesController(req, res, next) {
     }
 }
 
+/** GET /admin/stats — platform-wide counts for the admin dashboard. */
 async function getPlatformStatsController(req, res, next) {
     try{
         const stats = await getPlatformStats();
@@ -62,6 +72,7 @@ async function getPlatformStatsController(req, res, next) {
     }
 }
 
+/** PATCH /admin/users/:id/plan — directly set a user's plan/billing cycle/status. */
 async function setUserPlanController(req, res, next) {
     try{
         const {plan, billingCycle, status} = req.body;
@@ -76,6 +87,7 @@ async function setUserPlanController(req, res, next) {
     }
 }
 
+/** GET /admin/payment-requests — paginated listing, optionally filtered by status. */
 async function listPaymentRequestsController(req, res, next) {
     try {
         const {page, limit, status} = req.query;
@@ -87,6 +99,7 @@ async function listPaymentRequestsController(req, res, next) {
     }
 }
 
+/** PATCH /admin/payment-requests/:id — approve or reject a pending payment request. */
 async function reviewPaymentRequestController(req, res, next) {
     try {
         const {id} = req.params;
@@ -101,6 +114,7 @@ async function reviewPaymentRequestController(req, res, next) {
     }
 }
 
+/** GET /admin/users/over-limit — users whose site count exceeds their plan's limit. */
 async function listOverLimitUsersController(req, res, next) {
     try {
         const users = await listOverLimitUsersService();
@@ -111,6 +125,7 @@ async function listOverLimitUsersController(req, res, next) {
     }
 }
 
+/** GET /admin/logs — paginated admin activity log (superadmin only). */
 async function listAdminLogsController(req, res, next) {
     try {
         const {page, limit} = req.query;
@@ -122,6 +137,7 @@ async function listAdminLogsController(req, res, next) {
     }
 }
 
+/** GET /admin/users/:id/history — a user's subscription/billing history. */
 async function getUserBillingHistoryController(req, res, next) {
     try {
         const {id} = req.params;
@@ -134,6 +150,7 @@ async function getUserBillingHistoryController(req, res, next) {
     }
 }
 
+/** GET /admin/payment-requests/pending-count — badge count for the admin nav. */
 async function getPendingPaymentRequestCountController(req, res, next) {
     try {
         const result = await getPendingPaymentRequestCountService();

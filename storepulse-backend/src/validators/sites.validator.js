@@ -1,5 +1,12 @@
+/**
+ * Zod request schemas for the sites module: adding a site (with domain
+ * normalization) and a site id param.
+ */
 const {z} = require('zod');
 
+// Accepts a domain with or without a scheme/path (e.g. a user pasting the
+// full storefront URL) and normalizes it down to a bare, lowercase host
+// before the format check runs.
 const domainSchema = z.string()
     .min(1, 'Domain is required')
     .transform((val) => {

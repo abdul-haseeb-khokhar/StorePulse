@@ -1,3 +1,7 @@
+/**
+ * Admin module routes. Everything here requires a valid admin session
+ * (protectAdmin below); the activity log additionally requires SUPERADMIN.
+ */
 const express = require('express');
 const {
     updateUserStatusController, listUsersController, getUserDetailController, listSitesController,

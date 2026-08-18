@@ -1,3 +1,8 @@
+/**
+ * Prisma queries backing regular user auth: account lookup/creation and the
+ * three token-based flows (email verification, email change, password
+ * reset).
+ */
 const prisma = require('../../config/prisma')
 
 async function findUserByEmail(email) {
@@ -131,4 +136,4 @@ module.exports = {
     setVerificationToken, findUserByVerificationToken, markEmailVerified,
     setPendingEmailToken, findUserByPendingEmailToken, confirmPendingEmail,
     setPasswordResetToken, findUserByPasswordResetToken, resetUserPassword
-} 
+}

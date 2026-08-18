@@ -1,3 +1,8 @@
+/**
+ * Shared React Query client, with a retry policy that skips retrying
+ * client errors (they won't succeed on retry) and a 401 already handled by
+ * lib/api.js's interceptor.
+ */
 import { QueryClient } from "@tanstack/react-query";
 
 function shouldRetry(failureCount, error) {

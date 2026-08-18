@@ -1,3 +1,7 @@
+/**
+ * Helpers for the manual bank-transfer billing flow: env-sourced bank
+ * details, PKR formatting, and the prefilled WhatsApp payment-notice link.
+ */
 import { CONTACT_WHATSAPP } from "./contact";
 
 // Bank details are real account info, not something to hardcode into the
@@ -17,16 +21,22 @@ export function formatPKR(amount) {
   return PKR_FORMATTER.format(amount);
 }
 
-// Yearly billing is one lump-sum transfer up front (there's no recurring
-// auto-charge behind a manual bank transfer), so the amount owed is the
-// discounted monthly rate × 12 — not the monthly rate itself.
+/**
+ * The total owed for a plan/cycle. Yearly billing is one lump-sum transfer
+ * up front (there's no recurring auto-charge behind a manual bank
+ * transfer), so the amount owed is the discounted monthly rate × 12 — not
+ * the monthly rate itself.
+ */
 export function totalForCycle(plan, cycle) {
   return cycle === "yearly" ? plan.annualPricePKR * 12 : plan.monthlyPricePKR;
 }
 
-// Prefilled WhatsApp message so telling us "I've paid" costs the user one
-// tap instead of composing a message from scratch. No backend involved —
-// matching intake still happens by hand against the bank statement.
+/**
+ * Builds a WhatsApp deep link with a prefilled payment notice message, so
+ * telling us "I've paid" costs the user one tap instead of composing a
+ * message from scratch. No backend involved — matching intake still
+ * happens by hand against the bank statement.
+ */
 export function buildPaymentNoticeUrl({ planName, cycle, amount, email }) {
   const message =
     `Hi, I've sent a bank transfer for the ${planName} plan (${cycle}), ` +

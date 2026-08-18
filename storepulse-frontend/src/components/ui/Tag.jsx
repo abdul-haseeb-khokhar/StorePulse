@@ -1,3 +1,7 @@
+/**
+ * Tag — small pill label with a fixed set of color variants, plus Eyebrow,
+ * the small kicker-badge style used above section headings.
+ */
 const variantClass = {
   accent: "tag-accent",
   positive: "tag-positive",
@@ -24,4 +28,3 @@ export function Eyebrow({ children, className = "" }) {
     </div>
   );
 }
-

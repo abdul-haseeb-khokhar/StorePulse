@@ -1,11 +1,14 @@
+/**
+ * Rate limiters for the admin login endpoint. Same shape as the regular
+ * login limiter, but stricter — admin accounts are a higher-value target,
+ * so both the account and IP ceilings are tighter.
+ */
 const rateLimit = require('express-rate-limit');
 const { ipKeyGenerator } = require('express-rate-limit');
 const { createRedisStore } = require('./rateLimitStore');
 
-// Same shape as the regular login limiter, but stricter — admin accounts are
-// a higher-value target, so both the account and IP ceilings are tighter.
-
-// Keyed on the attempted email. The real defense — rotating IPs doesn't reset this.
+// Keyed on the attempted email — the real defense, since rotating IPs
+// doesn't reset this one.
 const adminLoginRateLimiterByAccount = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 3,
@@ -18,7 +21,7 @@ const adminLoginRateLimiterByAccount = rateLimit({
     },
 });
 
-// Keyed on IP. Catches a single script/bot hammering the endpoint.
+// Keyed on IP — catches a single script/bot hammering the endpoint.
 const adminLoginRateLimiterByIp = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 5,

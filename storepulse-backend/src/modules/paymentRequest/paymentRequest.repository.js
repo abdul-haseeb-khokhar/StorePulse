@@ -1,3 +1,7 @@
+/**
+ * Prisma queries backing manual payment requests: the user-facing submit
+ * flow and the admin-facing review queue.
+ */
 const prisma = require('../../config/prisma');
 
 const REQUEST_SELECT = {

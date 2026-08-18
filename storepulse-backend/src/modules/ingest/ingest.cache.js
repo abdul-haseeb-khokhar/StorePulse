@@ -1,3 +1,8 @@
+/**
+ * Redis cache for the per-site lookup ingest.service.js needs on every
+ * event (owner status, plan, site rank), so a hot site doesn't hit Postgres
+ * on every single tracked event.
+ */
 const redisClient = require('../../config/redis');
 
 const CACHE_TTL_SECONDS = 30 * 60;
@@ -28,6 +33,7 @@ async function setCachedSite (apiKey, site) {
     );
 }
 
+/** Forces the next lookup for this key to hit Postgres. Called wherever a site's status, plan, or rank could have changed. */
 async function invalidateCachedSite(apiKey) {
     await redisClient.del(`${KEY_PREFIX}${apiKey}`)
 }

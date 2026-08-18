@@ -1,3 +1,7 @@
+/**
+ * BillingPlan — shows the user's current plan/status/renewal, with links to
+ * upgrade and a confirmation dialog for the self-service cancel flow.
+ */
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

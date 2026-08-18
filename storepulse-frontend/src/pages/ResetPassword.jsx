@@ -1,3 +1,7 @@
+/**
+ * ResetPassword — completes a password reset from the emailed link: sets a
+ * new password against the token in the URL.
+ */
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { CheckCircle2, Eye, EyeOff, XCircle } from "lucide-react";

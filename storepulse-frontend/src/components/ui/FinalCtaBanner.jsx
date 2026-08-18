@@ -1,3 +1,6 @@
+/**
+ * FinalCtaBanner — the landing page's closing call-to-action card.
+ */
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
@@ -24,7 +27,7 @@ export default function FinalCtaBanner() {
         <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[var(--ink)] max-w-3xl leading-tight font-sora">
           Ready to see what your shoppers are doing right now?
         </h2>
-        
+
         <p className="text-sm sm:text-base text-[var(--muted)] max-w-xl leading-relaxed">
           Join store owners scaling with StorePulse live telemetry. Free to start, no credit card required.
         </p>

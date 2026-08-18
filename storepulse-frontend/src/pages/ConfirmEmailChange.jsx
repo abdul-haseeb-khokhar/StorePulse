@@ -1,3 +1,7 @@
+/**
+ * ConfirmEmailChange — landing page for the link emailed to a user's *new*
+ * address to confirm an in-progress email change.
+ */
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { CheckCircle2, XCircle } from "lucide-react";

@@ -1,3 +1,9 @@
+/**
+ * BillingPay — manual bank-transfer checkout for a chosen plan/cycle: shows
+ * the bank details to transfer to, then lets the user submit a payment
+ * request (optionally with a transfer reference) and share their receipt
+ * via WhatsApp/email for manual verification.
+ */
 import { useState } from "react";
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

@@ -1,3 +1,6 @@
+/**
+ * ScrollStorytelling — landing page's 5-card "core platform benefits" row.
+ */
 import { motion } from "framer-motion";
 import Card from "./Card";
 import { Eyebrow } from "./Tag";

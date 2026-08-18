@@ -1,3 +1,10 @@
+/**
+ * Business logic for event ingestion: validates the API key, enforces
+ * account/site/quota limits, and hands the event off to the write-behind
+ * buffer. This is the hot path hit by every pageview/click across every
+ * embedded storefront, so it leans on ingest.cache.js to avoid a Postgres
+ * round trip per event wherever possible.
+ */
 const {findSiteByApiKey} = require('./ingest.repository');
 const {addToBuffer} = require('./ingest.buffer');
 const {incrementMonthlyEventCount} = require('./ingest.usage');
@@ -5,6 +12,7 @@ const AppError = require('../../utils/AppError');
 const {getCachedSite, setCachedSite} = require('./ingest.cache')
 const {PLAN_LIMITS, resolveEffectivePlan} = require('../../config/plans')
 
+/** Pulls just the hostname out of a referrer URL, or 'direct' if there isn't one / it doesn't parse. */
 function extractDomain(referrerUrl) {
     if(!referrerUrl) return 'direct';
 
@@ -15,6 +23,12 @@ function extractDomain(referrerUrl) {
     }
 }
 
+/**
+ * Validates and records one tracked event.
+ *
+ * @param {{apiKey: string, type: 'PAGE_VIEW'|'PRODUCT_CLICK', pageUrl: string, referrer?: string, productId?: string, productName?: string, visitorId: string}} args
+ * @throws {AppError} 401 for an unknown key, 403 if the site/account can't currently accept events, 402 if the plan's monthly quota is exceeded.
+ */
 async function recordEvent({apiKey, type, pageUrl, referrer, productId, productName, visitorId}) {
     let site =await getCachedSite(apiKey);
     if(!site){
@@ -64,10 +78,10 @@ async function recordEvent({apiKey, type, pageUrl, referrer, productId, productN
 
     await addToBuffer({
         type,
-        pageUrl, 
-        referrer: type === 'PAGE_VIEW' ? extractDomain(referrer) : null, 
-        productId: productId || null, 
-        productName: productName || null, 
+        pageUrl,
+        referrer: type === 'PAGE_VIEW' ? extractDomain(referrer) : null,
+        productId: productId || null,
+        productName: productName || null,
         visitorId,
         siteId: site.id,
         createdAt: new Date(),

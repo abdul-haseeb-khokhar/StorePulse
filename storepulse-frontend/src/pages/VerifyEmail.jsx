@@ -1,3 +1,7 @@
+/**
+ * VerifyEmail — landing page for the signup verification link. On failure
+ * (expired/invalid token), offers a form to request a fresh one.
+ */
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { CheckCircle2, XCircle } from "lucide-react";

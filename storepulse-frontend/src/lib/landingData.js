@@ -1,3 +1,7 @@
+/**
+ * Static copy/data for the landing page's pricing section and FAQ.
+ */
+
 // Prices live in .env (see .env.example) so they can be changed without
 // touching code — same reasoning as the bank/contact details in billing.js.
 // Falls back to these defaults if a var is unset, so a missing env value

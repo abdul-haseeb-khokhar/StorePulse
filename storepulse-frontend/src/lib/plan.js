@@ -1,10 +1,17 @@
-// Relative instead of an absolute date on purpose: currentPeriodEnd is a
-// UTC instant, and formatting it as a calendar date would show a different
-// day depending on the viewer's own timezone (the exact same stored moment
-// can land on either side of midnight). A day count computed from the raw
-// duration has no such ambiguity — everyone sees the same number. Shared
-// between the admin panel and the user's own Settings page so both report
-// the same thing the same way.
+/**
+ * Display helpers for subscription plan/period info, shared between the
+ * user's own Settings page and the admin panel so both report the same
+ * thing the same way.
+ */
+
+/**
+ * Days remaining until a subscription's currentPeriodEnd, as a display
+ * string. Relative instead of an absolute date on purpose: currentPeriodEnd
+ * is a UTC instant, and formatting it as a calendar date would show a
+ * different day depending on the viewer's own timezone (the exact same
+ * stored moment can land on either side of midnight). A day count computed
+ * from the raw duration has no such ambiguity — everyone sees the same number.
+ */
 export function formatDaysRemaining(periodEnd) {
   const msRemaining = new Date(periodEnd).getTime() - Date.now();
   if (msRemaining <= 0) return "Access expired";

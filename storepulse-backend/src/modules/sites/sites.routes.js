@@ -1,3 +1,6 @@
+/**
+ * Sites module routes. All require a logged-in user.
+ */
 const express = require('express')
 const router = express.Router()
 
@@ -17,4 +20,3 @@ router.get('/:siteId',validate(siteIdParamSchema), getSiteByIdController)
 router.patch('/:siteId/api-key',validate(siteIdParamSchema), regenerateApiKeyController)
 
 module.exports = router;
-

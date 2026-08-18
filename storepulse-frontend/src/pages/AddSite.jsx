@@ -1,3 +1,8 @@
+/**
+ * AddSite — form for registering a new site under the logged-in user's
+ * account. On success, seeds the new site into the query cache and routes
+ * straight to its setup page (which shows the tracking snippet/API key).
+ */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";

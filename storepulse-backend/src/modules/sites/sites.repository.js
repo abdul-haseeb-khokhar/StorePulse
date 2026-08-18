@@ -1,3 +1,8 @@
+/**
+ * Prisma queries backing the sites module: creation (with a plan-limit
+ * guard), lookups, API key updates, and the shared "creation rank" query
+ * both this module and ingest rely on.
+ */
 const prisma = require('../../config/prisma')
 const {resolveEffectivePlan} = require('../../config/plans')
 

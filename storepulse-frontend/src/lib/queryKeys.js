@@ -1,3 +1,8 @@
+/**
+ * Central registry of React Query cache keys, so every screen that reads or
+ * invalidates a given piece of server state agrees on exactly what key it
+ * lives under.
+ */
 export const queryKeys = {
   sites: {
     all: ["sites"],

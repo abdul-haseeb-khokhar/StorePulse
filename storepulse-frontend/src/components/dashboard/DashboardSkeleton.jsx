@@ -1,3 +1,8 @@
+/**
+ * Loading placeholder for the dashboard page: mirrors the real layout
+ * (header, stat cards, traffic chart, two table cards) so content doesn't
+ * jump around once the real data arrives.
+ */
 import Card from "../ui/Card";
 import Skeleton from "../ui/Skeleton";
 

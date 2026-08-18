@@ -1,3 +1,7 @@
+/**
+ * FaqSection — landing page accordion over the static FAQ copy in
+ * lib/landingData.js. One question open at a time.
+ */
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
@@ -14,7 +18,7 @@ export default function FaqSection() {
 
   return (
     <section id="faq" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 lg:py-24 flex flex-col gap-10">
-      
+
       {/* Header */}
       <motion.div {...reveal(itemFadeUp)} className="flex flex-col items-center text-center gap-2 max-w-2xl mx-auto">
         <Eyebrow>FREQUENTLY ASKED QUESTIONS</Eyebrow>
@@ -30,7 +34,7 @@ export default function FaqSection() {
           return (
             <motion.div key={index} variants={reduceMotion ? undefined : itemFadeUp}>
               <div className="rounded-xl border border-[var(--divider-soft)] bg-[var(--paper-card)] overflow-hidden transition-colors">
-                
+
                 <button
                   onClick={() => setOpenIdx(isOpen ? -1 : index)}
                   className="w-full px-5 py-4 flex items-center justify-between text-left gap-4 font-semibold text-sm sm:text-base text-[var(--ink)] hover:text-[#DDBB55] transition-colors cursor-pointer"

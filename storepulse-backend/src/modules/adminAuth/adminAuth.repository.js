@@ -1,3 +1,6 @@
+/**
+ * Prisma queries backing admin authentication and invite management.
+ */
 const prisma = require('../../config/prisma');
 
 async function findAdminByEmail(email) {
@@ -12,6 +15,7 @@ async function findAdminById(id) {
     });
 }
 
+/** Creates a pending (not-yet-activated) admin row with an invite token. */
 async function createAdminInvite({email, hashedToken, expiry}) {
     return prisma.admin.create({
         data: {
@@ -22,6 +26,7 @@ async function createAdminInvite({email, hashedToken, expiry}) {
     });
 }
 
+/** Refreshes an existing pending invite's token/expiry, for resends. */
 async function updateAdminInvite(adminId, {hashedToken, expiry}) {
     return prisma.admin.update({
         where: {id: adminId},
@@ -38,6 +43,7 @@ async function findAdminByInviteToken(hashedToken) {
     });
 }
 
+/** Turns a pending invite into a real, usable admin account. */
 async function activateAdmin(adminId, {fullName, hashedPassword}) {
     return prisma.admin.update({
         where: {id: adminId},

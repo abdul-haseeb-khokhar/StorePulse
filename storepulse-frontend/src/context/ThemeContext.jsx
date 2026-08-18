@@ -1,3 +1,8 @@
+/**
+ * Light/dark theme provider: reads the user's stored preference (falling
+ * back to their OS setting), persists changes, and applies the theme via a
+ * `data-theme` attribute on `<html>` for index.css's theme selectors to key off.
+ */
 import { useLayoutEffect, useState } from "react";
 import { ThemeContext } from "./theme-context";
 

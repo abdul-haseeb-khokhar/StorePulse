@@ -1,3 +1,7 @@
+/**
+ * Zod request schemas for the notification module: paginated listing and a
+ * single-notification id param.
+ */
 const {z} = require('zod');
 
 const paginationSchema = z.object({

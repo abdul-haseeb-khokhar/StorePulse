@@ -1,5 +1,10 @@
+/**
+ * HTTP layer for in-app notifications: the reader side the notification
+ * bell polls.
+ */
 const {listMyNotifications, markMyNotificationRead, markAllMyNotificationsRead} = require('./notification.service');
 
+/** GET /notifications — paginated list plus unread count, for the notification bell. */
 async function listMyNotificationsController(req, res, next) {
     try {
         const {page, limit} = req.query;
@@ -11,6 +16,7 @@ async function listMyNotificationsController(req, res, next) {
     }
 }
 
+/** PATCH /notifications/:id/read */
 async function markMyNotificationReadController(req, res, next) {
     try {
         const {id} = req.params;
@@ -22,6 +28,7 @@ async function markMyNotificationReadController(req, res, next) {
     }
 }
 
+/** PATCH /notifications/read-all */
 async function markAllMyNotificationsReadController(req, res, next) {
     try {
         await markAllMyNotificationsRead(req.user.id);

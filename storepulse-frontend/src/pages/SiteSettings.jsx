@@ -1,3 +1,8 @@
+/**
+ * SiteSettings — view/manage an existing site: read-only name/domain/API
+ * key, key regeneration (with a confirmation dialog, since it breaks
+ * tracking until the snippet is updated), and the tracking snippet.
+ */
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

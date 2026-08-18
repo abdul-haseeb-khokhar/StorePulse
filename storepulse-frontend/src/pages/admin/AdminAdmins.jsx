@@ -1,3 +1,7 @@
+/**
+ * AdminAdmins — superadmin-only view of every admin account (active and
+ * pending), with an invite-by-email dialog.
+ */
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminLayout from "../../layouts/AdminLayout";

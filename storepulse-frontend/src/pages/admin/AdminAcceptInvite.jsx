@@ -1,3 +1,7 @@
+/**
+ * AdminAcceptInvite — activates a pending admin account from the invite
+ * link a superadmin sent: sets a name and password.
+ */
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { CheckCircle2, Eye, EyeOff, XCircle } from "lucide-react";

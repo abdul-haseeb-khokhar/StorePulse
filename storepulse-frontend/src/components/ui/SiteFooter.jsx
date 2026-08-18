@@ -1,3 +1,7 @@
+/**
+ * SiteFooter — shared marketing/docs footer: brand block, section nav
+ * links (overridable via `navItems`), and the NYRON credit line.
+ */
 import { Link } from "react-router-dom";
 import { ContactLink } from "./ContactLink";
 
@@ -16,10 +20,10 @@ export default function SiteFooter({ navItems = null }) {
   return (
     <footer className="relative w-full bg-[var(--paper)] text-[var(--ink)] border-t border-[var(--divider-soft)] pt-8 pb-6 transition-colors duration-200 text-left">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full">
-        
+
         {/* Main Footer Row — Logo + Tagline Left, Circular Icon Buttons Right */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-[var(--divider-soft)]">
-          
+
           {/* Brand Info & Logos */}
           <div className="space-y-2 max-w-md">
             <Link to="/" aria-label="StorePulse Homepage" className="inline-block">

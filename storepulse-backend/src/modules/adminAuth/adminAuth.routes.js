@@ -1,3 +1,7 @@
+/**
+ * Admin auth routes. Login is rate-limited by IP and by account; invite
+ * management is superadmin-only.
+ */
 const express = require('express');
 const {inviteAdminController, acceptInviteController, loginAdminController, listAdminsController} = require('./adminAuth.controller');
 const protectAdmin = require('../../middleware/protectAdmin');

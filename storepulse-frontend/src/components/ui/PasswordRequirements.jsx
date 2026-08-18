@@ -1,3 +1,6 @@
+/**
+ * PasswordRequirements — live checklist shown under a password field.
+ */
 import { Check, X } from "lucide-react";
 
 // Mirrors storepulse-backend/src/validators/auth.validator.js's

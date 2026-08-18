@@ -1,3 +1,9 @@
+/**
+ * Business logic for regular user auth: signup/login, profile changes, and
+ * the three token-based flows (email verification, email change, password
+ * reset). All three flows share the same shape — generate a token, hash it
+ * for storage, email the raw one, verify by re-hashing on the way back in.
+ */
 const {findUserByEmail, createUser, findUserById, findUserByIdWithSubscription, updateUserName, updateUserPassword,
     setVerificationToken, findUserByVerificationToken, markEmailVerified,
     setPendingEmailToken, findUserByPendingEmailToken, confirmPendingEmail,
@@ -15,6 +21,13 @@ const VERIFICATION_EXPIRY_MS = 24*60*60*1000;
 const EMAIL_CHANGE_EXPIRY_MS = 60*60*1000;
 const PASSWORD_RESET_EXPIRY_MS = 60*60*1000;
 
+/**
+ * Creates an account and emails a verification link.
+ *
+ * @param {string} fullName
+ * @param {string} email
+ * @param {string} password
+ */
 async function signUp(fullName, email, password) {
     const existingUser = await findUserByEmail(email)
     if(existingUser){
@@ -44,6 +57,14 @@ async function signUp(fullName, email, password) {
     };
 }
 
+/**
+ * Verifies credentials and issues a session JWT. Runs bcrypt against a
+ * dummy hash when no account matches, so login timing doesn't reveal
+ * whether the email exists.
+ *
+ * @param {string} email
+ * @param {string} password
+ */
 async function login(email, password) {
     const user = await findUserByEmail(email);
 
@@ -52,7 +73,7 @@ async function login(email, password) {
     if(!user || !isPasswordValid) {
         throw new AppError("Email or password is invalid!", 401)
     }
-    
+
     if(user.status === 'Banned'){
         throw new AppError('This user is banned by admin', 403, 'ACCOUNT_BANNED');
     }
@@ -69,6 +90,7 @@ async function login(email, password) {
     }
 }
 
+/** The logged-in user's profile, with their subscription synced if it's lapsed. */
 async function getUserById(id) {
     const user = await findUserByIdWithSubscription(id);
     if(!user){
@@ -83,6 +105,7 @@ async function changeName(userId, fullName) {
     return updateUserName(userId, fullName);
 }
 
+/** Verifies the current password before setting a new one. */
 async function changePassword(userId, currentPassword, newPassword) {
     const user = await findUserById(userId);
 
@@ -97,6 +120,7 @@ async function changePassword(userId, currentPassword, newPassword) {
     return updateUserPassword(userId, hashed);
 }
 
+/** Completes signup verification from an emailed token, and reactivates the account if it was Inactive pending this. */
 async function verifyEmail(rawToken) {
     const hashedToken = hashToken(rawToken);
     const user = await findUserByVerificationToken(hashedToken);
@@ -117,6 +141,11 @@ async function verifyEmail(rawToken) {
     };
 }
 
+/**
+ * Re-sends a verification link. Always returns the same message regardless
+ * of whether the account exists or is already verified, so this endpoint
+ * can't be used to probe which emails have accounts.
+ */
 async function resendVerification(email) {
     const user = await findUserByEmail(email);
 
@@ -134,13 +163,14 @@ async function resendVerification(email) {
     return { message: 'If an account with that email exists and is unverified, a new link has been sent.' };
 }
 
+/** Starts an email-change request by emailing a confirmation link to the new address (not the old one). */
 async function requestEmailChange(userId, newEmail) {
     const user = await findUserById(userId);
 
     if(newEmail === user.email) {
         throw new AppError('New Email must be different from your current email', 400)
     }
-    
+
     const existingUser = await findUserByEmail(newEmail);
     if(existingUser) {
         throw new AppError('An account with this email already exists', 409);
@@ -156,6 +186,7 @@ async function requestEmailChange(userId, newEmail) {
     return { message: 'Please check your new email address to confirm the change.' };
 }
 
+/** Completes an email-change request from the link sent to the new address. */
 async function confirmEmailChange(rawToken) {
     const hashedToken = hashToken(rawToken);
     const user = await findUserByPendingEmailToken(hashedToken);
@@ -171,6 +202,10 @@ async function confirmEmailChange(rawToken) {
     return {message: 'Email address updated successfully'};
 }
 
+/**
+ * Starts a password-reset request. Same anti-enumeration shape as
+ * resendVerification — the response never reveals whether the email exists.
+ */
 async function forgotPassword(email) {
     const user = await findUserByEmail(email);
 
@@ -188,6 +223,7 @@ async function forgotPassword(email) {
     return { message: 'If an account with that email exists, a reset link has been sent.'}
 }
 
+/** Completes a password reset from the emailed token. */
 async function resetPassword(rawToken, newPassword) {
     const hashedToken = hashToken(rawToken);
     const user = await findUserByPasswordResetToken(hashedToken);

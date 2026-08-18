@@ -1,3 +1,7 @@
+/**
+ * Business logic for admin authentication: sending/resending invites,
+ * activating an invited admin, and admin login.
+ */
 const {findAdminByEmail, findAdminById, createAdminInvite, updateAdminInvite, findAdminByInviteToken, activateAdmin, listAdmins} = require('./adminAuth.repository');
 const {generateToken, hashToken} = require('../../utils/verificationToken');
 const {hashPassword, comparePassword, DUMMY_PASSWORD_HASH} = require('../../utils/passwordHashing');
@@ -7,6 +11,11 @@ const {sendAdminInviteEmail} = require('../email/email.service');
 
 const INVITE_EXPIRY_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * Sends a new admin invite, or resends one for a still-pending address.
+ *
+ * @param {string} email
+ */
 async function inviteAdmin(email) {
     const existingAdmin = await findAdminByEmail(email);
     if(existingAdmin?.isActive) {
@@ -42,6 +51,13 @@ async function inviteAdmin(email) {
     return {message: 'Invite sent. The new admin will receive an email to set their password.'};
 }
 
+/**
+ * Activates a pending admin account from an invite link.
+ *
+ * @param {string} rawToken
+ * @param {string} fullName
+ * @param {string} password
+ */
 async function acceptInvite(rawToken, fullName, password) {
     const hashedToken = hashToken(rawToken);
     const admin = await findAdminByInviteToken(hashedToken);
@@ -62,6 +78,12 @@ async function acceptInvite(rawToken, fullName, password) {
     return {message: 'Admin account activated. You can now log in.'};
 }
 
+/**
+ * Verifies admin credentials and issues a session JWT.
+ *
+ * @param {string} email
+ * @param {string} password
+ */
 async function loginAdmin(email, password) {
     const admin = await findAdminByEmail(email);
 
@@ -80,6 +102,7 @@ async function loginAdmin(email, password) {
     };
 }
 
+/** All admin accounts (active and pending), for the superadmin admins list. */
 async function listAdminsService() {
     return listAdmins();
 }

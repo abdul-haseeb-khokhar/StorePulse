@@ -1,3 +1,9 @@
+/**
+ * Business logic for the sites module. "Active" is never stored — it's
+ * recomputed live from a site's fixed creation rank against whatever the
+ * owner's current plan allows, so a plan change instantly changes which
+ * sites are active with no migration needed on the Site table.
+ */
 const {
     createSiteIfUnderLimit, findSiteById, findSitesByUserId, updateApiKey, findUserPlan, countSitesCreatedUpTo,
 } = require('./sites.repository')
@@ -7,12 +13,14 @@ const {invalidateCachedSite} = require('../ingest/ingest.cache')
 const {getMonthlyEventCount} = require('../ingest/ingest.usage')
 const {PLAN_LIMITS} = require('../../config/plans')
 
-// Sites are never deleted or reordered, so "active" is entirely a function
-// of a fixed creation-order rank vs. whatever the CURRENT plan allows —
-// recomputed live here rather than stored, the same way resolveEffectivePlan
-// treats plan expiry: a downgrade locks the newest sites out immediately,
-// and an upgrade (or a lapsed plan's renewal) brings them back the instant
-// it's read, with no flag to flip and no migration on that Site row.
+/**
+ * Sites are never deleted or reordered, so "active" is entirely a function
+ * of a fixed creation-order rank vs. whatever the CURRENT plan allows —
+ * recomputed live here rather than stored, the same way resolveEffectivePlan
+ * treats plan expiry: a downgrade locks the newest sites out immediately,
+ * and an upgrade (or a lapsed plan's renewal) brings them back the instant
+ * it's read, with no flag to flip and no migration on that Site row.
+ */
 function annotateActiveSites(sites, maxSites) {
     if (maxSites === Infinity) return sites.map((site) => ({...site, active: true}));
 
@@ -29,14 +37,16 @@ function annotateActiveSites(sites, maxSites) {
     return sites.map((site) => ({...site, active: activeIds.has(site.id)}));
 }
 
-// A plan change that lowers maxSites can silently push some already-created
-// sites out of the active ranking — annotateActiveSites already recomputes
-// that live on every getUserSites() read, so the sites themselves need no
-// write here. This just diffs that same ranking across the old and new
-// plan so the caller (subscription.service.js, admin.service.js) knows
-// exactly which sites just flipped, in order to tell the user about it.
-// Returns [] for a same-or-higher maxSites change — nothing can newly
-// deactivate by gaining room, only by losing it.
+/**
+ * A plan change that lowers maxSites can silently push some already-created
+ * sites out of the active ranking — annotateActiveSites already recomputes
+ * that live on every getUserSites() read, so the sites themselves need no
+ * write here. This just diffs that same ranking across the old and new
+ * plan so the caller (subscription.service.js, admin.service.js) knows
+ * exactly which sites just flipped, in order to tell the user about it.
+ * Returns [] for a same-or-higher maxSites change — nothing can newly
+ * deactivate by gaining room, only by losing it.
+ */
 function getNewlyDeactivatedSites(sites, oldPlan, newPlan) {
     const oldMax = (PLAN_LIMITS[oldPlan] || PLAN_LIMITS.Free).maxSites;
     const newMax = (PLAN_LIMITS[newPlan] || PLAN_LIMITS.Free).maxSites;
@@ -60,6 +70,7 @@ async function isSiteActive(site, plan) {
     return rank <= maxSites;
 }
 
+/** Creates a site, rejecting if the owner's plan is already at its site limit. */
 async function addSite({name, domain, userId}) {
     const plan = await findUserPlan(userId);
     const {maxSites} = PLAN_LIMITS[plan] || PLAN_LIMITS.Free;
@@ -77,6 +88,7 @@ async function addSite({name, domain, userId}) {
     return site;
 }
 
+/** All of a user's sites, each annotated with whether it's currently active under their plan. */
 async function getUserSites(userId) {
     const [sites, plan] = await Promise.all([findSitesByUserId(userId), findUserPlan(userId)]);
     const {maxSites} = PLAN_LIMITS[plan] || PLAN_LIMITS.Free;
@@ -84,9 +96,12 @@ async function getUserSites(userId) {
     return annotateActiveSites(sites, maxSites);
 }
 
-// Per-site, not a single account-wide number — the quota itself is
-// enforced per site (see ingest.service.js), so a combined total here
-// would misrepresent what's actually being checked against the cap.
+/**
+ * Per-site monthly event usage against the plan's quota. Per-site, not a
+ * single account-wide number — the quota itself is enforced per site (see
+ * ingest.service.js), so a combined total here would misrepresent what's
+ * actually being checked against the cap.
+ */
 async function getUsageSummary(userId) {
     const plan = await findUserPlan(userId);
     const {maxMonthlyEvents} = PLAN_LIMITS[plan] || PLAN_LIMITS.Free;
@@ -111,6 +126,7 @@ async function getUsageSummary(userId) {
     };
 }
 
+/** A single site, after confirming it exists and belongs to the requesting user. */
 async function getSiteById({siteId, userId}) {
     // findUserPlan doesn't depend on the site row (only userId, already
     // known), so it runs alongside findSiteById instead of waiting on it —
@@ -125,6 +141,7 @@ async function getSiteById({siteId, userId}) {
     return {...site, active: await isSiteActive(site, plan)};
 }
 
+/** Revokes a site's current API key and issues a new one. */
 async function regenerateApiKey({siteId, userId}) {
     const site = await getSiteById({siteId, userId});
 

@@ -1,6 +1,9 @@
-// Single source of truth for what each plan actually allows. sites.service.js
-// enforces maxSites, ingest.service.js enforces maxMonthlyEvents — both read
-// from here so the two limits can never drift out of sync with each other.
+/**
+ * Single source of truth for what each subscription plan actually allows.
+ * sites.service.js enforces maxSites and ingest.service.js enforces
+ * maxMonthlyEvents — both read from here so the two limits can never drift
+ * out of sync with each other.
+ */
 const PLAN_LIMITS = {
     Free: {maxSites: 1, maxMonthlyEvents: 10000},
     Pro: {maxSites: 5, maxMonthlyEvents: 100000},
@@ -12,11 +15,18 @@ const BILLING_CYCLE_DAYS = {
     yearly: 365,
 };
 
-// A plan past its currentPeriodEnd has lapsed — treated as Free until an
-// admin sets a fresh period (or, once real billing exists, a renewal
-// webhook does). Checked lazily wherever a plan actually gates something
-// (site creation, ingest quota) instead of a background job sweeping the
-// whole subscriptions table on a schedule.
+/**
+ * Resolves the plan a subscription should actually be treated as right now.
+ *
+ * A plan past its currentPeriodEnd has lapsed — treated as Free until an
+ * admin sets a fresh period (or, once real billing exists, a renewal
+ * webhook does). Checked lazily wherever a plan actually gates something
+ * (site creation, ingest quota) instead of a background job sweeping the
+ * whole subscriptions table on a schedule.
+ *
+ * @param {{plan?: string, currentPeriodEnd?: string|Date}|null} subscription
+ * @returns {string} The plan name currently in effect ('Free', 'Pro', 'Business').
+ */
 function resolveEffectivePlan(subscription) {
     if (!subscription) return 'Free';
 
@@ -26,8 +36,14 @@ function resolveEffectivePlan(subscription) {
     return plan || 'Free';
 }
 
-// Admins pick a billing cycle, not a date — this is what turns that choice
-// into the actual currentPeriodEnd stored on the subscription.
+/**
+ * Converts an admin's billing-cycle choice into a concrete expiry date.
+ * Admins pick a cycle, not a date — this is what turns that choice into the
+ * actual currentPeriodEnd stored on the subscription.
+ *
+ * @param {'monthly'|'yearly'} billingCycle
+ * @returns {Date} The moment the new period ends, measured from now.
+ */
 function periodEndFromCycle(billingCycle) {
     const days = BILLING_CYCLE_DAYS[billingCycle] || BILLING_CYCLE_DAYS.monthly;
     return new Date(Date.now() + days * 24 * 60 * 60 * 1000);

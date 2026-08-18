@@ -1,3 +1,11 @@
+/**
+ * Business logic for the admin module: user status changes, direct plan
+ * overrides, payment-request review, and the platform stats/logs the admin
+ * dashboard reads. Plan changes funnel through setUserPlanService so every
+ * path that changes a subscription (direct admin action or an approved
+ * payment request) gets the same no-op guard, cache invalidation, history
+ * entry, and notifications.
+ */
 const {
     updateUserStatus, listUsers, findUserByIdWithSites, listSites, getPlatformStats, createAdminLog,
     listUsersWithSiteCounts, listAdminLogs, countPendingPaymentRequests,
@@ -16,10 +24,16 @@ const {notifyPlanChanged, notifySitesDeactivated, notifyPaymentRequestReviewed} 
 const {periodEndFromCycle, resolveEffectivePlan, PLAN_LIMITS} = require('../../config/plans');
 const AppError = require('../../utils/AppError');
 
-// Best-effort — by the time this runs, the admin action it's reporting on
-// has already fully succeeded and been written to the DB, so a Resend
-// outage or a bad address should never surface as a failure of the action
-// itself. Logged, not rethrown.
+/**
+ * Runs a notification send (email or in-app) without letting its failure
+ * propagate. By the time this runs, the admin action it's reporting on has
+ * already fully succeeded and been written to the DB, so a Resend outage or
+ * a bad address should never surface as a failure of the action itself.
+ * Logged, not rethrown.
+ *
+ * @param {Function} sendFn
+ * @param {object} args
+ */
 async function notifyBestEffort(sendFn, args) {
     try {
         await sendFn(args);
@@ -28,6 +42,14 @@ async function notifyBestEffort(sendFn, args) {
     }
 }
 
+/**
+ * Activates, bans, or soft-deletes a user, invalidates their sites' cached
+ * ingest status, logs the action, and notifies the user by email.
+ *
+ * @param {string} userId
+ * @param {'Active'|'Banned'|'Deleted'} status
+ * @param {string} adminId
+ */
 async function updateUserStatusService(userId, status, adminId) {
     const user = await findUserById(userId)
 
@@ -75,6 +97,7 @@ async function updateUserStatusService(userId, status, adminId) {
     return result;
 }
 
+/** Paginated user listing with each user's plan resolved (lazily, read-only). */
 async function listUsersService({page, limit, search, status}) {
     const skip = (page - 1) * limit;
     const {users, total} = await listUsers({skip, take: limit, search, status});
@@ -92,6 +115,12 @@ async function listUsersService({page, limit, search, status}) {
     return {users: usersWithPlan, total, page, limit, totalPages: Math.ceil(total / limit)};
 }
 
+/**
+ * A single user's admin-facing detail. Unlike the list view, this does
+ * actually persist a downgrade if the subscription has lapsed
+ * (syncExpiredSubscription), since a single-record view is cheap to keep
+ * accurate.
+ */
 async function getUserDetailService(userId) {
     const user = await findUserByIdWithSites(userId);
     if(!user) {
@@ -102,6 +131,7 @@ async function getUserDetailService(userId) {
     return {...user, subscription};
 }
 
+/** Paginated site listing across all users, for the admin sites view. */
 async function listSitesService({page, limit, search}) {
     const skip = (page - 1) * limit;
     const {sites, total} = await listSites({skip, take: limit, search});
@@ -109,6 +139,14 @@ async function listSitesService({page, limit, search}) {
     return {sites, total, page, limit, totalPages: Math.ceil(total / limit)};
 }
 
+/**
+ * Directly sets a user's plan/billing cycle/status. The single write path
+ * for subscription changes — also used internally when a payment request is
+ * approved (see reviewPaymentRequestService) — so every caller gets the
+ * same no-op guard, cache invalidation, history entry, and notifications.
+ *
+ * @param {{userId: string, plan: string, billingCycle?: string, status?: string, adminId: string}} args
+ */
 async function setUserPlanService({userId, plan, billingCycle, status, adminId}) {
     const user = await findUserById(userId);
     if(!user) {
@@ -195,16 +233,18 @@ async function setUserPlanService({userId, plan, billingCycle, status, adminId})
     return {subscription, message: `User plan set to ${plan}`};
 }
 
-// A direct plan change makes any request this user has waiting for review
-// moot — left alone, approving it later would silently re-run
-// setUserPlanService and push currentPeriodEnd out another cycle for a
-// request that no longer reflects what's actually being decided. This is
-// queue cleanup, not the operation itself, so — same reasoning as
-// notifyBestEffort below — a failure here is logged and swallowed rather
-// than thrown: the plan change it's called from has typically already
-// committed by the time this runs, and a stale pending request left behind
-// on a rare failure is the same state as before this existed at all, not a
-// new problem.
+/**
+ * Auto-rejects any payment request this user still has pending. A direct
+ * plan change makes any request this user has waiting for review moot —
+ * left alone, approving it later would silently re-run setUserPlanService
+ * and push currentPeriodEnd out another cycle for a request that no longer
+ * reflects what's actually being decided. This is queue cleanup, not the
+ * operation itself, so — same reasoning as notifyBestEffort above — a
+ * failure here is logged and swallowed rather than thrown: the plan change
+ * it's called from has typically already committed by the time this runs,
+ * and a stale pending request left behind on a rare failure is the same
+ * state as before this existed at all, not a new problem.
+ */
 async function supersedePendingRequest({userId, adminId, user}) {
     try {
         const supersededRequest = await findPendingRequestByUserId(userId);
@@ -225,6 +265,7 @@ async function supersedePendingRequest({userId, adminId, user}) {
     }
 }
 
+/** Paginated, optionally status-filtered payment-request listing. */
 async function listPaymentRequestsService({page, limit, status}) {
     const skip = (page - 1) * limit;
     const {requests, total} = await listRequests({skip, take: limit, status});
@@ -232,12 +273,16 @@ async function listPaymentRequestsService({page, limit, status}) {
     return {requests, total, page, limit, totalPages: Math.ceil(total / limit) || 1};
 }
 
-// Approving reuses setUserPlanService rather than upserting the
-// subscription directly here — there should be exactly one place that
-// actually turns "a plan should change" into a written Subscription row,
-// so a payment-request approval and an admin manually setting a plan stay
-// governed by the same no-op guard, cache invalidation, history entry, and
-// admin log.
+/**
+ * Approves or rejects a payment request. Approving reuses
+ * setUserPlanService rather than upserting the subscription directly here —
+ * there should be exactly one place that actually turns "a plan should
+ * change" into a written Subscription row, so a payment-request approval
+ * and an admin manually setting a plan stay governed by the same no-op
+ * guard, cache invalidation, history entry, and admin log.
+ *
+ * @param {{requestId: string, status: 'Approved'|'Rejected', note?: string, adminId: string}} args
+ */
 async function reviewPaymentRequestService({requestId, status, note, adminId}) {
     const request = await findRequestById(requestId);
     if (!request) {
@@ -275,6 +320,7 @@ async function reviewPaymentRequestService({requestId, status, note, adminId}) {
     };
 }
 
+/** Users whose site count exceeds what their resolved plan allows. */
 async function listOverLimitUsersService() {
     const users = await listUsersWithSiteCounts();
 
@@ -287,9 +333,12 @@ async function listOverLimitUsersService() {
         .filter((u) => u.siteCount > PLAN_LIMITS[u.plan].maxSites);
 }
 
-// Thin pass-through to the same history service the user's own billing
-// page uses — an admin viewing one user's history and that user viewing
-// their own should never be able to disagree about what it says.
+/**
+ * A user's subscription/billing history, for the admin detail view. Thin
+ * pass-through to the same history service the user's own billing page
+ * uses — an admin viewing one user's history and that user viewing their
+ * own should never be able to disagree about what it says.
+ */
 async function getUserBillingHistoryService(userId, {page, limit}) {
     const user = await findUserById(userId);
     if (!user) {
@@ -299,6 +348,7 @@ async function getUserBillingHistoryService(userId, {page, limit}) {
     return getSubscriptionHistoryService(userId, {page, limit});
 }
 
+/** Paginated admin activity log. */
 async function listAdminLogsService({page, limit}) {
     const skip = (page - 1) * limit;
     const {logs, total} = await listAdminLogs({skip, take: limit});
@@ -306,6 +356,7 @@ async function listAdminLogsService({page, limit}) {
     return {logs, total, page, limit, totalPages: Math.ceil(total / limit) || 1};
 }
 
+/** Count of payment requests still awaiting review, for the admin nav badge. */
 async function getPendingPaymentRequestCountService() {
     const count = await countPendingPaymentRequests();
     return {count};

@@ -1,3 +1,7 @@
+/**
+ * Ingest module routes. Public (no auth) but rate-limited — see
+ * middleware/ingestRateLimiter.js.
+ */
 const express = require('express');
 const {recordEventController} = require('./ingest.controller');
 const validate = require('../../middleware/validate');;

@@ -1,3 +1,8 @@
+/**
+ * Business logic for subscriptions: lazily syncing a lapsed subscription
+ * back to Free (or a pending plan) the moment anyone actually looks at it,
+ * and the user-initiated cancel flow that schedules that drop for later.
+ */
 const {upsertUserSubscription, createSubscriptionHistory, listSubscriptionHistory, findSubscriptionByUserId} = require('./subscription.repository');
 const {findUserById} = require('../auth/auth.repository');
 const {findSitesByUserId} = require('../sites/sites.repository');
@@ -6,11 +11,13 @@ const {sendSubscriptionExpiredEmail, sendSitesDeactivatedEmail} = require('../em
 const {notifySubscriptionExpired, notifySitesDeactivated} = require('../notification/notification.service');
 const AppError = require('../../utils/AppError');
 
-// Same reasoning as admin.service.js's notifyBestEffort / billing.service.js's
-// local copy: by the time either caller below runs, the downgrade this is
-// reporting on has already committed, so a Resend outage shouldn't turn a
-// successful (if unwelcome) plan sync into a request failure. Logged, not
-// rethrown.
+/**
+ * Same reasoning as admin.service.js's notifyBestEffort / billing.service.js's
+ * local copy: by the time either caller below runs, the downgrade this is
+ * reporting on has already committed, so a Resend outage shouldn't turn a
+ * successful (if unwelcome) plan sync into a request failure. Logged, not
+ * rethrown.
+ */
 async function notifyBestEffort(fn) {
     try {
         await fn();
@@ -19,10 +26,12 @@ async function notifyBestEffort(fn) {
     }
 }
 
-// One row per real change, alongside whatever wrote it — never the only
-// record of a change (the Subscription row itself is), just the trail.
-// changedBy is an adminId, or null when the system did it on its own
-// (lazy expiry, a scheduled cancel finally landing).
+/**
+ * One row per real change, alongside whatever wrote it — never the only
+ * record of a change (the Subscription row itself is), just the trail.
+ * changedBy is an adminId, or null when the system did it on its own
+ * (lazy expiry, a scheduled cancel finally landing).
+ */
 async function recordSubscriptionHistory(userId, subscription, {changedBy = null, reason}) {
     return createSubscriptionHistory({
         userId,
@@ -35,27 +44,35 @@ async function recordSubscriptionHistory(userId, subscription, {changedBy = null
     });
 }
 
-// resolveEffectivePlan (config/plans.js) is read-time only — it tells
-// enforcement (site creation, ingest quota) to treat a lapsed subscription
-// as Free without ever touching the row itself, so the DB can say "Pro"
-// indefinitely after the period ends. This is the one place that turns
-// that into a real, persisted fact: called wherever a subscription is
-// about to be shown to someone (this user's own /auth/me, the admin
-// panel), it writes the downgrade back the first time either of them
-// looks, instead of leaving every reader to quietly disagree with what's
-// actually being enforced.
-//
-// Also the landing point for a scheduled self-service cancel (see
-// cancelSubscription below): pendingPlan, if set, is what gets applied
-// instead of the bare Free fallback — same mechanism, one extra field.
-//
-// Lives in its own module (rather than admin's) because auth.service.js
-// needs it too for /auth/me — auth reaching into the admin module just to
-// resolve a subscription would be a strange dependency direction.
-//
-// Takes the subscription already fetched by the caller rather than
-// re-querying — avoids a second DB round trip on every single call just
-// to check a field the caller already has in hand.
+/**
+ * Applies a lapsed subscription's downgrade the first time anyone actually
+ * looks at it, and notifies the user it happened.
+ *
+ * resolveEffectivePlan (config/plans.js) is read-time only — it tells
+ * enforcement (site creation, ingest quota) to treat a lapsed subscription
+ * as Free without ever touching the row itself, so the DB can say "Pro"
+ * indefinitely after the period ends. This is the one place that turns
+ * that into a real, persisted fact: called wherever a subscription is
+ * about to be shown to someone (this user's own /auth/me, the admin
+ * panel), it writes the downgrade back the first time either of them
+ * looks, instead of leaving every reader to quietly disagree with what's
+ * actually being enforced.
+ *
+ * Also the landing point for a scheduled self-service cancel (see
+ * cancelSubscription below): pendingPlan, if set, is what gets applied
+ * instead of the bare Free fallback — same mechanism, one extra field.
+ *
+ * Lives in its own module (rather than admin's) because auth.service.js
+ * needs it too for /auth/me — auth reaching into the admin module just to
+ * resolve a subscription would be a strange dependency direction.
+ *
+ * Takes the subscription already fetched by the caller rather than
+ * re-querying — avoids a second DB round trip on every single call just
+ * to check a field the caller already has in hand.
+ *
+ * @param {string} userId
+ * @param {object|null} subscription The caller's already-fetched subscription row.
+ */
 async function syncExpiredSubscription(userId, subscription) {
     if (!subscription || subscription.plan === 'Free') return subscription;
 
@@ -99,13 +116,15 @@ async function syncExpiredSubscription(userId, subscription) {
     return updated;
 }
 
-// User-initiated cancel. Doesn't touch plan/currentPeriodEnd/billingCycle —
-// there's no payment processor here to prorate a refund through, so instead
-// of cutting access off immediately, access stays at the current paid plan
-// through what's already been paid for, and syncExpiredSubscription applies
-// the drop to Free itself once currentPeriodEnd actually arrives. Admin
-// downgrades stay a separate, immediate path (setUserPlanService) — that's
-// still the tool for cause.
+/**
+ * User-initiated cancel. Doesn't touch plan/currentPeriodEnd/billingCycle —
+ * there's no payment processor here to prorate a refund through, so instead
+ * of cutting access off immediately, access stays at the current paid plan
+ * through what's already been paid for, and syncExpiredSubscription applies
+ * the drop to Free itself once currentPeriodEnd actually arrives. Admin
+ * downgrades stay a separate, immediate path (setUserPlanService) — that's
+ * still the tool for cause.
+ */
 async function cancelSubscription(userId) {
     const subscription = await findSubscriptionByUserId(userId);
 
@@ -128,6 +147,7 @@ async function cancelSubscription(userId) {
     return updated;
 }
 
+/** Paginated subscription/billing history for one user. */
 async function getSubscriptionHistoryService(userId, {page = 1, limit = 20} = {}) {
     const skip = (page - 1) * limit;
     const {entries, total} = await listSubscriptionHistory(userId, {skip, take: limit});

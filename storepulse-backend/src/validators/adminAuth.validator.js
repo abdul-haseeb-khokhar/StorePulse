@@ -1,3 +1,7 @@
+/**
+ * Zod request schemas for admin authentication: inviting an admin, accepting
+ * an invite, and admin login.
+ */
 const {z} = require('zod');
 
 const emailValidator = z.string().email('Invalid email address').toLowerCase();

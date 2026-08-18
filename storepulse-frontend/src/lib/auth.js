@@ -1,3 +1,7 @@
+/**
+ * Regular-user session storage: token/user-profile persistence in
+ * localStorage.
+ */
 import { queryClient } from "./queryClient";
 
 const TOKEN_KEY = "storepulse_token";

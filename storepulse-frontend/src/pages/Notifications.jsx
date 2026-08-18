@@ -1,3 +1,7 @@
+/**
+ * Notifications — paginated in-app notification list with mark-read /
+ * mark-all-read actions, mirroring the bell dropdown's data.
+ */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

@@ -1,3 +1,6 @@
+/**
+ * NotFound — catch-all 404 page for any unmatched route.
+ */
 import { Link } from "react-router-dom";
 import { Compass } from "lucide-react";
 import BlankLayout from "../layouts/BlankLayout";

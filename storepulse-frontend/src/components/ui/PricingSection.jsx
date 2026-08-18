@@ -1,3 +1,7 @@
+/**
+ * PricingSection — landing page's pricing cards over the static plan data
+ * in lib/landingData.js, with a monthly/annual billing toggle.
+ */
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -18,7 +22,7 @@ export default function PricingSection() {
 
   return (
     <section id="pricing" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 lg:py-24 flex flex-col gap-12">
-      
+
       {/* Header & Annual Toggle — Left-aligned */}
       <motion.div {...reveal(itemFadeUp)} className="flex flex-col items-start text-left gap-3 max-w-3xl">
         <Eyebrow>TRANSPARENT PRICING</Eyebrow>

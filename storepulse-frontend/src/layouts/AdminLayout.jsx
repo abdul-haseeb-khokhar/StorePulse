@@ -1,3 +1,8 @@
+/**
+ * AdminLayout — top nav for every admin screen, with a live-polled badge on
+ * the "Payment Requests" link and superadmin-only links (Logs, Admins)
+ * shown conditionally based on the logged-in admin's role.
+ */
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { LayoutDashboard, Users, Globe, Receipt, ScrollText, ShieldCheck } from "lucide-react";

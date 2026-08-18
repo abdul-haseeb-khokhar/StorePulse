@@ -19,12 +19,15 @@ function formatNumber(value) {
   return new Intl.NumberFormat().format(value || 0);
 }
 
-// Landing hub for everything billing-related — previously scattered across
-// this page (just the plan picker) and the Profile page (usage + billing
-// history buried under a Plan card). Each card below owns one concern and
-// links to its own page; this page itself just previews them, reusing the
-// same queries those pages need anyway so navigating into one is instant
-// (TanStack Query serves the already-cached data within its staleTime).
+/**
+ * Billing — landing hub for everything billing-related, previously
+ * scattered across this page (just the plan picker) and the Profile page
+ * (usage + billing history buried under a Plan card). Each card below owns
+ * one concern and links to its own page; this page itself just previews
+ * them, reusing the same queries those pages need anyway so navigating
+ * into one is instant (TanStack Query serves the already-cached data
+ * within its staleTime).
+ */
 export default function Billing() {
   const meQuery = useQuery({
     queryKey: queryKeys.me,

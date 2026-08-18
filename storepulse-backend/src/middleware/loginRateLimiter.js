@@ -1,9 +1,13 @@
+/**
+ * Rate limiters for the regular (non-admin) login endpoint: one keyed on
+ * the attempted account, one keyed on the caller's IP.
+ */
 const rateLimit = require('express-rate-limit');
 const { ipKeyGenerator } = require('express-rate-limit');
 const { createRedisStore } = require('./rateLimitStore');
 
-// Keyed on the attempted email — the actual attack target. Stricter than the
-// IP limit because rotating proxies/IPs doesn't reset this one.
+// Keyed on the attempted email — the actual attack target. Stricter than
+// the IP limit because rotating proxies/IPs doesn't reset this one.
 const loginRateLimiterByAccount = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 5,

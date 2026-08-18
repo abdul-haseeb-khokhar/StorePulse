@@ -1,3 +1,7 @@
+/**
+ * SitesList — grid of the user's sites, each card previewing its own
+ * 7-day summary (fetched in parallel via useQueries, one query per site).
+ */
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";

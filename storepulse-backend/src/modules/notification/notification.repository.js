@@ -1,3 +1,6 @@
+/**
+ * Prisma queries backing in-app notifications.
+ */
 const prisma = require('../../config/prisma');
 
 const NOTIFICATION_SELECT = {id: true, type: true, message: true, link: true, read: true, createdAt: true};

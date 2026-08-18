@@ -1,3 +1,8 @@
+/**
+ * Landing — the public marketing homepage (/), assembled from independent
+ * section components. Only ever rendered for logged-out visitors (behind
+ * RequireGuest in App.jsx).
+ */
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import HomeHeader from "../components/ui/HomeHeader";

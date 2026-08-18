@@ -1,3 +1,8 @@
+/**
+ * Settings — account profile page: inline-editable name/email (email
+ * changes require confirmation via a link to the new address), a
+ * collapsible change-password section, and logout.
+ */
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

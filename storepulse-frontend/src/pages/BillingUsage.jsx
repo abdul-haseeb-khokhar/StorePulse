@@ -1,3 +1,7 @@
+/**
+ * BillingUsage — this month's event count per site against the plan's
+ * monthly quota.
+ */
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import AppLayout from "../layouts/AppLayout";

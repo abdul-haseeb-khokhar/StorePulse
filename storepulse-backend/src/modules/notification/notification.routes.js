@@ -1,3 +1,6 @@
+/**
+ * Notification module routes. All require a logged-in user.
+ */
 const express = require('express');
 const {
     listMyNotificationsController, markMyNotificationReadController, markAllMyNotificationsReadController,

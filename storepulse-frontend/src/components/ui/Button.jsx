@@ -1,3 +1,8 @@
+/**
+ * Button — the shared button primitive. Visual variants/sizes map onto
+ * index.css's .btn-* classes rather than one-off Tailwind combinations, so
+ * every button in the app stays visually consistent by construction.
+ */
 const variantClass = {
   primary: "btn-primary",
   secondary: "btn-secondary",
@@ -45,4 +50,3 @@ export default function Button({
     </button>
   );
 }
-

@@ -1,3 +1,8 @@
+/**
+ * Docs — the public integration guide (/docs): scroll-spied table of
+ * contents on the left, static instructional content (mostly copy and
+ * snippets from lib/docsData.js) on the right.
+ */
 import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import DocsHeader from "../components/ui/DocsHeader";

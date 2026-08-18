@@ -1,3 +1,9 @@
+/**
+ * Business logic for the analytics module: turns raw event counts into the
+ * traffic chart, headline summary, and top-products/top-referrers views the
+ * dashboard shows, after confirming the requesting user actually has access
+ * to the site's data.
+ */
 const { getDailyTraffic, countPageViews, countProductClicks, countUniqueVisitors, getTopClickedProducts, getTopReferrers } = require(
     './analytics.repository'
 )
@@ -5,18 +11,21 @@ const { getSiteById } = require('../sites/sites.service')
 const {formateDateKey, buildDateRange, resolveDateBoundary} = require('../../utils/dateRange')
 const AppError = require('../../utils/AppError')
 
-// Ownership alone isn't enough to read a site's analytics — a site that
-// exists but no longer fits the owner's plan (see sites.service.js's
-// isSiteActive) shouldn't leak real numbers to the dashboard just because
-// the frontend chose not to ask. Rejecting here, not just in the UI, is
-// what makes this actual enforcement rather than a cosmetic fog.
+/**
+ * Guards every analytics read below. Ownership alone isn't enough to read a
+ * site's analytics — a site that exists but no longer fits the owner's plan
+ * (see sites.service.js's isSiteActive) shouldn't leak real numbers to the
+ * dashboard just because the frontend chose not to ask. Rejecting here, not
+ * just in the UI, is what makes this actual enforcement rather than a
+ * cosmetic fog.
+ */
 function assertSiteActive(site) {
     if (!site.active) {
         throw new AppError("This site isn't included in your current plan. Upgrade to see its data.", 403);
     }
 }
 
-// This function manages the traffic on the site on daily basis
+/** Daily page-view/click counts for a site, with days that had no events filled in as zero. */
 async function getTrafficOverview({ siteId, userId, startDate, endDate }) {
     assertSiteActive(await getSiteById({ siteId, userId }));
 
@@ -42,6 +51,7 @@ async function getTrafficOverview({ siteId, userId, startDate, endDate }) {
     })
 }
 
+/** The immediately-preceding period of equal length, for period-over-period comparison. */
 function getPreviousPeriod (startDate, endDate) {
     const periodLengthMs = endDate.getTime() - startDate.getTime();
 
@@ -51,6 +61,7 @@ function getPreviousPeriod (startDate, endDate) {
     return {previousEndDate, previousStartDate};
 }
 
+/** Percent change from `previous` to `current`, treating a 0 baseline as +100% if current is nonzero. */
 function calculatePercentChange(current, previous){
     if(previous === 0) {
         return current === 0 ? 0 : 100;
@@ -59,12 +70,13 @@ function calculatePercentChange(current, previous){
     return Math.round(((current-previous)/previous) * 100);
 }
 
+/** Headline stats (page views, clicks, unique visitors) for a range, each with its change vs. the prior equal-length period. */
 async function getSummary({siteId, userId, startDate, endDate}) {
     assertSiteActive(await getSiteById({siteId, userId}));
 
     const {previousStartDate, previousEndDate} = getPreviousPeriod(startDate, endDate);
 
-    const [currentPageViews, 
+    const [currentPageViews,
         currentClicks,
         currentVisitors,
         previousPageViews,
@@ -95,6 +107,7 @@ async function getSummary({siteId, userId, startDate, endDate}) {
     }
 }
 
+/** Most-clicked products for a site within a date boundary. */
 async function getTopProducts(siteId, userId,{startDate, endDate, limit}) {
     assertSiteActive(await getSiteById({siteId, userId}));
 
@@ -108,9 +121,10 @@ async function getTopProducts(siteId, userId,{startDate, endDate, limit}) {
     }));
 }
 
+/** Top referring sources for a site within a date boundary. */
 async function getTopReferrersService(siteId, userId,{startDate, endDate, limit}) {
     assertSiteActive(await getSiteById({siteId, userId}));
-    
+
     const range = resolveDateBoundary(startDate, endDate);
     const rows = await getTopReferrers({siteId, ...range, limit});
 

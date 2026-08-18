@@ -1,3 +1,7 @@
+/**
+ * AdminUsers — paginated, searchable/filterable user listing with inline
+ * status actions (activate/ban/delete).
+ */
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

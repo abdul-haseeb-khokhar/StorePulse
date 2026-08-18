@@ -1,3 +1,9 @@
+/**
+ * Top-level route table. Three route groups by access level: guest-only
+ * (redirects an already-logged-in user straight to the dashboard),
+ * authenticated (wrapped in RequireAuth), and admin (wrapped in
+ * RequireAdminAuth, entirely separate from the customer-facing session).
+ */
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 import Landing from "./pages/Landing";

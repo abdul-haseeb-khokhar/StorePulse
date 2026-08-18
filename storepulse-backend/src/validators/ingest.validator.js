@@ -1,3 +1,9 @@
+/**
+ * Zod request schema for the public event-ingest endpoint. This is the only
+ * validation standing between the open internet and the ingest pipeline, so
+ * it's stricter than the dashboard-facing validators (regex-checked API key,
+ * enum-checked event type).
+ */
 const {z} = require('zod');
 
 const trackEventSchema = z.object({
@@ -12,6 +18,8 @@ const trackEventSchema = z.object({
         productName: z.string().optional().nullable(),
         visitorId: z.string().uuid('VisitorId must be a valid UUID'),
     }).superRefine((data, ctx) => {
+        // productId can't be a plain .required() on the field itself since
+        // it's only mandatory for one of the two event types.
         if(data.type === 'PRODUCT_CLICK' && !data.productId) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,

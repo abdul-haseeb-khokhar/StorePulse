@@ -1,3 +1,8 @@
+/**
+ * Shared "contact us" affordances: ContactLink (the generic NYRON-branded
+ * touchpoint used across the app) and ContactChannels (BillingPay's
+ * StorePulse-specific WhatsApp/email pair).
+ */
 import { Mail, MessageCircle } from "lucide-react";
 import { NYRON_CONTACT_URL, CONTACT_GMAIL_URL } from "../../lib/contact";
 

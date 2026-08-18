@@ -1,3 +1,7 @@
+/**
+ * Zod request schemas for the billing module: creating a payment request and
+ * paginating a listing.
+ */
 const {z} = require('zod');
 
 const createPaymentRequestSchema = z.object({

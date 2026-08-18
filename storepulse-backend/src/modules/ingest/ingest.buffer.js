@@ -1,3 +1,9 @@
+/**
+ * Write-behind buffer for incoming events: events land in a Redis list
+ * first and are flushed to Postgres in batches (by size or on a timer — see
+ * the cron-style caller of flushBuffer), so a burst of ingest traffic never
+ * hits the database as individual inserts.
+ */
 const path = require('path');
 const fs = require('fs')
 const { createManyEvents } = require('./ingest.repository');
@@ -10,16 +16,22 @@ const MAX_BUFFER_SIZE = 500;
 const MAX_RETRIES = 3;
 const FAILED_EVENTS_LOG = path.join(__dirname, 'failed-events.log')
 
-// Analytics reads straight from Postgres, but events sit in the Redis
-// buffer above for up to FLUSH_INTERVAL_MS (or until MAX_BUFFER_SIZE is hit)
-// before landing there. This timestamp — set per site, only on a successful
-// write, not on a failed one — lets the analytics API tell callers exactly
-// how fresh THAT SITE's numbers are, instead of silently implying they're
-// live or reporting the shared buffer's activity across every site at once.
+/**
+ * Analytics reads straight from Postgres, but events sit in the Redis
+ * buffer above for up to FLUSH_INTERVAL_MS (or until MAX_BUFFER_SIZE is hit)
+ * before landing there. This timestamp — set per site, only on a successful
+ * write, not on a failed one — lets the analytics API tell callers exactly
+ * how fresh THAT SITE's numbers are, instead of silently implying they're
+ * live or reporting the shared buffer's activity across every site at once.
+ *
+ * @param {string} siteId
+ * @returns {Promise<string|null>} ISO timestamp of the site's last successful flush, or null if it's never flushed.
+ */
 async function getLastFlushAt(siteId) {
     return redisClient.get(`${LAST_FLUSH_KEY_PREFIX}${siteId}`);
 }
 
+/** Pushes one event into the buffer, triggering an immediate flush if it's now full. */
 async function addToBuffer(event){
     await redisClient.lpush(BUFFER_KEY, JSON.stringify(event));
 
@@ -29,6 +41,7 @@ async function addToBuffer(event){
     }
 }
 
+/** Drains up to MAX_BUFFER_SIZE buffered events into Postgres. */
 async function flushBuffer(){
     const rawEvents = await redisClient.lrange(BUFFER_KEY, 0, MAX_BUFFER_SIZE - 1);
 
@@ -39,6 +52,7 @@ async function flushBuffer(){
     await writesWithRetry(events, rawEvents.length , MAX_RETRIES);
 }
 
+/** Writes a batch to Postgres, retrying with a fixed backoff before falling back to disk logging. */
 async function writesWithRetry(events, countToTrim, attemptsLeft) {
     try{
         await createManyEvents(events);
@@ -64,6 +78,7 @@ async function writesWithRetry(events, countToTrim, attemptsLeft) {
     }
 }
 
+/** Last resort when Postgres writes keep failing: append the batch to a local log instead of losing it. */
 function saveFailedEvents(events) {
     const line = JSON.stringify({failedAt: new Date().toISOString(), events}) + "\n";
     fs.appendFile(FAILED_EVENTS_LOG, line, (err) => {

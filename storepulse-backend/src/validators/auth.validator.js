@@ -1,3 +1,7 @@
+/**
+ * Zod request schemas for the regular user auth module: register/login,
+ * profile changes, and the email verification / password reset flows.
+ */
 const {z} = require('zod');
 
 const fullNameValidator = z.string()

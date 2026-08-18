@@ -1,3 +1,8 @@
+/**
+ * HeroSectionOne — landing page hero: marketing copy on the left, a static
+ * mock dashboard preview (hardcoded sample numbers, not live data) on the
+ * right.
+ */
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {

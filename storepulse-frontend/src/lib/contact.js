@@ -1,3 +1,7 @@
+/**
+ * Contact touchpoints (email, WhatsApp) used across the app's "need help"
+ * links, plus the NYRON credit link used in footers.
+ */
 export const CONTACT_EMAIL = import.meta.env.VITE_CONTACT_EMAIL;
 
 // Plain mailto: links depend on whatever mail client the OS/browser has

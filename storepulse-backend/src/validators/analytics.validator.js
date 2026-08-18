@@ -1,3 +1,8 @@
+/**
+ * Zod request schemas for the analytics module's routes. The two schemas
+ * mirror the two ways a date window can be specified across the analytics
+ * endpoints — see the per-schema notes below.
+ */
 const {z} = require('zod');
 
 // summary/traffic take a `range` shorthand the controller converts itself

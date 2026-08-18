@@ -1,9 +1,12 @@
-// Colors and type mirror storepulse-frontend/src/index.css's light-theme
-// tokens (--paper, --paper-card, --ink, --stamp, --divider, --muted) so
-// these emails read as the same product as the app. Email clients don't
-// support CSS custom properties, so the values are inlined directly, and
-// the font stacks fall back the same way index.css's --font-display /
-// --font-body do (no web font is loaded — most clients would strip it).
+/**
+ * HTML/plain-text builders for every transactional email the app sends.
+ * Colors and type mirror storepulse-frontend/src/index.css's light-theme
+ * tokens (--paper, --paper-card, --ink, --stamp, --divider, --muted) so
+ * these emails read as the same product as the app. Email clients don't
+ * support CSS custom properties, so the values are inlined directly, and
+ * the font stacks fall back the same way index.css's --font-display /
+ * --font-body do (no web font is loaded — most clients would strip it).
+ */
 
 const FONT_DISPLAY = "'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace";
 const FONT_BODY = "'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif";
@@ -24,6 +27,7 @@ function escapeHtml(value) {
     return String(value).replace(/[&<>"']/g, (char) => HTML_ESCAPES[char]);
 }
 
+/** Shared card layout every template renders its content into. */
 function baseLayout({ kicker, heading, bodyText, buttonText, buttonUrl, footerNote }) {
     return `
     <div style="font-family: ${FONT_BODY}; background-color: ${PAPER}; padding: 40px 20px;">
@@ -111,10 +115,12 @@ function adminInviteTemplate({acceptUrl}) {
     return {subject: 'You\'ve been invited to StorePulse admin', html, text};
 }
 
-// The lightweight half of gap #12 from the subscription scoping pass —
-// there's no in-app notification center yet, so this reuses the email
-// infrastructure that already works rather than building a throwaway
-// stand-in for whatever that center ends up looking like.
+/**
+ * The lightweight half of gap #12 from the subscription scoping pass —
+ * there's no in-app notification center yet, so this reuses the email
+ * infrastructure that already works rather than building a throwaway
+ * stand-in for whatever that center ends up looking like.
+ */
 function planChangedTemplate({fullName, plan, billingCycle, currentPeriodEnd, billingUrl}) {
     const kicker = 'Account';
     const heading = 'Your plan has changed';
@@ -189,13 +195,15 @@ function paymentRequestReviewedTemplate({fullName, status, plan, reviewNote, bil
     };
 }
 
-// Row 6 of the notification scoping pass — syncExpiredSubscription
-// (subscription.service.js) applies this downgrade lazily, on whatever
-// request happens to notice the period has ended, with nothing telling the
-// user it happened. `wasScheduled` distinguishes the two reasons it can
-// fire (see recordSubscriptionHistory's reason strings there): a plan that
-// simply lapsed vs. a self-service cancel finally landing — the user asked
-// for the second one, so the copy confirms it rather than breaking it as news.
+/**
+ * Row 6 of the notification scoping pass — syncExpiredSubscription
+ * (subscription.service.js) applies this downgrade lazily, on whatever
+ * request happens to notice the period has ended, with nothing telling the
+ * user it happened. `wasScheduled` distinguishes the two reasons it can
+ * fire (see recordSubscriptionHistory's reason strings there): a plan that
+ * simply lapsed vs. a self-service cancel finally landing — the user asked
+ * for the second one, so the copy confirms it rather than breaking it as news.
+ */
 function subscriptionExpiredTemplate({fullName, previousPlan, wasScheduled, billingUrl}) {
     const kicker = 'Account';
     const heading = 'Your plan is now Free';
@@ -218,13 +226,15 @@ function subscriptionExpiredTemplate({fullName, previousPlan, wasScheduled, bill
     return {subject: 'Your StorePulse plan is now Free', html, text};
 }
 
-// Row 7 of the notification scoping pass — a plan change (admin-set or a
-// lazy expiry) can lower maxSites below what a user's already-created
-// sites need, silently pushing the newest ones out of the active ranking
-// (see sites.service.js's annotateActiveSites/getNewlyDeactivatedSites).
-// Those sites keep accepting events from their embedded snippet either
-// way — ingest doesn't reject them — they just stop counting, which is a
-// confusing thing to notice only by an analytics dashboard looking wrong.
+/**
+ * Row 7 of the notification scoping pass — a plan change (admin-set or a
+ * lazy expiry) can lower maxSites below what a user's already-created
+ * sites need, silently pushing the newest ones out of the active ranking
+ * (see sites.service.js's annotateActiveSites/getNewlyDeactivatedSites).
+ * Those sites keep accepting events from their embedded snippet either
+ * way — ingest doesn't reject them — they just stop counting, which is a
+ * confusing thing to notice only by an analytics dashboard looking wrong.
+ */
 function sitesDeactivatedTemplate({fullName, sites, plan, billingUrl}) {
     const kicker = 'Sites';
     const heading = sites.length === 1 ? 'One of your sites is now inactive' : `${sites.length} of your sites are now inactive`;

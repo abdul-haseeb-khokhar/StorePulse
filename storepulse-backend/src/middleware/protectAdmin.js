@@ -1,7 +1,16 @@
+/**
+ * Auth guard for admin routes: requires a valid Bearer JWT and an active
+ * admin account, then attaches `req.admin` (id + role) for downstream
+ * handlers such as requireSuperAdmin.
+ */
 const {verifyToken} = require('../utils/jwt');
 const AppError = require('../utils/AppError');
 const {findAdminById} = require('../modules/adminAuth/adminAuth.repository');
 
+/**
+ * Express middleware. Populates `req.admin = { id, role }` on success, or
+ * forwards a 401/403/404 AppError on any auth failure.
+ */
 async function protectAdmin(req, res, next) {
     try {
         const authHeader = req.headers.authorization;

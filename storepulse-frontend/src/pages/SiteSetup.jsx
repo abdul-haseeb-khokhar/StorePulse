@@ -1,3 +1,8 @@
+/**
+ * SiteSetup — one-time "your site is ready" screen shown right after
+ * creating a site: the tracking snippet to copy/paste, plus a way straight
+ * into the dashboard.
+ */
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";

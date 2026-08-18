@@ -1,13 +1,12 @@
+/**
+ * Shared Framer Motion presets — values lifted directly from the NYRON
+ * design system's documented "Container Stagger" / "Item Fade-Up" patterns,
+ * so grids of cards enter with the same staggered fade-up feel across every
+ * NYRON product. Import these rather than redefining variants inline
+ * (NYRON's own audit flags exactly that duplication as a thing to avoid).
+ */
 export { useReducedMotion } from "framer-motion";
 
-/**
- * Framer Motion presets — values lifted directly from the NYRON design
- * system's documented "Container Stagger" / "Item Fade-Up" patterns, so
- * grids of cards enter with the same staggered fade-up feel across
- * every NYRON product. Import these rather than redefining variants
- * inline (NYRON's own audit flags exactly that duplication as a thing
- * to avoid).
- */
 export const containerStagger = {
   hidden: { opacity: 0 },
   visible: {

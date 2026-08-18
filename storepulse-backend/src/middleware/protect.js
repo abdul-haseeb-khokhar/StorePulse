@@ -1,7 +1,15 @@
+/**
+ * Auth guard for regular (non-admin) routes: requires a valid Bearer JWT and
+ * an active user account, then attaches `req.user` for downstream handlers.
+ */
 const {verifyToken} = require('../utils/jwt');
 const AppError = require('../utils/AppError');
 const {findUserById} = require('../modules/auth/auth.repository');
 
+/**
+ * Express middleware. Populates `req.user = { id }` on success, or forwards
+ * a 401/403/404 AppError on any auth failure.
+ */
 async function protect(req, res, next) {
     try {
         const authHeader = req.headers.authorization;
@@ -24,7 +32,7 @@ async function protect(req, res, next) {
         }
 
         const user = await findUserById(decoded.userId);
-        
+
         if(!user) {
             throw new AppError('User not found', 404);
         }

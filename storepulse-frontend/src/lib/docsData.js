@@ -1,3 +1,7 @@
+/**
+ * Static copy/snippets for the /docs page: section list, install
+ * snippets per framework, example payloads, and the troubleshooting table.
+ */
 import { API_BASE_URL } from "./api";
 
 export const DOC_SECTIONS = [

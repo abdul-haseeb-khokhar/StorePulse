@@ -1,6 +1,16 @@
+/**
+ * Prisma queries backing ingest: the API-key lookup that resolves a site's
+ * owner/plan/rank, and the batch insert the buffer flushes into.
+ */
 const prisma = require('../../config/prisma');
 const {countSitesCreatedUpTo} = require('../sites/sites.repository');
 
+/**
+ * Resolves a site (with owner status/plan and creation rank) from its API
+ * key. This is the object ingest.cache.js caches for CACHE_TTL_SECONDS, so
+ * everything it includes is deliberately just what recordEvent needs to
+ * enforce access without a second round trip.
+ */
 async function findSiteByApiKey(apiKey) {
     const site = await prisma.site.findUnique({
         where: {apiKey},
@@ -32,6 +42,7 @@ async function findSiteByApiKey(apiKey) {
     return {...site, rank};
 }
 
+/** Batch-inserts a flushed page of buffered events. */
 async function createManyEvents(events) {
     return prisma.event.createMany({
         data: events,
