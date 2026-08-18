@@ -14,7 +14,7 @@ const PALETTES = {
 
 /**
  * TrafficChart — bars = product clicks, line = page views, matching the
- * design's combo chart. `data` is [{ date, visitors, clicks }], same
+ * design's combo chart. `data` is [{ date, pageViews, clicks }], same
  * shape the dashboard's analytics fetch already produces.
  */
 export default function TrafficChart({ data }) {
@@ -56,7 +56,7 @@ export default function TrafficChart({ data }) {
             <Bar dataKey="clicks" name="Product clicks" fill={palette.clicks} />
             <Line
               type="monotone"
-              dataKey="visitors"
+              dataKey="pageViews"
               name="Page views"
               stroke={palette.views}
               strokeWidth={2}

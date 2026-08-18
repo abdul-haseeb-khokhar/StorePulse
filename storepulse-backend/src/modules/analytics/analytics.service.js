@@ -3,17 +3,29 @@ const { getDailyTraffic, countPageViews, countProductClicks, countUniqueVisitors
 )
 const { getSiteById } = require('../sites/sites.service')
 const {formateDateKey, buildDateRange, resolveDateBoundary} = require('../../utils/dateRange')
+const AppError = require('../../utils/AppError')
+
+// Ownership alone isn't enough to read a site's analytics — a site that
+// exists but no longer fits the owner's plan (see sites.service.js's
+// isSiteActive) shouldn't leak real numbers to the dashboard just because
+// the frontend chose not to ask. Rejecting here, not just in the UI, is
+// what makes this actual enforcement rather than a cosmetic fog.
+function assertSiteActive(site) {
+    if (!site.active) {
+        throw new AppError("This site isn't included in your current plan. Upgrade to see its data.", 403);
+    }
+}
 
 // This function manages the traffic on the site on daily basis
 async function getTrafficOverview({ siteId, userId, startDate, endDate }) {
-    await getSiteById({ siteId, userId });
+    assertSiteActive(await getSiteById({ siteId, userId }));
 
     const rawResults = await getDailyTraffic({ siteId, startDate, endDate });
 
     const resultsByDate = new Map();
     rawResults.forEach((row) => {
         resultsByDate.set(formateDateKey(row.date), {
-            visitors: Number(row.visitors),
+            pageViews: Number(row.pageViews),
             clicks: Number(row.clicks)
         });
     });
@@ -24,7 +36,7 @@ async function getTrafficOverview({ siteId, userId, startDate, endDate }) {
         const dayData = resultsByDate.get(date);
         return {
             date,
-            visitors: dayData ? dayData.visitors : 0,
+            pageViews: dayData ? dayData.pageViews : 0,
             clicks: dayData ? dayData.clicks : 0
         }
     })
@@ -48,7 +60,7 @@ function calculatePercentChange(current, previous){
 }
 
 async function getSummary({siteId, userId, startDate, endDate}) {
-    await getSiteById({siteId, userId});
+    assertSiteActive(await getSiteById({siteId, userId}));
 
     const {previousStartDate, previousEndDate} = getPreviousPeriod(startDate, endDate);
 
@@ -84,7 +96,7 @@ async function getSummary({siteId, userId, startDate, endDate}) {
 }
 
 async function getTopProducts(siteId, userId,{startDate, endDate, limit}) {
-    await getSiteById({siteId, userId});
+    assertSiteActive(await getSiteById({siteId, userId}));
 
     const range = resolveDateBoundary(startDate, endDate);
     const rows = await getTopClickedProducts({siteId, ...range, limit});
@@ -97,14 +109,17 @@ async function getTopProducts(siteId, userId,{startDate, endDate, limit}) {
 }
 
 async function getTopReferrersService(siteId, userId,{startDate, endDate, limit}) {
-    await getSiteById({siteId, userId});
+    assertSiteActive(await getSiteById({siteId, userId}));
     
     const range = resolveDateBoundary(startDate, endDate);
     const rows = await getTopReferrers({siteId, ...range, limit});
 
     return rows.map (r => ({
         referrers: r.referrer,
-        visitors: r._count.referrer
+        // Page views from this referrer, not deduplicated visitors — same
+        // distinction as getTrafficOverview's pageViews above. Named to
+        // match rather than reuse "visitors" for a number that isn't one.
+        pageViews: r._count.referrer
     }))
 }
 module.exports = {

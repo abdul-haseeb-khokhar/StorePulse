@@ -104,9 +104,19 @@ export default function Dashboard() {
       : null;
 
   // Derived during render rather than synced via setState-in-effect: falls
-  // back to the first site once the list arrives, same default the old
-  // fetch-success handler picked, without needing an extra render pass.
-  const effectiveSiteId = selectedSiteId || sites[0]?.id || "";
+  // back to a site once the list arrives, without needing an extra render
+  // pass. Prefers an active one — /api/sites is newest-first, and the
+  // newest site is exactly the one most likely to be locked after a
+  // downgrade (see sites.service.js's isSiteActive), so defaulting to
+  // sites[0] would land most downgraded users on the locked-site card
+  // instead of the real data their still-active oldest site has.
+  const effectiveSiteId =
+    selectedSiteId || sites.find((site) => site.active !== false)?.id || sites[0]?.id || "";
+  // Sites are never deleted when a downgrade pushes them past the plan's
+  // site limit — they just stop appearing here as real data (see
+  // sites.service.js's isSiteActive / analytics.service.js's
+  // assertSiteActive, which 403s these same endpoints server-side).
+  const isLocked = sites.find((site) => site.id === effectiveSiteId)?.active === false;
 
   useEffect(() => {
     if (!effectiveSiteId) return;
@@ -123,7 +133,7 @@ export default function Dashboard() {
       const { data } = await api.get(`/analytics/${effectiveSiteId}/summary`, { params: { range } });
       return { summary: data.summary, dataAsOf: data.dataAsOf };
     },
-    enabled: Boolean(effectiveSiteId),
+    enabled: Boolean(effectiveSiteId) && !isLocked,
     refetchInterval: LIVE_METRICS_REFETCH_MS,
   });
 
@@ -136,7 +146,7 @@ export default function Dashboard() {
         dataAsOf: data.dataAsOf,
       };
     },
-    enabled: Boolean(effectiveSiteId),
+    enabled: Boolean(effectiveSiteId) && !isLocked,
     refetchInterval: LIVE_METRICS_REFETCH_MS,
   });
 
@@ -145,8 +155,11 @@ export default function Dashboard() {
   const dataAsOf = summaryQuery.data?.dataAsOf ?? trafficQuery.data?.dataAsOf ?? null;
   const analyticsErrorObj = summaryQuery.error ?? trafficQuery.error ?? null;
   const error = analyticsErrorObj ? getApiErrorMessage(analyticsErrorObj, "Could not load analytics.") : null;
+  // isLoading, not isPending — a disabled query (see the `!isLocked` guards
+  // above) never starts fetching and would otherwise stay isPending forever,
+  // the same trap fixed in SitesList.jsx's loading check.
   const loadingAnalytics =
-    Boolean(effectiveSiteId) && (summaryQuery.isPending || trafficQuery.isPending);
+    Boolean(effectiveSiteId) && (summaryQuery.isLoading || trafficQuery.isLoading);
 
   // Kept separate from the summary/traffic queries above: these two panels
   // are supplementary, so a problem with either endpoint falls back to an
@@ -160,7 +173,7 @@ export default function Dashboard() {
       });
       return data.data || [];
     },
-    enabled: Boolean(effectiveSiteId),
+    enabled: Boolean(effectiveSiteId) && !isLocked,
     retry: 0,
   });
 
@@ -173,7 +186,7 @@ export default function Dashboard() {
       });
       return data.data || [];
     },
-    enabled: Boolean(effectiveSiteId),
+    enabled: Boolean(effectiveSiteId) && !isLocked,
     retry: 0,
   });
 
@@ -212,10 +225,7 @@ export default function Dashboard() {
 
   return (
     <AppLayout>
-      <main
-        className="mx-auto"
-        style={{ maxWidth: 1040, padding: "var(--space-6) var(--space-4) var(--space-8)" }}
-      >
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 lg:py-12 flex flex-col gap-6">
         {loadingSites ? (
           <DashboardSkeleton showHeader />
         ) : sitesError ? (
@@ -265,21 +275,24 @@ export default function Dashboard() {
                     {sites.map((site) => (
                       <option key={site.id} value={site.id}>
                         {site.name}
+                        {site.active === false ? " (Locked)" : ""}
                       </option>
                     ))}
                   </select>
                 </label>
-                <Seg
-                  name="range"
-                  aria-label="Date range"
-                  value={range}
-                  onChange={setRange}
-                  options={[
-                    { value: "7d", label: "7d" },
-                    { value: "30d", label: "30d" },
-                    { value: "90d", label: "90d" },
-                  ]}
-                />
+                {!isLocked && (
+                  <Seg
+                    name="range"
+                    aria-label="Date range"
+                    value={range}
+                    onChange={setRange}
+                    options={[
+                      { value: "7d", label: "7d" },
+                      { value: "30d", label: "30d" },
+                      { value: "90d", label: "90d" },
+                    ]}
+                  />
+                )}
                 {selectedSite && (
                   <Link
                     to={`/sites/${selectedSite.id}/settings`}
@@ -293,7 +306,25 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {error && !summary ? (
+            {isLocked ? (
+              // Every summary/traffic/top-* query above is disabled for a
+              // locked site (they'd just 403 anyway — see
+              // analytics.service.js's assertSiteActive), which leaves them
+              // stuck "pending" forever rather than erroring. This branch
+              // has to come before the error/loading checks below, or a
+              // locked site would show the loading skeleton indefinitely
+              // instead of this.
+              <Card className="flex flex-col items-center text-center" style={{ padding: "var(--space-8)" }}>
+                <div className="card-title">This site isn't included in your current plan</div>
+                <p className="card-body">
+                  {selectedSite?.name} is still saved and won't be deleted, but tracking and analytics
+                  are paused until you upgrade.
+                </p>
+                <Link to="/billing/upgrade">
+                  <Button>Upgrade plan</Button>
+                </Link>
+              </Card>
+            ) : error && !summary ? (
               <Card>
                 <p className="card-body" style={{ color: "var(--brick)" }}>
                   {error}
@@ -379,7 +410,7 @@ export default function Dashboard() {
                             topReferrers.map((referrer, index) => (
                               <tr key={`${referrer.referrers}-${index}`}>
                                 <td>{referrer.referrers || "Direct"}</td>
-                                <td>{formatNumber(referrer.visitors)}</td>
+                                <td>{formatNumber(referrer.pageViews)}</td>
                               </tr>
                             ))
                           )}

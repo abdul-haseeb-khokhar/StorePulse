@@ -27,14 +27,22 @@ function SiteCard({ site }) {
       <div className="card-kicker">{site.domain}</div>
       <div className="card-title">{site.name}</div>
       <p className="card-body">
-        {site.summary
-          ? `${formatNumber(site.summary.uniqueVisitors.value)} unique visitors · last 7 days`
-          : "No traffic yet"}
+        {site.active === false
+          ? "Not included in your current plan"
+          : site.summary
+            ? `${formatNumber(site.summary.uniqueVisitors.value)} unique visitors · last 7 days`
+            : "No traffic yet"}
       </p>
       <div className="card-meta" style={{ justifyContent: "space-between" }}>
         <span className="flex items-center" style={{ gap: 6 }}>
-          <Tag variant="accent">Live</Tag>
-          {site.summary && <span>{formatNumber(site.summary.pageViews.value)} page views</span>}
+          {site.active === false ? (
+            <Tag variant="outline">Locked</Tag>
+          ) : (
+            <>
+              <Tag variant="accent">Live</Tag>
+              {site.summary && <span>{formatNumber(site.summary.pageViews.value)} page views</span>}
+            </>
+          )}
         </span>
         <Link
           to={`/sites/${site.id}/settings`}
@@ -83,6 +91,11 @@ export default function SitesList() {
         });
         return data.summary;
       },
+      // A locked (over-limit) site 403s this endpoint server-side (see
+      // analytics.service.js's assertSiteActive) — skipping the request
+      // entirely avoids a guaranteed-failing round trip for a card that
+      // already shows its own "not included in your plan" state instead.
+      enabled: site.active !== false,
       retry: 0,
     })),
   });
@@ -91,7 +104,10 @@ export default function SitesList() {
     ...site,
     summary: summaryQueries[i]?.data ?? null,
   }));
-  const loading = sitesQuery.isPending || summaryQueries.some((q) => q.isPending);
+  // isPending stays true forever for a disabled query (a locked site's
+  // summary never even starts fetching) — isLoading correctly reflects
+  // "actually in flight", so it doesn't get stuck waiting on those.
+  const loading = sitesQuery.isPending || summaryQueries.some((q) => q.isLoading);
   // Guarded by sites.length === 0 so a background refetch failure (e.g. on
   // reconnect) can't blank out a list we're already successfully showing.
   const error =

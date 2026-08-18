@@ -1,4 +1,4 @@
-const {findUserByEmail, createUser, findUserById, updateUserName, updateUserPassword, 
+const {findUserByEmail, createUser, findUserById, findUserByIdWithSubscription, updateUserName, updateUserPassword,
     setVerificationToken, findUserByVerificationToken, markEmailVerified,
     setPendingEmailToken, findUserByPendingEmailToken, confirmPendingEmail,
     setPasswordResetToken, findUserByPasswordResetToken, resetUserPassword
@@ -9,6 +9,7 @@ const {signToken} = require('../../utils/jwt')
 const AppError = require('../../utils/AppError');
 const { sendVerificationEmail, sendEmailChangeEmail, sendPasswordResetEmail } = require('../email/email.service');
 const { updateUserStatus } = require('../admin/admin.repository');
+const { syncExpiredSubscription } = require('../subscription/subscription.service');
 
 const VERIFICATION_EXPIRY_MS = 24*60*60*1000;
 const EMAIL_CHANGE_EXPIRY_MS = 60*60*1000;
@@ -28,7 +29,15 @@ async function signUp(fullName, email, password) {
     const expiry = new Date(Date.now() + VERIFICATION_EXPIRY_MS);
 
     await setVerificationToken(user.id, hashedToken, expiry);
-    await sendVerificationEmail({fullName: user.fullName, email: user.email, rawToken});
+    // Best-effort: the account row is already committed by this point, so a
+    // Resend outage/bad address shouldn't turn a successful signup into a
+    // 500 the client has no way to recover from. The user can still get a
+    // fresh link via POST /auth/resend-verification either way.
+    try {
+        await sendVerificationEmail({fullName: user.fullName, email: user.email, rawToken});
+    } catch (error) {
+        console.error('Failed to send verification email:', error.message);
+    }
 
     return{
         message: 'Account created. Please check your email to verify your account.'
@@ -45,7 +54,7 @@ async function login(email, password) {
     }
     
     if(user.status === 'Banned'){
-        throw new AppError('This user is banned by admin', 403);
+        throw new AppError('This user is banned by admin', 403, 'ACCOUNT_BANNED');
     }
 
     if(!user.isEmailVerified && user.status === 'Inactive') {
@@ -61,12 +70,13 @@ async function login(email, password) {
 }
 
 async function getUserById(id) {
-    const user = await findUserById(id);
+    const user = await findUserByIdWithSubscription(id);
     if(!user){
         throw new AppError("User not found", 404);
     }
 
-    return {id: user.id, fullName: user.fullName, email: user.email}
+    const subscription = await syncExpiredSubscription(id, user.subscription);
+    return {id: user.id, fullName: user.fullName, email: user.email, subscription}
 }
 
 async function changeName(userId, fullName) {

@@ -1,9 +1,18 @@
 const redisClient = require('../../config/redis');
 
 const CACHE_TTL_SECONDS = 30 * 60;
+// Bumped from "site:" when `rank` was added to the cached shape (see
+// ingest.repository.js's findSiteByApiKey) — the 30-minute TTL means a
+// deploy can otherwise leave old-shape entries live for up to that long,
+// and a missing `rank` field silently fails the new maxSites check open
+// (`undefined > maxSites` is false), not closed. Namespacing the key by
+// shape version means old entries are simply never read by the new code
+// instead of being trusted as if they still matched it; bump this again
+// any time the cached site object's shape changes.
+const KEY_PREFIX = 'site:v2:';
 
 async function getCachedSite(apiKey) {
-    const site = await redisClient.get(`site:${apiKey}`);
+    const site = await redisClient.get(`${KEY_PREFIX}${apiKey}`);
 
     if(!site) return null;
 
@@ -12,7 +21,7 @@ async function getCachedSite(apiKey) {
 
 async function setCachedSite (apiKey, site) {
     await redisClient.set(
-        `site:${apiKey}`,
+        `${KEY_PREFIX}${apiKey}`,
         JSON.stringify(site),
         'EX',
         CACHE_TTL_SECONDS
@@ -20,7 +29,7 @@ async function setCachedSite (apiKey, site) {
 }
 
 async function invalidateCachedSite(apiKey) {
-    await redisClient.del(`site:${apiKey}`)
+    await redisClient.del(`${KEY_PREFIX}${apiKey}`)
 }
 
 module.exports = {

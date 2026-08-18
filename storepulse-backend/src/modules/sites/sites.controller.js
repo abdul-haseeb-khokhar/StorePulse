@@ -1,4 +1,4 @@
-const {addSite, getUserSites, regenerateApiKey, getSiteById} = require('./sites.service')
+const {addSite, getUserSites, regenerateApiKey, getSiteById, getUsageSummary} = require('./sites.service')
 
 async function addSiteController(req, res, next) {
     try{
@@ -21,6 +21,17 @@ async function getUserSitesController(req, res, next) {
         res.status(200).json({sites});
     } catch(error){
         next(error)
+    }
+}
+
+async function getUsageSummaryController(req, res, next) {
+    try {
+        const userId = req.user.id;
+        const usage = await getUsageSummary(userId);
+
+        res.status(200).json(usage);
+    } catch (error) {
+        next(error);
     }
 }
 
@@ -50,5 +61,5 @@ async function regenerateApiKeyController(req, res, next) {
 }
 
 module.exports = {
-    addSiteController, getUserSitesController, getSiteByIdController, regenerateApiKeyController
+    addSiteController, getUserSitesController, getSiteByIdController, regenerateApiKeyController, getUsageSummaryController
 }

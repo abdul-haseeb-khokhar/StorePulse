@@ -21,6 +21,12 @@ const STATUS_TAG_VARIANT = {
   Deleted: "outline",
 };
 
+const PLAN_TAG_VARIANT = {
+  Free: "neutral",
+  Pro: "accent",
+  Business: "positive",
+};
+
 const STATUS_FILTER_OPTIONS = [
   { value: "", label: "All" },
   { value: "Active", label: "Active" },
@@ -153,6 +159,7 @@ export default function AdminUsers() {
                     <th>Name</th>
                     <th>Email</th>
                     <th>Status</th>
+                    <th>Plan</th>
                     <th>Verified</th>
                     <th>Joined</th>
                     <th></th>
@@ -167,6 +174,9 @@ export default function AdminUsers() {
                       <td>{user.email}</td>
                       <td>
                         <Tag variant={STATUS_TAG_VARIANT[user.status] || "neutral"}>{user.status}</Tag>
+                      </td>
+                      <td>
+                        <Tag variant={PLAN_TAG_VARIANT[user.plan] || "neutral"}>{user.plan}</Tag>
                       </td>
                       <td>{user.isEmailVerified ? "Yes" : "No"}</td>
                       <td>{new Date(user.createdAt).toLocaleDateString()}</td>

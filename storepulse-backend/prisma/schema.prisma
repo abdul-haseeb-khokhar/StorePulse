@@ -34,10 +34,44 @@ model User {
 
   sites Site[]
   subscription Subscription?
+  paymentRequests PaymentRequest[]
+  subscriptionHistory SubscriptionHistory[]
+  notifications Notification[]
 
   @@index([emailVerificationToken])
   @@index([pendingEmailToken])
   @@index([passwordResetToken])
+}
+
+// User-facing only — the one admin-facing case in this app (a new payment
+// request needing review) is already served by a live pending-count query
+// on PaymentRequest (see admin.repository.js's countPendingPaymentRequests)
+// rather than a persisted row here, since there's no "read" state that
+// actually needs tracking for a queue that clears itself the moment it's
+// acted on. This table is for the opposite shape: a one-off fact about
+// something that already happened to a specific user, which they should be
+// able to come back and see later — a live count can't represent that.
+model Notification {
+  id        String           @id @default(uuid())
+  type      NotificationType
+  message   String
+  // Optional route to send the user to when they click it, e.g. "/billing"
+  // or "/sites".
+  link      String?
+  read      Boolean          @default(false)
+  userId    String
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, read, createdAt])
+}
+
+enum NotificationType {
+  PLAN_CHANGED
+  SUBSCRIPTION_EXPIRED
+  SITES_DEACTIVATED
+  PAYMENT_REQUEST_REVIEWED
 }
 
 model Site {
@@ -121,10 +155,86 @@ model Subscription {
   status           SubscriptionStatus @default(Active)
   currentPeriodEnd DateTime?
   canceledAt       DateTime?
+  // Set by a user-initiated cancel (POST /billing/cancel): the plan doesn't
+  // change immediately — there's no payment processor here to prorate a
+  // refund through, so instead access is kept at the current (paid) plan
+  // until currentPeriodEnd, and only then does the lazy-expiry check in
+  // subscription.service.js apply pendingPlan instead of just falling back
+  // to Free. Admin-initiated downgrades bypass this entirely and stay
+  // immediate — that's still the tool for cause (non-payment, abuse).
+  pendingPlan      Plan?
+  // Set alongside plan/status by setUserPlanService and payment-request
+  // approval. Nullable because Free has no cycle. Previously computed once
+  // to derive currentPeriodEnd and then thrown away — persisted now so
+  // renewals/reporting can see what cycle a user is actually on.
+  billingCycle     BillingCycle?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id])
+}
+
+// One row per real subscription change (admin plan-set, lazy expiry
+// applying, a self-service cancel taking effect) — a lightweight audit /
+// billing-history trail. Not the same table as Subscription itself: that
+// one only ever holds the current state, this one accumulates every state
+// it's passed through.
+model SubscriptionHistory {
+  id               String   @id @default(uuid())
+  userId           String
+  plan             Plan
+  billingCycle     BillingCycle?
+  status           SubscriptionStatus
+  currentPeriodEnd DateTime?
+  // adminId of whoever made the change, or null when the system did it
+  // (lazy expiry, a scheduled cancel finally applying).
+  changedBy        String?
+  reason           String
+  createdAt        DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+}
+
+// A user's claim of having sent a bank transfer, submitted from
+// BillingPay.jsx alongside (not instead of) the WhatsApp message — WhatsApp
+// remains the actual notification channel, this is what makes that claim
+// visible and actionable inside the admin panel instead of living only in
+// a chat thread. Approving one calls the same setUserPlanService path an
+// admin manually setting a plan does, so there's exactly one place that
+// actually mutates a Subscription.
+model PaymentRequest {
+  id           String   @id @default(uuid())
+  userId       String
+  plan         Plan
+  billingCycle BillingCycle
+  status       PaymentRequestStatus @default(Pending)
+  note         String?
+  createdAt    DateTime @default(now())
+  reviewedAt   DateTime?
+  reviewedBy   String?
+  // Distinct from `note` above (that one's the user's own submission note,
+  // e.g. a transfer reference) — this is the admin's reason for approving
+  // or, more usefully, rejecting, surfaced back to the user in the review
+  // email (see billing/email templates).
+  reviewNote   String?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
+
+enum PaymentRequestStatus {
+  Pending
+  Approved
+  Rejected
+}
+
+enum BillingCycle {
+  monthly
+  yearly
 }
 
 enum SubscriptionStatus {

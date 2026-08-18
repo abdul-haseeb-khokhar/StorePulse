@@ -35,7 +35,7 @@ async function getDailyTraffic({siteId, startDate, endDate}){
     return prisma.$queryRaw`
     SELECT
         DATE_TRUNC('day', "createdAt")::date AS date,
-        COUNT(*) FILTER(WHERE "type"= 'PAGE_VIEW' )AS visitors,
+        COUNT(*) FILTER(WHERE "type"= 'PAGE_VIEW' )AS "pageViews",
         COUNT(*) FILTER(WHERE "type" = 'PRODUCT_CLICK') AS clicks
     FROM "Event"
     WHERE "siteId" = ${siteId}

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Mail, MessageCircle, Phone } from "lucide-react";
 import AppLayout from "../layouts/AppLayout";
 import Card from "../components/ui/Card";
 import Field from "../components/ui/Field";
@@ -9,9 +8,9 @@ import Button from "../components/ui/Button";
 import Dialog from "../components/ui/Dialog";
 import CodeBlock from "../components/ui/CodeBlock";
 import Skeleton from "../components/ui/Skeleton";
+import { ContactLink } from "../components/ui/ContactLink";
 import api, { API_BASE_URL, getApiErrorMessage } from "../lib/api";
 import { queryKeys } from "../lib/queryKeys";
-import { CONTACT_GMAIL_URL, CONTACT_WHATSAPP, CONTACT_PHONE } from "../lib/contact";
 
 function SiteSettingsSkeleton() {
   return (
@@ -107,6 +106,13 @@ export default function SiteSettings() {
               <div className="card-title" style={{ marginBottom: "var(--space-3)" }}>
                 {site.name}
               </div>
+              {site.active === false && (
+                <p className="card-body" style={{ marginBottom: "var(--space-3)", color: "var(--brick)" }}>
+                  This site isn&apos;t included in your current plan — tracking and analytics are
+                  paused, but nothing here has been deleted. <Link to="/billing/upgrade">Upgrade</Link>{" "}
+                  to reactivate it.
+                </p>
+              )}
               <div className="grid" style={{ gap: "var(--space-3)" }}>
                 <Field id="st-name" label="Site name" value={site.name} readOnly />
                 <Field id="st-domain" label="Domain" value={site.domain} readOnly />
@@ -143,30 +149,7 @@ export default function SiteSettings() {
               </p>
               <p className="card-body">Need a hand with integration? Reach us however&apos;s easiest:</p>
               <div className="flex items-center" style={{ gap: "var(--space-4)" }}>
-                <a
-                  href={CONTACT_GMAIL_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center text-sm"
-                  style={{ gap: 6 }}
-                >
-                  <Mail className="h-4 w-4 text-muted" />
-                  Email
-                </a>
-                <a
-                  href={`https://wa.me/${CONTACT_WHATSAPP}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center text-sm"
-                  style={{ gap: 6 }}
-                >
-                  <MessageCircle className="h-4 w-4 text-muted" />
-                  WhatsApp
-                </a>
-                <a href={`tel:+${CONTACT_PHONE}`} className="flex items-center text-sm" style={{ gap: 6 }}>
-                  <Phone className="h-4 w-4 text-muted" />
-                  Call
-                </a>
+                <ContactLink />
               </div>
             </Card>
           </>

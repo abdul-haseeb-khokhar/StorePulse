@@ -8,5 +8,13 @@ export const CONTACT_GMAIL_URL = `https://mail.google.com/mail/?view=cm&fs=1&to=
 
 export const CONTACT_WHATSAPP = import.meta.env.VITE_CONTACT_WHATSAPP;
 export const CONTACT_WHATSAPP_DISPLAY = import.meta.env.VITE_CONTACT_WHATSAPP_DISPLAY;
-export const CONTACT_PHONE = import.meta.env.VITE_CONTACT_PHONE;
-export const CONTACT_PHONE_DISPLAY = import.meta.env.VITE_CONTACT_PHONE_DISPLAY;
+
+// Every generic "need help / contact us" touchpoint in the app routes here
+// instead of exposing our own email/WhatsApp directly — a fixed brand URL,
+// not per-deployment data, so it's hardcoded rather than env-driven (same
+// reasoning as the NYRON credit link in AuthLayout.jsx/SiteFooter.jsx).
+// Deliberately NOT used by billing.js's buildPaymentNoticeUrl — that's a
+// functional payment-verification flow (prefilled WhatsApp message with
+// plan/amount/email) that has to reach StorePulse, not NYRON's general
+// business inquiries page.
+export const NYRON_CONTACT_URL = "https://nyron-x.vercel.app/#talk-business";

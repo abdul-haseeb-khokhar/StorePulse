@@ -4,7 +4,7 @@ import { Check, X } from "lucide-react";
 // passwordValidator exactly, so a green row here always means the backend
 // will accept it too.
 const REQUIREMENTS = [
-  { key: "length", label: "At least 8 characters", test: (pw) => pw.length >= 8 },
+  { key: "length", label: "8–50 characters", test: (pw) => pw.length >= 8 && pw.length <= 50 },
   { key: "upper", label: "At least one uppercase letter", test: (pw) => /[A-Z]/.test(pw) },
   { key: "number", label: "At least one number", test: (pw) => /[0-9]/.test(pw) },
   {

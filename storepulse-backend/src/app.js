@@ -6,8 +6,10 @@ const sitesRoutes = require('./modules/sites/sites.routes');
 const authRoutes  = require('./modules/auth/auth.routes');
 const ingestRoutes = require('./modules/ingest/ingest.routes');
 const analyticsRoutes = require('./modules/analytics/analytics.routes');
+const billingRoutes = require('./modules/billing/billing.routes');
 const adminRoutes = require('./modules/admin/admin.routes');
 const adminAuthRoutes = require('./modules/adminAuth/adminAuth.routes');
+const notificationRoutes = require('./modules/notification/notification.routes');
 
 const AppError = require('./utils/AppError')
 
@@ -33,6 +35,8 @@ app.use('/api/auth', dashboardCors , authRoutes);
 app.use('/api/sites', dashboardCors , sitesRoutes)
 app.use('/api/events', ingestCors , ingestRoutes)
 app.use('/api/analytics', dashboardCors , analyticsRoutes);
+app.use('/api/billing', dashboardCors , billingRoutes);
+app.use('/api/notifications', dashboardCors, notificationRoutes);
 app.use('/api/admin/auth', dashboardCors, adminAuthRoutes);
 app.use('/api/admin', dashboardCors, adminRoutes);
 
@@ -51,7 +55,7 @@ app.use((err, req, res, next) => {
     const statusCode = err.statusCode || 500;
     const message = err.statusCode ? err.message : 'Something went wrong on server side'
 
-    res.status(statusCode).json({message})
+    res.status(statusCode).json(err.code ? { message, code: err.code } : { message })
 });
 
 module.exports = app;
