@@ -2,7 +2,10 @@
  * HTTP layer for the sites module: adding sites, listing a user's sites,
  * usage summary, and API key management.
  */
-const {addSite, getUserSites, regenerateApiKey, getSiteById, getUsageSummary} = require('./sites.service')
+const {
+    addSite, getUserSites, regenerateApiKey, getSiteById, getUsageSummary,
+    setPublicDashboardEnabled, regeneratePublicToken,
+} = require('./sites.service')
 
 /** POST /sites — adds a new site, enforcing the owner's plan site limit. */
 async function addSiteController(req, res, next) {
@@ -69,6 +72,36 @@ async function regenerateApiKeyController(req, res, next) {
     }
 }
 
+/** PATCH /sites/:siteId/public-access — turns the public dashboard link on or off. */
+async function setPublicAccessController(req, res, next) {
+    try {
+        const {siteId} = req.params;
+        const {enabled} = req.body;
+        const userId = req.user.id;
+
+        const site = await setPublicDashboardEnabled({siteId, userId, enabled});
+
+        res.status(200).json({site})
+    } catch (error) {
+        next(error)
+    }
+}
+
+/** PATCH /sites/:siteId/public-access/regenerate — revokes the current public link and issues a new one. */
+async function regeneratePublicTokenController(req, res, next) {
+    try {
+        const {siteId} = req.params;
+        const userId = req.user.id;
+
+        const site = await regeneratePublicToken({siteId, userId});
+
+        res.status(200).json({site})
+    } catch (error) {
+        next(error)
+    }
+}
+
 module.exports = {
-    addSiteController, getUserSitesController, getSiteByIdController, regenerateApiKeyController, getUsageSummaryController
+    addSiteController, getUserSitesController, getSiteByIdController, regenerateApiKeyController, getUsageSummaryController,
+    setPublicAccessController, regeneratePublicTokenController,
 }

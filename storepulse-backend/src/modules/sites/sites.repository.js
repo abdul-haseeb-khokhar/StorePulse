@@ -1,10 +1,11 @@
 /**
  * Prisma queries backing the sites module: creation (with a plan-limit
- * guard), lookups, API key updates, and the shared "creation rank" query
- * both this module and ingest rely on.
+ * guard), lookups, API key updates, public-dashboard sharing state, and
+ * the shared "creation rank" query both this module and ingest rely on.
  */
 const prisma = require('../../config/prisma')
 const {resolveEffectivePlan} = require('../../config/plans')
+const {generatePublicToken} = require('../../utils/apiKey')
 
 // Locks the user's row for the duration of the transaction so two
 // concurrent "add site" requests from the same user can't both read the
@@ -26,10 +27,25 @@ async function createSiteIfUnderLimit({name, domain, apiKey, userId, maxSites}) 
     });
 }
 
+// Explicit select, not the full row: this list feeds SitesList.jsx's site
+// tiles and Dashboard.jsx's site switcher, neither of which needs — or
+// should carry — publicToken (the public dashboard's bearer-style share
+// link). That field is only meant to surface on SiteSettings.jsx (via
+// findSiteById below), the one screen that actually displays/copies it.
 async function findSitesByUserId(userId) {
     return prisma.site.findMany({
         where: {userId},
-        orderBy: {createdAt: 'desc'}
+        orderBy: {createdAt: 'desc'},
+        select: {
+            id: true,
+            name: true,
+            domain: true,
+            apiKey: true,
+            userId: true,
+            createdAt: true,
+            updatedAt: true,
+            publicDashboardEnabled: true,
+        }
     });
 }
 
@@ -44,6 +60,40 @@ async function updateApiKey(id, newApiKey) {
         where:{id},
         data: {apiKey: newApiKey}
     })
+}
+
+async function findSiteByPublicToken(token) {
+    return prisma.site.findUnique({
+        where: {publicToken: token}
+    })
+}
+
+async function updatePublicAccess(id, data) {
+    return prisma.site.update({
+        where: {id},
+        data
+    })
+}
+
+// Locks the site row for the duration of the transaction — same pattern as
+// createSiteIfUnderLimit's user-row lock above — so two concurrent "enable"
+// requests for the same site (a double-click, or two tabs) can't both read
+// "no token yet" and each mint a different one. Without the lock, only one
+// of those tokens actually persists; the other request's response would
+// show a link that was never the DB's real state, and whoever copied that
+// link would get a permanently dead one.
+async function setPublicAccess(id, enabled) {
+    return prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM "Site" WHERE id = ${id} FOR UPDATE`;
+
+        const site = await tx.site.findUnique({where: {id}});
+        const data = {publicDashboardEnabled: enabled};
+        if (enabled && !site.publicToken) {
+            data.publicToken = generatePublicToken();
+        }
+
+        return tx.site.update({where: {id}, data});
+    });
 }
 
 async function findUserPlan(userId) {
@@ -77,5 +127,6 @@ async function countSitesCreatedUpTo(userId, createdAt, siteId) {
 }
 
 module.exports = {
-    createSiteIfUnderLimit, findSiteById, findSitesByUserId, updateApiKey, findUserPlan, countSitesCreatedUpTo
+    createSiteIfUnderLimit, findSiteById, findSitesByUserId, updateApiKey, findUserPlan, countSitesCreatedUpTo,
+    findSiteByPublicToken, updatePublicAccess, setPublicAccess,
 }

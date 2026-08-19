@@ -20,14 +20,7 @@ import DashboardSkeleton from "../components/dashboard/DashboardSkeleton";
 import api, { getApiErrorMessage } from "../lib/api";
 import { queryKeys } from "../lib/queryKeys";
 import { containerStagger, itemFadeUp, useReducedMotion } from "../lib/motion";
-
-const rangeLabels = {
-  "7d": "7 days",
-  "30d": "30 days",
-  "90d": "90 days",
-};
-
-const RANGE_DAYS = { "7d": 7, "30d": 30, "90d": 90 };
+import { rangeLabels, getDateBoundaryParams, formatNumber, formatChartDate, buildStatCards } from "../lib/analyticsFormat";
 
 // Events land via the storefront's tracking snippet, outside React Query's
 // cache entirely — polling is what keeps the stat cards/chart feeling live
@@ -35,33 +28,6 @@ const RANGE_DAYS = { "7d": 7, "30d": 30, "90d": 90 };
 // already-fresh-enough data. Paused automatically while the tab isn't
 // focused (React Query's refetchIntervalInBackground default is false).
 const LIVE_METRICS_REFETCH_MS = 30_000;
-
-// The top-products/top-referrers endpoints take explicit startDate/endDate
-// query params (unlike summary/traffic, which take a `range` string the
-// backend converts itself) — mirror analytics.controller.js's own
-// getDateRangeFromQuery mapping here so all four panels show the same window.
-function getDateBoundaryParams(range) {
-  const days = RANGE_DAYS[range] || 7;
-  const endDate = new Date();
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - days);
-  return { startDate: startDate.toISOString(), endDate: endDate.toISOString() };
-}
-
-function formatNumber(value) {
-  return new Intl.NumberFormat().format(value || 0);
-}
-
-function formatTrend(change) {
-  const prefix = change > 0 ? "+" : "";
-  return `${prefix}${change || 0}%`;
-}
-
-function formatChartDate(date) {
-  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(
-    new Date(`${date}T00:00:00`),
-  );
-}
 
 // Events sit in a Redis buffer for up to ~10s (see ingest.buffer.js) before
 // landing in Postgres, which is what analytics reads from — so "now" is
@@ -202,32 +168,7 @@ export default function Dashboard() {
   const selectedSite = sites.find((site) => site.id === effectiveSiteId);
   const rangeLabel = rangeLabels[range];
 
-  const stats = useMemo(() => {
-    if (!summary) return [];
-
-    return [
-      {
-        label: "Page views",
-        value: formatNumber(summary.pageViews.value),
-        trend: formatTrend(summary.pageViews.change),
-        trendDirection: summary.pageViews.change < 0 ? "down" : summary.pageViews.change === 0 ? "flat" : "up",
-      },
-      {
-        label: "Product clicks",
-        value: formatNumber(summary.productClicks.value),
-        trend: formatTrend(summary.productClicks.change),
-        trendDirection:
-          summary.productClicks.change < 0 ? "down" : summary.productClicks.change === 0 ? "flat" : "up",
-      },
-      {
-        label: "Unique visitors",
-        value: formatNumber(summary.uniqueVisitors.value),
-        trend: formatTrend(summary.uniqueVisitors.change),
-        trendDirection:
-          summary.uniqueVisitors.change < 0 ? "down" : summary.uniqueVisitors.change === 0 ? "flat" : "up",
-      },
-    ];
-  }, [summary]);
+  const stats = useMemo(() => buildStatCards(summary), [summary]);
 
   return (
     <AppLayout>

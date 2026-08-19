@@ -12,13 +12,13 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
+  id        String     @id @default(uuid())
   fullName  String
-  email     String   @unique
+  email     String     @unique
   password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  status  UserStatus @default(Inactive)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  status    UserStatus @default(Inactive)
 
   isEmailVerified Boolean @default(false)
 
@@ -29,14 +29,14 @@ model User {
   pendingEmailToken       String?
   pendingEmailTokenExpiry DateTime?
 
-  passwordResetToken      String?
+  passwordResetToken       String?
   passwordResetTokenExpiry DateTime?
 
-  sites Site[]
-  subscription Subscription?
-  paymentRequests PaymentRequest[]
+  sites               Site[]
+  subscription        Subscription?
+  paymentRequests     PaymentRequest[]
   subscriptionHistory SubscriptionHistory[]
-  notifications Notification[]
+  notifications       Notification[]
 
   @@index([emailVerificationToken])
   @@index([pendingEmailToken])
@@ -83,6 +83,12 @@ model Site {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Public, no-auth dashboard sharing (see analytics/publicDashboard.routes.js).
+  // Deliberately separate from apiKey — the ingest credential and this
+  // read-only share link have to be revocable independently of each other.
+  publicDashboardEnabled Boolean @default(false)
+  publicToken            String? @unique
+
   user   User    @relation(fields: [userId], references: [id])
   events Event[]
 
@@ -108,11 +114,11 @@ model Event {
 }
 
 model adminLog {
-  id String @id @default(uuid())
-  adminId String
-  action String
+  id             String   @id @default(uuid())
+  adminId        String
+  action         String
   targetedUserId String?
-  createdAt DateTime @default(now())
+  createdAt      DateTime @default(now())
 
   @@index([adminId])
   @@index([targetedUserId])
@@ -149,9 +155,9 @@ enum UserStatus {
 }
 
 model Subscription {
-  id               String   @id @default(uuid())
-  userId           String   @unique
-  plan             Plan     @default(Free)
+  id               String             @id @default(uuid())
+  userId           String             @unique
+  plan             Plan               @default(Free)
   status           SubscriptionStatus @default(Active)
   currentPeriodEnd DateTime?
   canceledAt       DateTime?
@@ -168,8 +174,8 @@ model Subscription {
   // to derive currentPeriodEnd and then thrown away — persisted now so
   // renewals/reporting can see what cycle a user is actually on.
   billingCycle     BillingCycle?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
 
   user User @relation(fields: [userId], references: [id])
 }
@@ -180,7 +186,7 @@ model Subscription {
 // one only ever holds the current state, this one accumulates every state
 // it's passed through.
 model SubscriptionHistory {
-  id               String   @id @default(uuid())
+  id               String             @id @default(uuid())
   userId           String
   plan             Plan
   billingCycle     BillingCycle?
@@ -190,7 +196,7 @@ model SubscriptionHistory {
   // (lazy expiry, a scheduled cancel finally applying).
   changedBy        String?
   reason           String
-  createdAt        DateTime @default(now())
+  createdAt        DateTime           @default(now())
 
   user User @relation(fields: [userId], references: [id])
 
@@ -205,13 +211,13 @@ model SubscriptionHistory {
 // admin manually setting a plan does, so there's exactly one place that
 // actually mutates a Subscription.
 model PaymentRequest {
-  id           String   @id @default(uuid())
+  id           String               @id @default(uuid())
   userId       String
   plan         Plan
   billingCycle BillingCycle
   status       PaymentRequestStatus @default(Pending)
   note         String?
-  createdAt    DateTime @default(now())
+  createdAt    DateTime             @default(now())
   reviewedAt   DateTime?
   reviewedBy   String?
   // Distinct from `note` above (that one's the user's own submission note,

@@ -32,4 +32,13 @@ const siteIdParamSchema = z.object({
     })
 });
 
-module.exports = { addSiteSchema, siteIdParamSchema };
+const publicAccessSchema = z.object({
+    params: z.object({
+        siteId: z.string().uuid('Invalid site ID')
+    }),
+    body: z.object({
+        enabled: z.boolean()
+    })
+});
+
+module.exports = { addSiteSchema, siteIdParamSchema, publicAccessSchema };

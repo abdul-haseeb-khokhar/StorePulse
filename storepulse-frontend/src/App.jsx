@@ -19,6 +19,7 @@ import SiteSetup from "./pages/SiteSetup";
 import SiteSettings from "./pages/SiteSettings";
 import SitesList from "./pages/SitesList";
 import Dashboard from "./pages/Dashboard";
+import PublicDashboard from "./pages/PublicDashboard";
 import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
 import Billing from "./pages/Billing";
@@ -47,6 +48,10 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/docs" element={<Docs />} />
+          {/* No-auth, publicly shareable per-site dashboard — see
+              SiteSettings.jsx's "Public dashboard" section for where the
+              link comes from. */}
+          <Route path="/public/:token" element={<PublicDashboard />} />
 
           {/* Guest-only: an active session skips straight to the dashboard.
               Landing is here too — its CTAs and pricing are for prospects,

@@ -11,6 +11,7 @@ const sitesRoutes = require('./modules/sites/sites.routes');
 const authRoutes  = require('./modules/auth/auth.routes');
 const ingestRoutes = require('./modules/ingest/ingest.routes');
 const analyticsRoutes = require('./modules/analytics/analytics.routes');
+const publicDashboardRoutes = require('./modules/analytics/publicDashboard.routes');
 const billingRoutes = require('./modules/billing/billing.routes');
 const adminRoutes = require('./modules/admin/admin.routes');
 const adminAuthRoutes = require('./modules/adminAuth/adminAuth.routes');
@@ -45,6 +46,11 @@ app.use('/api/auth', dashboardCors , authRoutes);
 app.use('/api/sites', dashboardCors , sitesRoutes)
 app.use('/api/events', ingestCors , ingestRoutes)
 app.use('/api/analytics', dashboardCors , analyticsRoutes);
+// Its own top-level path (not nested under /api/analytics) since it's a
+// wholly different trust boundary — see publicDashboard.routes.js. Still
+// the dashboard CORS policy, not the wide-open ingest one: this is the
+// frontend's own SPA calling its own backend, just without a session.
+app.use('/api/public/dashboard', dashboardCors , publicDashboardRoutes);
 app.use('/api/billing', dashboardCors , billingRoutes);
 app.use('/api/notifications', dashboardCors, notificationRoutes);
 app.use('/api/admin/auth', dashboardCors, adminAuthRoutes);

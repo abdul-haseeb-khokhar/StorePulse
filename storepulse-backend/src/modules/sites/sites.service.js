@@ -6,8 +6,9 @@
  */
 const {
     createSiteIfUnderLimit, findSiteById, findSitesByUserId, updateApiKey, findUserPlan, countSitesCreatedUpTo,
+    findSiteByPublicToken, updatePublicAccess, setPublicAccess,
 } = require('./sites.repository')
-const {generateApiKey} = require('../../utils/apiKey')
+const {generateApiKey, generatePublicToken} = require('../../utils/apiKey')
 const AppError = require('../../utils/AppError')
 const {invalidateCachedSite} = require('../ingest/ingest.cache')
 const {getMonthlyEventCount} = require('../ingest/ingest.usage')
@@ -159,6 +160,59 @@ async function regenerateApiKey({siteId, userId}) {
     return updatedSite;
 }
 
+/**
+ * Enables or disables the public, no-auth dashboard link for a site. The
+ * first time it's turned on, a token is minted; later toggles reuse
+ * whatever token already exists, so switching it back on hands out the
+ * same link rather than a different one — see SiteSettings.jsx's "Turn
+ * off" copy, which spells this out for the owner ("Regenerate" is the
+ * separate, explicit action for actually invalidating a leaked link). The
+ * ownership check and the actual flip are two separate steps (own-check
+ * here, the read-token-then-write itself made atomic in setPublicAccess)
+ * rather than one combined query, since only the second half has the race
+ * that needs locking.
+ */
+async function setPublicDashboardEnabled({siteId, userId, enabled}) {
+    await getSiteById({siteId, userId});
+
+    return setPublicAccess(siteId, enabled);
+}
+
+/** Revokes the current public link and issues a new one, independent of the ingest API key. */
+async function regeneratePublicToken({siteId, userId}) {
+    await getSiteById({siteId, userId});
+
+    return updatePublicAccess(siteId, {publicToken: generatePublicToken()});
+}
+
+/**
+ * Resolves a site from its public share token for the no-auth dashboard
+ * routes. Not-found, turned-off, and plan-inactive all fail identically —
+ * an anonymous visitor shouldn't be able to tell "bad link" apart from
+ * "the owner disabled sharing" or "the owner's plan lapsed," any of which
+ * would otherwise leak information about an account that isn't theirs.
+ * Unlike getSiteById, there's no legitimate reason for a public caller to
+ * ever see an inactive site, so that check lives here instead of being
+ * left to each caller (contrast analytics.service.js's assertSiteActive,
+ * which the owner-facing path does need as a separate step — see
+ * SiteSettings.jsx, which shows a locked site's settings even when its
+ * analytics are blocked).
+ */
+async function getSiteByPublicToken(token) {
+    const site = await findSiteByPublicToken(token);
+    if (!site || !site.publicDashboardEnabled) {
+        throw new AppError('This dashboard link is no longer available.', 404);
+    }
+
+    const plan = await findUserPlan(site.userId);
+    if (!(await isSiteActive(site, plan))) {
+        throw new AppError('This dashboard link is no longer available.', 404);
+    }
+
+    return site;
+}
+
 module.exports = {
     addSite, getUserSites, regenerateApiKey, getSiteById, getUsageSummary, getNewlyDeactivatedSites,
+    setPublicDashboardEnabled, regeneratePublicToken, getSiteByPublicToken,
 }

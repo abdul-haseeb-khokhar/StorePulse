@@ -15,6 +15,13 @@ export const queryKeys = {
     topProducts: (siteId, range) => ["analytics", siteId, "top-products", range],
     topReferrers: (siteId, range) => ["analytics", siteId, "top-referrers", range],
   },
+  publicDashboard: {
+    site: (token) => ["public-dashboard", token, "site"],
+    summary: (token, range) => ["public-dashboard", token, "summary", range],
+    traffic: (token, range) => ["public-dashboard", token, "traffic", range],
+    topProducts: (token, range) => ["public-dashboard", token, "top-products", range],
+    topReferrers: (token, range) => ["public-dashboard", token, "top-referrers", range],
+  },
   me: ["me"],
   notifications: {
     list: (params) => ["notifications", params],

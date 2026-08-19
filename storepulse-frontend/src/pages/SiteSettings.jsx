@@ -55,6 +55,9 @@ export default function SiteSettings() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [showRegenNotice, setShowRegenNotice] = useState(false);
   const [regenerateError, setRegenerateError] = useState(null);
+  const [confirmRegenPublicOpen, setConfirmRegenPublicOpen] = useState(false);
+  const [showRegenPublicNotice, setShowRegenPublicNotice] = useState(false);
+  const [publicAccessError, setPublicAccessError] = useState(null);
 
   const siteQuery = useQuery({
     queryKey: queryKeys.sites.detail(siteId),
@@ -83,6 +86,40 @@ export default function SiteSettings() {
     setRegenerateError(null);
     regenerateMutation.mutate();
   }
+
+  const togglePublicAccessMutation = useMutation({
+    mutationFn: (enabled) => api.patch(`/sites/${siteId}/public-access`, { enabled }),
+    onSuccess: ({ data }) => {
+      queryClient.setQueryData(queryKeys.sites.detail(siteId), data.site);
+      setShowRegenPublicNotice(false);
+    },
+    onError: (err) => setPublicAccessError(getApiErrorMessage(err, "Could not update the public dashboard.")),
+  });
+
+  const regeneratePublicTokenMutation = useMutation({
+    mutationFn: () => api.patch(`/sites/${siteId}/public-access/regenerate`),
+    onSuccess: ({ data }) => {
+      queryClient.setQueryData(queryKeys.sites.detail(siteId), data.site);
+      setShowRegenPublicNotice(true);
+    },
+    onError: (err) => setPublicAccessError(getApiErrorMessage(err, "Could not regenerate the public link.")),
+    onSettled: () => setConfirmRegenPublicOpen(false),
+  });
+
+  function handleTogglePublicAccess(enabled) {
+    setPublicAccessError(null);
+    togglePublicAccessMutation.mutate(enabled);
+  }
+
+  function handleRegeneratePublicToken() {
+    setPublicAccessError(null);
+    regeneratePublicTokenMutation.mutate();
+  }
+
+  const publicDashboardUrl =
+    site?.publicDashboardEnabled && site?.publicToken
+      ? `${window.location.origin}/public/${site.publicToken}`
+      : "";
 
   const snippet = site
     ? `<script src="${API_BASE_URL}/track.js"\n  data-site-key="${site.apiKey}"></script>`
@@ -144,6 +181,61 @@ export default function SiteSettings() {
               </div>
             </Card>
 
+            <Card style={{ marginBottom: "var(--space-3)" }}>
+              <div className="card-kicker">Sharing</div>
+              <div className="card-title" style={{ marginBottom: "var(--space-3)" }}>
+                Public dashboard
+              </div>
+              <p className="card-body" style={{ marginBottom: "var(--space-3)" }}>
+                Share a read-only dashboard for {site.name} — no login required. Paste the
+                link into your client&apos;s own site so they can check their analytics
+                directly.
+              </p>
+
+              {site.publicDashboardEnabled ? (
+                <div className="grid" style={{ gap: "var(--space-3)" }}>
+                  <CodeBlock language="link">{publicDashboardUrl}</CodeBlock>
+                  <div className="flex items-center flex-wrap" style={{ gap: "var(--space-3)" }}>
+                    <Button
+                      variant="secondary"
+                      onClick={() => handleTogglePublicAccess(false)}
+                      loading={togglePublicAccessMutation.isPending}
+                    >
+                      Turn off
+                    </Button>
+                    <Button variant="outline" onClick={() => setConfirmRegenPublicOpen(true)}>
+                      Regenerate link
+                    </Button>
+                  </div>
+                  <p className="text-sm" style={{ opacity: 0.6 }}>
+                    Turning this off hides the dashboard immediately, but doesn&apos;t
+                    invalidate the link — turning it back on reuses the same one. If this
+                    link leaked and you need the old one to stop working, use{" "}
+                    <strong>Regenerate link</strong> instead.
+                  </p>
+                </div>
+              ) : (
+                <Button
+                  variant="secondary"
+                  onClick={() => handleTogglePublicAccess(true)}
+                  loading={togglePublicAccessMutation.isPending}
+                >
+                  Enable public dashboard
+                </Button>
+              )}
+
+              {publicAccessError && (
+                <p className="text-sm" style={{ color: "var(--brick)", marginTop: "var(--space-3)" }}>
+                  {publicAccessError}
+                </p>
+              )}
+              {showRegenPublicNotice && (
+                <p className="text-sm" style={{ color: "var(--stamp)", marginTop: "var(--space-3)" }}>
+                  Link regenerated. The old public link no longer works — share the new one instead.
+                </p>
+              )}
+            </Card>
+
             <Card>
               <div className="card-kicker">Tracking snippet</div>
               <p className="card-body">This is your tracking snippet.</p>
@@ -179,6 +271,27 @@ export default function SiteSettings() {
             The current key stops working the moment you confirm. Tracking on{" "}
             {site?.domain} will silently stop until your developer updates the snippet
             with the new key.
+          </span>
+        </Dialog>
+
+        <Dialog
+          open={confirmRegenPublicOpen}
+          title="Regenerate public link?"
+          onClose={() => setConfirmRegenPublicOpen(false)}
+          actions={
+            <>
+              <Button variant="secondary" onClick={() => setConfirmRegenPublicOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleRegeneratePublicToken} loading={regeneratePublicTokenMutation.isPending}>
+                Regenerate
+              </Button>
+            </>
+          }
+        >
+          <span style={{ color: "var(--brick)" }}>
+            The current public link stops working the moment you confirm. Anyone you already
+            shared it with will need the new one.
           </span>
         </Dialog>
       </main>
