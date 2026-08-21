@@ -17,7 +17,7 @@ const adminRoutes = require('./modules/admin/admin.routes');
 const adminAuthRoutes = require('./modules/adminAuth/adminAuth.routes');
 const notificationRoutes = require('./modules/notification/notification.routes');
 
-const AppError = require('./utils/AppError')
+const AppError = require('./utils/AppError');
 
 const app = express()
 
@@ -56,6 +56,15 @@ app.use('/api/notifications', dashboardCors, notificationRoutes);
 app.use('/api/admin/auth', dashboardCors, adminAuthRoutes);
 app.use('/api/admin', dashboardCors, adminRoutes);
 
+// track.js is embedded on arbitrary third-party storefronts, so it needs
+// the same "wide open" trust model as the ingest endpoint — same reasoning
+// as ingestCors above, but for the static file itself rather than the
+// POST endpoint it talks to.
+app.use('/track.js',(req, res, next) => {
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    next();
+}, express.static('public/track.js'));
 app.use(express.static("public"));
 
 app.get('/health', (req, res) => {
